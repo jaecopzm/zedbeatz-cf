@@ -8,14 +8,14 @@ import TrackPageClient from "./client";
 async function getTrackData(id: string) {
   return unstable_cache(async () => {
     let query = supabase.from("tracks").select("id, title, audio_key, cover_key, duration, artist_id, genre, plays, featured_artists, artists(name, slug), slug");
-    query = isNaN(Number(id)) ? query.eq("slug", id) : query.eq("id", id);
+    query = isNaN(Number(id)) ? query.eq("slug", id) : query.eq("id", Number(id));
     const { data } = await query.single();
     if (!data) return null;
 
     const { data: artistTracks } = await supabase
       .from("tracks")
       .select("id, title, cover_key, audio_key, duration, slug, artists(name, slug)")
-      .eq("artist_id", data.artist_id)
+      .eq("artist_id", data.artist_id ?? 0)
       .neq("id", data.id)
       .limit(5);
 
@@ -111,7 +111,7 @@ export default async function TrackPage({ params }: { params: Promise<{ id: stri
     audioUrl: getPublicUrl(data.audio_key),
     coverUrl: coverUrl,
     duration: data.duration ?? undefined,
-    genre: data.genre, plays: data.plays, slug: data.slug,
+    genre: data.genre, plays: data.plays, slug: data.slug ?? undefined,
     moreFromArtist,
   };
 

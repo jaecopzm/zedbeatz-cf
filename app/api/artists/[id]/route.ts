@@ -6,8 +6,8 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
   const { id } = await params;
 
   const [{ data: artist }, { data: tracks }] = await Promise.all([
-    supabase.from("artists").select("id, name, bio, image_key").eq("id", id).single(),
-    supabase.from("tracks").select("id, title, audio_key, cover_key, duration, genre, plays").eq("artist_id", id).order("created_at", { ascending: false }),
+    supabase.from("artists").select("id, name, bio, image_key").eq("id", Number(id)).single(),
+    supabase.from("tracks").select("id, title, audio_key, cover_key, duration, genre, plays").eq("artist_id", Number(id)).order("created_at", { ascending: false }),
   ]);
 
   if (!artist) return NextResponse.json({ error: "Not found" }, { status: 404 });

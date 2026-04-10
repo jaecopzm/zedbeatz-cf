@@ -17,7 +17,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/search`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.9 },
     ...(tracks ?? []).map((t) => ({
       url: `${BASE_URL}/track/${t.slug || t.id}`,
-      lastModified: new Date(t.created_at),
+      lastModified: t.created_at ? new Date(t.created_at) : new Date(),
       changeFrequency: 'weekly' as const,
       priority: 0.8,
     })),

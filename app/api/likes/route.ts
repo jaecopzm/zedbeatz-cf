@@ -87,14 +87,14 @@ export async function POST(req: NextRequest) {
   // Check if already liked
   const { data: existing } = await supabase
     .from("playlist_tracks")
-    .select("id")
+    .select("track_id")
     .eq("playlist_id", favId)
     .eq("track_id", track_id)
     .maybeSingle();
 
   if (existing) {
     // Unlike
-    await supabase.from("playlist_tracks").delete().eq("id", existing.id);
+    await supabase.from("playlist_tracks").delete().eq("playlist_id", favId).eq("track_id", track_id);
     return NextResponse.json({ liked: false });
   }
 

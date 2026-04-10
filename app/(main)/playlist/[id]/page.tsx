@@ -7,10 +7,10 @@ export default async function PlaylistPage({ params }: { params: Promise<{ id: s
   const { id } = await params;
 
   const [{ data: playlist }, { data: trackData }] = await Promise.all([
-    supabase.from("playlists").select("id, name, cover_key, is_featured, category, playlist_tracks(count)").eq("id", id).single(),
+    supabase.from("playlists").select("id, name, cover_key, is_featured, category, playlist_tracks(count)").eq("id", Number(id)).single(),
     supabase.from("playlist_tracks")
       .select("position, tracks(id, title, audio_key, cover_key, duration, slug, featured_artists, artists(id, name, slug))")
-      .eq("playlist_id", id)
+      .eq("playlist_id", Number(id))
       .order("position"),
   ]);
 

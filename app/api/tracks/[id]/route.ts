@@ -9,7 +9,7 @@ export async function GET(
   const { data, error } = await supabase
     .from("tracks")
     .select("id, plays")
-    .eq("id", id)
+    .eq("id", Number(id))
     .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json(data);
@@ -25,7 +25,7 @@ export async function PATCH(
   const { error } = await supabase
     .from("tracks")
     .update({ featured_artists: body.featured_artists })
-    .eq("id", id);
+    .eq("id", Number(id));
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });

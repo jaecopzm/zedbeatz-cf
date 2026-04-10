@@ -11,8 +11,8 @@ export default async function AlbumPage({ params }: { params: Promise<{ id: stri
 
   const [{ data: album }, { data: rawTracks }] = await unstable_cache(
     async () => Promise.all([
-      supabase.from("albums").select("id, title, cover_key, release_year, artist_id, artists(name)").eq("id", id).single(),
-      supabase.from("tracks").select("id, title, audio_key, cover_key, duration, artist_id, artists(name)").eq("album_id", id).order("created_at"),
+      supabase.from("albums").select("id, title, cover_key, release_year, artist_id, artists(name)").eq("id", Number(id)).single(),
+      supabase.from("tracks").select("id, title, audio_key, cover_key, duration, artist_id, artists(name)").eq("album_id", Number(id)).order("created_at"),
     ]),
     [`album-${id}`],
     { revalidate: 600 }
@@ -20,10 +20,10 @@ export default async function AlbumPage({ params }: { params: Promise<{ id: stri
 
   if (!album) notFound();
 
-  const artistName = (album.artists as unknown as { name: string } | null)?.name ?? "Unknown";
+  const artistName = (album.artists as { name: string } | null)?.name ?? "Unknown";
   const tracks: Track[] = (rawTracks ?? []).map((t) => ({
     id: t.id, title: t.title, artistId: t.artist_id ?? undefined,
-    artist: (t.artists as unknown as { name: string } | null)?.name ?? artistName,
+    artist: (t.artists as { name: string } | null)?.name ?? artistName,
     audioUrl: getPublicUrl(t.audio_key),
     coverUrl: t.cover_key ? getPublicUrl(t.cover_key) : undefined,
     duration: t.duration ?? undefined,

@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
     const { data, error } = await supabase
       .from("tracks")
       .select("*")
-      .eq("artist_id", artist_id)
+      .eq("artist_id", Number(artist_id))
       .ilike("title", title)
       .limit(1);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });

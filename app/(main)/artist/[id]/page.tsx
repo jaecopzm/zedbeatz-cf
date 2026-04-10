@@ -13,7 +13,7 @@ import { sanitizeFeaturedArtists } from "@/lib/featured-artists";
 async function getArtistData(id: string) {
   return unstable_cache(async () => {
     let artistQuery = supabase.from("artists").select("id, name, bio, image_key, slug");
-    artistQuery = isNaN(Number(id)) ? artistQuery.eq("slug", id) : artistQuery.eq("id", id);
+    artistQuery = isNaN(Number(id)) ? artistQuery.eq("slug", id) : artistQuery.eq("id", Number(id));
     const { data: artist } = await artistQuery.single();
     if (!artist) return null;
 
@@ -75,7 +75,7 @@ export default async function ArtistPage({ params }: { params: Promise<{ id: str
     title: t.title,
     artistId: t.artist_id ?? undefined,
     artist: artist.name,
-    artistSlug: artist.slug,
+    artistSlug: artist.slug ?? undefined,
     featuredArtists: sanitizeFeaturedArtists(t.featured_artists),
     audioUrl: getPublicUrl(t.audio_key),
     coverUrl: t.cover_key ? getPublicUrl(t.cover_key) : undefined,
