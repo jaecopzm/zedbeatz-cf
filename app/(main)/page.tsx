@@ -133,7 +133,7 @@ async function getFeaturedArtists() {
     return a.name.localeCompare(b.name);
   });
   
-  return sorted.slice(0, 6).map((a) => ({ // Reduced from 8 to 6
+  return sorted.slice(0, 8).map((a) => ({
     id: a.id, name: a.name, slug: a.slug,
     coverUrl: a.image_key ? getPublicUrl(a.image_key) : undefined,
   }));
@@ -188,7 +188,7 @@ function SectionHeader({
 export default async function HomePage() {
   const [hero, latest, trending, artists, playlists] = await Promise.all([
     getHeroTracks(),
-    getLatestTracks(8), // Reduced from 12
+    getLatestTracks(12),
     getTrending(),
     getFeaturedArtists(),
     getPlaylists(),
