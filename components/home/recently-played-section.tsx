@@ -21,7 +21,7 @@ export default function RecentlyPlayedSection() {
       .finally(() => setLoading(false));
   }, [isSignedIn, isLoaded]);
 
-  if (loading && !isLoaded) {
+  if (loading) {
     return (
       <>
         {Array.from({ length: 6 }).map((_, i) => <TrackCardSkeleton key={i} />)}
@@ -34,14 +34,6 @@ export default function RecentlyPlayedSection() {
       <div className="col-span-full text-center py-8 text-[var(--muted)] text-sm">
         Sign in to see your recently played tracks
       </div>
-    );
-  }
-
-  if (loading) {
-    return (
-      <>
-        {Array.from({ length: 6 }).map((_, i) => <TrackCardSkeleton key={i} />)}
-      </>
     );
   }
 
