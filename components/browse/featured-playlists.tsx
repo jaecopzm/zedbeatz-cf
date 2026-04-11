@@ -20,7 +20,7 @@ type Playlist = {
 export default function FeaturedPlaylists() {
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [saved, setSaved] = useState<Set<number>>(new Set());
-  const { setQueue, currentTrack, isPlaying, togglePlay } = usePlayer();
+  const { setQueue, currentTrack, playing, toggle } = usePlayer();
   const { isSignedIn } = useUser();
   const [playingPlaylistId, setPlayingPlaylistId] = useState<number | null>(null);
 
@@ -51,7 +51,7 @@ export default function FeaturedPlaylists() {
   function handlePlayPause(e: React.MouseEvent, id: number) {
     e.preventDefault();
     if (playingPlaylistId === id && currentTrack) {
-      togglePlay();
+      toggle();
     } else {
       playPlaylist(id);
     }
@@ -73,7 +73,7 @@ export default function FeaturedPlaylists() {
   return (
     <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-2 md:gap-3">
       {playlists.map((playlist, i) => {
-        const isCurrentlyPlaying = playingPlaylistId === playlist.id && currentTrack && isPlaying;
+        const isCurrentlyPlaying = playingPlaylistId === playlist.id && currentTrack && playing;
         return (
           <motion.div key={playlist.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: i * 0.08 }}>
             <Link
