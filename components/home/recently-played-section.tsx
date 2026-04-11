@@ -9,15 +9,17 @@ import type { Track } from "@/lib/player-store";
 export default function RecentlyPlayedSection() {
   const { isSignedIn, isLoaded } = useUser();
   const [tracks, setTracks] = useState<Track[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!isLoaded) return;
+    
     if (!isSignedIn) { 
       setLoading(false); 
       setTracks([]);
       return; 
     }
+    
     setLoading(true);
     fetch("/api/recently-played/list")
       .then(r => r.json())
@@ -25,6 +27,11 @@ export default function RecentlyPlayedSection() {
       .catch(() => setTracks([]))
       .finally(() => setLoading(false));
   }, [isSignedIn, isLoaded]);
+
+  // Don't show anything while checking auth
+  if (!isLoaded) {
+    return null;
+  }
 
   if (loading) {
     return (

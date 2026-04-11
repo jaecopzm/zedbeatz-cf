@@ -8,6 +8,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUser, SignInButton } from "@clerk/nextjs";
 import { ListMusic } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 type Playlist = {
   id: number;
@@ -24,10 +25,19 @@ type Playlist = {
 type ViewState = "list" | "detail";
 
 export default function LibraryPage() {
+  const { isSignedIn, isLoaded } = useUser();
+  const router = useRouter();
   const [userPlaylists, setUserPlaylists] = useState<Playlist[]>([]);
   const [savedPlaylists, setSavedPlaylists] = useState<Playlist[]>([]);
   const [recentlyPlayed, setRecentlyPlayed] = useState<Track[]>([]);
   const [newName, setNewName] = useState("");
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (isLoaded && !isSignedIn) {
+      router.push('/');
+    }
+  }, [isSignedIn, isLoaded, router]);
   const [showCreate, setShowCreate] = useState(false);
   const [selected, setSelected] = useState<number | "recent" | "liked" | null>(null);
   const [tracks, setTracks] = useState<Track[]>([]);
