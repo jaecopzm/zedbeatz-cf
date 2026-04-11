@@ -4,13 +4,13 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="border-t border-[var(--border)] bg-[var(--surface)] mt-auto w-full">
+    <footer className="border-t border-[var(--border)] bg-[var(--surface)] mt-auto w-full mb-32 lg:mb-0">
       <div className="w-full px-4 md:px-8 py-8 md:py-12">
         {/* Desktop: 4-col grid. Mobile: brand + flex row of 3 */}
         <div className="mb-8">
           {/* Brand */}
           <div className="mb-6 md:hidden">
-            <Link href="/"><img src="/Logo.png" alt="ZedBeatz" className="h-8 w-auto mb-2" /></Link>
+            <Link href="/"><img src="/Logo.png" alt="ZedBeatz" className="h-6 w-auto mb-2" /></Link>
             <p className="text-xs text-[var(--muted)]">Zambia's premier music streaming platform</p>
           </div>
 

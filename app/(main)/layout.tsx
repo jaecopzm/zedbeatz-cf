@@ -4,6 +4,7 @@ import BottomNav from "@/components/bottom-nav";
 import ToastContainer from "@/components/toast";
 import MobileMenu from "@/components/mobile-menu";
 import Footer from "@/components/footer";
+import ScrollToTop from "@/components/scroll-to-top";
 import { LikesProvider } from "@/lib/likes-context";
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
@@ -13,7 +14,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         {/* Mobile Header */}
         <header className="lg:hidden fixed top-0 left-0 right-0 h-14 z-40 flex items-center justify-between px-4 border-b border-white/[0.07] bg-[rgba(10,10,15,0.55)] backdrop-blur-xl [-webkit-backdrop-filter:blur(24px)] supports-[backdrop-filter]:bg-[rgba(10,10,15,0.45)]">
           <MobileMenu />
-          <img src="/Logo.png" alt="ZedBeatz" className="h-7 w-auto absolute left-1/2 -translate-x-1/2" />
+          <img src="/Logo.png" alt="ZedBeatz" className="h-6 w-auto absolute left-1/2 -translate-x-1/2" />
           <div className="w-9" />{/* spacer to balance the hamburger */}
         </header>
 
@@ -37,6 +38,9 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
         {/* Mobile bottom nav */}
         <BottomNav />
+
+        {/* Scroll to top button */}
+        <ScrollToTop />
 
         {/* Toast notifications */}
         <ToastContainer />

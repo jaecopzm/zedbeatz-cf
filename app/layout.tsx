@@ -4,7 +4,12 @@ import { ClerkProvider } from "@clerk/nextjs";
 import Script from "next/script";
 import "./globals.css";
 
-const geist = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
+const geist = Geist({ 
+  variable: "--font-geist-sans", 
+  subsets: ["latin"],
+  display: "swap",
+  preload: true
+});
 
 export const metadata: Metadata = {
   title: {
@@ -45,6 +50,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <ClerkProvider>
       <html lang="en" className={`${geist.variable} h-full`} data-scroll-behavior="smooth">
+        <head>
+          <link rel="preconnect" href="https://fonts.googleapis.com" />
+          <link rel="dns-prefetch" href="https://cdn.zedbeatz.com" />
+        </head>
         <body className="h-full bg-background text-foreground antialiased selection:bg-[var(--primary)] selection:text-black">
           <Script src="https://www.googletagmanager.com/gtag/js?id=G-55D0XM6BJB" strategy="afterInteractive" />
           <Script id="ga-init" strategy="afterInteractive">{`

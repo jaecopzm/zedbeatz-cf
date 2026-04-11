@@ -44,7 +44,6 @@ export default function LibraryPage() {
   const [view, setView] = useState<ViewState>("list");
   const { setQueue, currentTrack } = usePlayer();
   const [searchQuery, setSearchQuery] = useState("");
-  const { isSignedIn, isLoaded } = useUser();
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editName, setEditName] = useState("");
 

@@ -18,6 +18,7 @@ type PlayerState = {
   queue: Track[];
   currentIndex: number;
   playing: boolean;
+  loading: boolean;
   shuffle: boolean;
   repeat: "off" | "one" | "all";
   currentTrack: Track | null;
@@ -28,25 +29,28 @@ type PlayerState = {
   prev: () => void;
   toggleShuffle: () => void;
   cycleRepeat: () => void;
+  setLoading: (loading: boolean) => void;
 };
 
 export const usePlayer = create<PlayerState>((set, get) => ({
   queue: [],
   currentIndex: 0,
   playing: false,
+  loading: false,
   shuffle: false,
   repeat: "off",
   get currentTrack() { const s = get(); return s.queue[s.currentIndex] ?? null; },
 
   setQueue: (tracks, startIndex = 0) => {
-    set({ queue: tracks, currentIndex: startIndex, playing: true });
+    set({ queue: tracks, currentIndex: startIndex, playing: true, loading: true });
   },
   play: (track) => {
-    set({ queue: [track], currentIndex: 0, playing: true });
+    set({ queue: [track], currentIndex: 0, playing: true, loading: true });
   },
   toggle: () => set((s) => ({ playing: !s.playing })),
   toggleShuffle: () => set((s) => ({ shuffle: !s.shuffle })),
   cycleRepeat: () => set((s) => ({ repeat: s.repeat === "off" ? "all" : s.repeat === "all" ? "one" : "off" })),
+  setLoading: (loading) => set({ loading }),
 
   next: () => {
     const { queue, currentIndex, shuffle, repeat } = get();
@@ -59,11 +63,11 @@ export const usePlayer = create<PlayerState>((set, get) => ({
     } else if (repeat === "all") {
       nextIndex = 0;
     }
-    set({ currentIndex: nextIndex, playing: true });
+    set({ currentIndex: nextIndex, playing: true, loading: true });
   },
 
   prev: () => {
     const { currentIndex, queue } = get();
-    set({ currentIndex: Math.max(currentIndex - 1, 0), playing: true });
+    set({ currentIndex: Math.max(currentIndex - 1, 0), playing: true, loading: true });
   },
 }));

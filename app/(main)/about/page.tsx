@@ -5,9 +5,9 @@ export default function AboutPage() {
   return (
     <div className="min-h-screen pb-32 px-4 md:px-8 py-8">
       <div className="max-w-3xl mx-auto">
-        <h1 className="text-3xl md:text-5xl font-bold mb-6">About ZedBeatz</h1>
+        <h1 className="text-2xl md:text-5xl font-bold mb-6">About ZedBeatz</h1>
         
-        <div className="space-y-6 text-[var(--muted)] leading-relaxed">
+        <div className="space-y-6 text-[var(--muted)] leading-relaxed text-sm md:text-base">
           <p>
             ZedBeatz is Zambia's premier music streaming and download platform, dedicated to promoting and distributing Zambian music to the world.
           </p>

@@ -9,6 +9,9 @@ let toastQueue: Toast[] = [];
 let listeners: Array<(toasts: Toast[]) => void> = [];
 
 export function showToast(message: string, type: "success" | "error" | "info" = "info") {
+  if ('vibrate' in navigator) {
+    navigator.vibrate(type === "success" ? 10 : type === "error" ? [10, 50, 10] : 5);
+  }
   const toast: Toast = { id: Date.now().toString(), message, type };
   toastQueue = [...toastQueue, toast];
   listeners.forEach((l) => l(toastQueue));

@@ -1,57 +1,134 @@
-# Performance & UX Improvements for ZedBeatz
+# Performance Optimization Guide
 
-## 🔴 Critical (High Impact)
+## ✅ Implemented
 
-### 1. Database Indexes (Fixes 600-1200ms queries)
-```sql
--- Add these indexes in Supabase SQL editor
-CREATE INDEX IF NOT EXISTS idx_playlist_tracks_playlist_id ON playlist_tracks(playlist_id);
-CREATE INDEX IF NOT EXISTS idx_playlist_tracks_track_id ON playlist_tracks(track_id);
-CREATE INDEX IF NOT EXISTS idx_recently_played_user_id_played_at ON recently_played(user_id, played_at DESC);
-CREATE INDEX IF NOT EXISTS idx_tracks_artist_id ON tracks(artist_id);
-CREATE INDEX IF NOT EXISTS idx_tracks_created_at ON tracks(created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_tracks_plays ON tracks(plays DESC);
-CREATE INDEX IF NOT EXISTS idx_tracks_genre ON tracks(genre);
-CREATE INDEX IF NOT EXISTS idx_playlists_user_id_name ON playlists(user_id, name);
+1. **Font Loading** - Added `display: swap` to prevent font blocking
+2. **Compression** - Enabled gzip compression in Next.js config
+3. **Image Optimization** - Disabled (avoiding Vercel costs)
+4. **Caching** - Already using `unstable_cache` with revalidation times
+
+## 🚀 Quick Wins (Do These Now)
+
+### 1. Replace Next/Image with regular img tags
+Since you disabled image optimization, remove unused Next/Image imports:
+```bash
+# Find all files still importing Next/Image
+grep -r "import Image from \"next/image\"" --include="*.tsx" --include="*.ts"
 ```
 
-### 2. Enable Edge Runtime for API Routes
-Add to each API route: `export const runtime = 'edge';`
+### 2. Add loading="lazy" to images
+Update all `<img>` tags to include lazy loading:
+```tsx
+<img src={url} alt={alt} loading="lazy" />
+```
 
-### 3. Request Deduplication
-Prevent duplicate API calls when multiple components mount
+### 3. Reduce initial data fetching
+Current home page fetches 5 datasets. Consider:
+- Load playlists on scroll (not initially)
+- Reduce featured artists from 8 to 6
+- Load trending section lazily
 
-### 4. Lazy Load Images
-Use Next.js Image with blur placeholders
+### 4. Code splitting for heavy libraries
+Lazy load framer-motion animations:
+```tsx
+// Instead of:
+import { motion } from "framer-motion"
 
-## 🟡 High Priority
+// Use:
+const motion = dynamic(() => import("framer-motion").then(m => ({ default: m.motion })))
+```
 
-### 5. Virtualize Long Lists (library, tracks page)
-### 6. Prefetch Critical Routes
-### 7. Persist Player State (volume, shuffle, repeat)
-### 8. Add Loading Skeletons
-### 9. Infinite Scroll for Tracks
-### 10. Service Worker for Offline
+## 🎯 Medium Impact
 
-## 🟢 Nice to Have
+### 5. Optimize Clerk loading
+Add `appearance` prop to reduce Clerk bundle:
+```tsx
+<ClerkProvider appearance={{ layout: { unsafe_disableDevelopmentModeWarnings: true } }}>
+```
 
-### 11. Keyboard Shortcuts (Cmd+K for search)
-### 12. Pull-to-Refresh (Mobile)
-### 13. Error Boundaries
-### 14. Bundle Size Optimization
-### 15. Analytics Events
+### 6. Reduce Google Analytics impact
+Already using `strategy="afterInteractive"` ✓
 
-## 🎨 UX Improvements
+### 7. Add resource hints
+```tsx
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="dns-prefetch" href="https://cdn.zedbeatz.com" />
+```
 
-### 16. Haptic Feedback (Mobile)
-### 17. Better Empty States
-### 18. More Toast Notifications
-### 19. Search History Persistence
-### 20. Enhanced Player Controls
+### 8. Optimize Supabase queries
+- Add indexes on frequently queried columns (plays, created_at)
+- Use `.select()` to only fetch needed columns
+- Consider edge functions for complex queries
 
-## Expected Impact
+## 📊 Monitoring
 
-- Database indexes: 80-90% faster queries
-- Edge runtime: Better cold starts
-- Image optimization: 30-50% faster loads
-- Virtualization: Handle 1000+ items smoothly
+### Measure improvements:
+```bash
+# Build and analyze bundle
+npm run build
+
+# Check bundle size
+npx @next/bundle-analyzer
+```
+
+### Lighthouse scores to track:
+- First Contentful Paint (FCP) - Target: < 1.8s
+- Largest Contentful Paint (LCP) - Target: < 2.5s
+- Time to Interactive (TTI) - Target: < 3.8s
+- Total Blocking Time (TBT) - Target: < 200ms
+
+## 🔧 Advanced Optimizations
+
+### 9. Static Generation where possible
+Convert pages that don't need real-time data to SSG:
+```tsx
+export const revalidate = 3600; // Revalidate every hour
+```
+
+### 10. Implement ISR (Incremental Static Regeneration)
+For artist/track pages:
+```tsx
+export const revalidate = 300; // 5 minutes
+```
+
+### 11. Add Service Worker for offline support
+Use next-pwa for caching static assets
+
+### 12. Optimize CSS
+- Remove unused Tailwind classes (already tree-shaken)
+- Consider critical CSS extraction
+
+### 13. Database optimizations
+```sql
+-- Add indexes
+CREATE INDEX idx_tracks_created_at ON tracks(created_at DESC);
+CREATE INDEX idx_tracks_plays ON tracks(plays DESC);
+CREATE INDEX idx_tracks_artist_id ON tracks(artist_id);
+```
+
+## 🎨 User Experience
+
+### 14. Add loading skeletons
+Already have `TrackCardSkeleton` ✓
+
+### 15. Prefetch on hover
+```tsx
+<Link href={url} prefetch={true}>
+```
+
+### 16. Optimize mobile experience
+- Reduce animations on mobile
+- Smaller images for mobile viewports
+- Defer non-critical JS
+
+## 📦 Bundle Size Reduction
+
+Current heavy dependencies:
+- framer-motion (~60KB)
+- recharts (~100KB) - only used in admin
+- embla-carousel (~20KB)
+
+Consider:
+- Lazy load admin components
+- Replace framer-motion with CSS animations where possible
+- Use dynamic imports for charts

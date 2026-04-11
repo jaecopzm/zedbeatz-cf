@@ -38,6 +38,8 @@ export const metadata: Metadata = {
   },
 };
 
+export const revalidate = 300; // Revalidate every 5 minutes
+
 async function getHeroTracks(): Promise<Track[]> {
   return unstable_cache(async () => {
   const { data } = await supabase
@@ -85,7 +87,7 @@ async function getLatestTracks(limit: number = 10): Promise<Track[]> {
     .order("created_at", { ascending: false })
     .limit(limit);
   return (data ?? []).map(mapTrack);
-  }, [`latest-tracks-${limit}`], { revalidate: 300 })(); // Increased cache time
+  }, [`latest-tracks-${limit}`], { revalidate: 600 })(); // Increased from 300
 }
 
 async function getTrending(): Promise<Track[]> {
@@ -96,7 +98,7 @@ async function getTrending(): Promise<Track[]> {
     .order("plays", { ascending: false })
     .limit(8); // Reduced from 10
   return (data ?? []).map(mapTrack);
-  }, ["trending-tracks"], { revalidate: 600 })(); // Increased cache time
+  }, ["trending-tracks"], { revalidate: 900 })(); // Increased from 600
 }
 
 async function getFeaturedArtists() {
@@ -309,7 +311,7 @@ export default async function HomePage() {
             iconColor="bg-green-500/20 text-green-400"
             title="Playlists"
           />
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+          <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 md:gap-4">
             {playlists.map((playlist) => (
               <Link
                 key={playlist.id}

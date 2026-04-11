@@ -17,6 +17,7 @@ export default function LikeButton({ trackId, size = 18 }: { trackId: number; si
     e.stopPropagation();
     if (loading || !isSignedIn) return;
     
+    if ('vibrate' in navigator) navigator.vibrate(10);
     setLoading(true);
     const wasLiked = liked;
     if (!wasLiked) { setPopping(true); setTimeout(() => setPopping(false), 400); }

@@ -20,11 +20,15 @@ function fmt(s: number) {
 }
 
 export default function Player() {
-  const { queue, currentIndex, playing, shuffle, repeat, toggle, next, prev, toggleShuffle, cycleRepeat, setQueue } = usePlayer();
+  const { queue, currentIndex, playing, loading, shuffle, repeat, toggle, next, prev, toggleShuffle, cycleRepeat, setQueue, setLoading } = usePlayer();
   const track = queue[currentIndex];
   const audioRef = useRef<HTMLAudioElement>(null);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
+
+  const haptic = () => {
+    if ('vibrate' in navigator) navigator.vibrate(10);
+  };
   const [volume, setVolume] = useState(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("player-volume");
@@ -108,6 +112,7 @@ export default function Player() {
   }
 
   function handlePrev() {
+    haptic();
     if (audioRef.current && audioRef.current.currentTime > 3) {
       audioRef.current.currentTime = 0;
     } else {
@@ -136,6 +141,9 @@ export default function Player() {
         onTimeUpdate={(e) => setProgress(e.currentTarget.currentTime)}
         onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
         onEnded={handleEnded}
+        onWaiting={() => setLoading(true)}
+        onCanPlay={() => setLoading(false)}
+        onPlaying={() => setLoading(false)}
         className="hidden"
       />
 
@@ -230,19 +238,25 @@ export default function Player() {
 
               {/* Transport */}
               <div className="w-full max-w-xs flex items-center justify-between mb-3">
-                <button onClick={toggleShuffle}
+                <button onClick={() => { haptic(); toggleShuffle(); }}
                   className={`p-2 rounded-full transition-all ${shuffle ? "text-[var(--primary)]" : "text-white/30 hover:text-white hover:bg-white/10"}`}>
                   <Shuffle size={16} />
                 </button>
                 <button onClick={handlePrev} className="p-1.5 text-white/70 hover:text-white active:scale-90 transition-all">
                   <SkipBack size={24} fill="currentColor" />
                 </button>
-                <button onClick={toggle}
-                  className="w-12 h-12 rounded-full bg-white flex items-center justify-center text-black shadow-2xl active:scale-95 hover:scale-105 transition-all"
+                <button onClick={() => { haptic(); toggle(); }}
+                  className="w-12 h-12 rounded-full bg-white flex items-center justify-center text-black shadow-2xl active:scale-95 hover:scale-105 transition-all relative"
                   style={{ boxShadow: "0 0 30px rgba(255,255,255,0.15), 0 6px 24px rgba(0,0,0,0.5)" }}>
-                  {playing ? <Pause size={22} fill="currentColor" /> : <Play size={22} fill="currentColor" className="ml-0.5" />}
+                  {loading ? (
+                    <div className="w-5 h-5 border-2 border-black/20 border-t-black rounded-full animate-spin" />
+                  ) : playing ? (
+                    <Pause size={22} fill="currentColor" />
+                  ) : (
+                    <Play size={22} fill="currentColor" className="ml-0.5" />
+                  )}
                 </button>
-                <button onClick={next} className="p-1.5 text-white/70 hover:text-white active:scale-90 transition-all">
+                <button onClick={() => { haptic(); next(); }} className="p-1.5 text-white/70 hover:text-white active:scale-90 transition-all">
                   <SkipForward size={24} fill="currentColor" />
                 </button>
                 <button onClick={cycleRepeat}
@@ -351,9 +365,15 @@ export default function Player() {
                   <SkipBack size={28} fill="currentColor" />
                 </button>
                 <button onClick={toggle}
-                  className="w-16 h-16 rounded-full bg-white flex items-center justify-center text-black shadow-2xl active:scale-95 transition-all hover:scale-105"
+                  className="w-16 h-16 rounded-full bg-white flex items-center justify-center text-black shadow-2xl active:scale-95 transition-all hover:scale-105 relative"
                   style={{ boxShadow: "0 0 40px rgba(255,255,255,0.2), 0 8px 32px rgba(0,0,0,0.4)" }}>
-                  {playing ? <Pause size={28} fill="currentColor" /> : <Play size={28} fill="currentColor" className="ml-1" />}
+                  {loading ? (
+                    <div className="w-7 h-7 border-2 border-black/20 border-t-black rounded-full animate-spin" />
+                  ) : playing ? (
+                    <Pause size={28} fill="currentColor" />
+                  ) : (
+                    <Play size={28} fill="currentColor" className="ml-1" />
+                  )}
                 </button>
                 <button onClick={next} className="p-2 text-white/80 hover:text-white active:scale-90 transition-all">
                   <SkipForward size={28} fill="currentColor" />
@@ -463,9 +483,15 @@ export default function Player() {
               </button>
               <button
                 onClick={toggle}
-                className="w-9 h-9 rounded-full bg-white hover:scale-105 active:scale-95 flex items-center justify-center text-black transition-all shadow-lg"
+                className="w-9 h-9 rounded-full bg-white hover:scale-105 active:scale-95 flex items-center justify-center text-black transition-all shadow-lg relative"
               >
-                {playing ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" className="ml-0.5" />}
+                {loading ? (
+                  <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
+                ) : playing ? (
+                  <Pause size={18} fill="currentColor" />
+                ) : (
+                  <Play size={18} fill="currentColor" className="ml-0.5" />
+                )}
               </button>
               <button onClick={next} className="text-[var(--muted)] hover:text-white transition-colors">
                 <SkipForward size={20} fill="currentColor" />
@@ -562,9 +588,15 @@ export default function Player() {
               </button>
               <button
                 onClick={(e) => { e.stopPropagation(); toggle(); }}
-                className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-black shadow-md active:scale-95 transition-transform"
+                className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-black shadow-md active:scale-95 transition-transform relative"
               >
-                {playing ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" className="ml-0.5" />}
+                {loading ? (
+                  <div className="w-3.5 h-3.5 border-2 border-black/20 border-t-black rounded-full animate-spin" />
+                ) : playing ? (
+                  <Pause size={16} fill="currentColor" />
+                ) : (
+                  <Play size={16} fill="currentColor" className="ml-0.5" />
+                )}
               </button>
               <button onClick={(e) => { e.stopPropagation(); next(); }} className="p-1.5 text-[var(--muted)] active:text-white transition-colors">
                 <SkipForward size={16} fill="currentColor" />

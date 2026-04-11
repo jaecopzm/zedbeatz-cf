@@ -4,10 +4,10 @@ export default function ContactPage() {
   return (
     <div className="min-h-screen pb-32 px-4 md:px-8 py-8">
       <div className="max-w-3xl mx-auto">
-        <h1 className="text-3xl md:text-5xl font-bold mb-6">Contact Us</h1>
+        <h1 className="text-2xl md:text-5xl font-bold mb-6">Contact Us</h1>
         
         <div className="space-y-8">
-          <p className="text-[var(--muted)] leading-relaxed">
+          <p className="text-[var(--muted)] leading-relaxed text-sm md:text-base">
             Have questions, feedback, or need support? We'd love to hear from you!
           </p>
           
