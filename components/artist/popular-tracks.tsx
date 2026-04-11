@@ -75,7 +75,7 @@ export default function PopularTracks({
               {/* Cover */}
               <div className="relative w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl overflow-hidden shrink-0 shadow-sm bg-[var(--surface-2)]">
                 {track.coverUrl && (
-                  <Image src={track.coverUrl} alt={track.title} fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" />
+                  <Image src={track.coverUrl} alt={track.title} fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" unoptimized />
                 )}
               </div>
 

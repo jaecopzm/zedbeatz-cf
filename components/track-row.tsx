@@ -56,7 +56,7 @@ export default function TrackRow({ track, queue, index }: { track: Track; queue?
       {/* Cover */}
       <div className="relative w-10 h-10 rounded-lg shrink-0 overflow-hidden bg-[var(--surface-3)] shadow-sm">
         {track.coverUrl ? (
-          <Image src={track.coverUrl} alt={track.title} fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" />
+          <Image src={track.coverUrl} alt={track.title} fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" unoptimized />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-[var(--surface-3)] to-[var(--surface-2)]" />
         )}

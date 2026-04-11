@@ -57,7 +57,7 @@ export default function ArtistHeader({ artist, tracks }: { artist: Artist; track
           <div className={`absolute -inset-1.5 rounded-full bg-gradient-to-br from-[var(--primary)]/50 to-purple-500/30 blur-sm transition-opacity duration-700 ${isPlaying ? "opacity-100" : "opacity-0"}`} />
           <div className="relative w-32 h-32 md:w-52 md:h-52 rounded-full overflow-hidden border-2 border-white/10 shadow-2xl">
             {artist.imageUrl ? (
-              <Image src={artist.imageUrl} alt={artist.name} fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" priority />
+              <Image src={artist.imageUrl} alt={artist.name} fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" priority unoptimized />
             ) : (
               <div className="w-full h-full bg-gradient-to-br from-[var(--primary)]/80 to-purple-600 flex items-center justify-center text-4xl md:text-6xl font-extrabold text-white">
                 {artist.name[0]}

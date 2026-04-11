@@ -38,7 +38,7 @@ export default function HeroSection({ tracks }: { tracks: Track[] }) {
         className="absolute inset-0"
       >
         {track.coverUrl && (
-          <Image src={track.coverUrl} alt={track.title} fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" priority />
+          <Image src={track.coverUrl} alt={track.title} fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" priority unoptimized />
         )}
       </motion.div>
 

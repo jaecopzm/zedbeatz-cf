@@ -146,7 +146,7 @@ export default function Player() {
           {/* Ambient glow */}
           {track.coverUrl && (
             <div className="absolute inset-0 overflow-hidden z-0">
-              <Image src={track.coverUrl} alt="" fill sizes="100vw" className="object-cover opacity-10 blur-3xl scale-110" />
+              <Image src={track.coverUrl} alt="" fill sizes="100vw" className="object-cover opacity-10 blur-3xl scale-110" unoptimized />
               <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-[#0d0d14]/80 to-[#0a0a0f]" />
             </div>
           )}
@@ -176,7 +176,7 @@ export default function Player() {
                 <div className={`absolute -inset-6 rounded-full blur-3xl transition-opacity duration-1000 pointer-events-none ${playing ? "opacity-30" : "opacity-0"}`}
                   style={{ background: "radial-gradient(circle, var(--primary) 0%, transparent 65%)" }} />
                 {track.coverUrl ? (
-                  <Image src={track.coverUrl} alt={track.title} fill priority
+                  <Image src={track.coverUrl} alt={track.title} fill priority unoptimized
                     className={`object-cover rounded-2xl shadow-2xl transition-all duration-700 ${playing ? "scale-100" : "scale-[0.97]"}`}
                     style={{ boxShadow: "0 24px 60px rgba(0,0,0,0.6)" }} />
                 ) : (
@@ -314,8 +314,8 @@ export default function Player() {
                 <div className={`absolute -inset-6 rounded-full blur-3xl transition-opacity duration-700 ${playing ? "opacity-40" : "opacity-0"}`}
                   style={{ background: "radial-gradient(circle, var(--primary) 0%, transparent 70%)" }} />
                 {track.coverUrl ? (
-                  <Image src={track.coverUrl} alt={track.title} fill
-                    className={`object-cover rounded-2xl shadow-2xl transition-transform duration-700 ${playing ? "scale-100" : "scale-95"}`} priority />
+                  <Image src={track.coverUrl} alt={track.title} fill sizes="(max-width: 640px) 100vw, 320px"
+                    className={`object-cover rounded-2xl shadow-2xl transition-transform duration-700 ${playing ? "scale-100" : "scale-95"}`} priority unoptimized />
                 ) : (
                   <div className="w-full h-full rounded-2xl bg-gradient-to-br from-[var(--surface-2)] to-[var(--surface-3)]" />
                 )}

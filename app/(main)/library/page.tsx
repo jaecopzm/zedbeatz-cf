@@ -384,7 +384,7 @@ function PlaylistRow({ p, i, selected, selectPlaylist, editingId, editName, setE
       {/* Cover */}
       <div className="w-14 h-14 rounded-xl bg-[var(--surface-3)] overflow-hidden shrink-0 relative">
         {p.cover_url ? (
-          <Image src={p.cover_url} alt={p.name} fill className="object-cover" />
+          <Image src={p.cover_url} alt={p.name} fill sizes="56px" className="object-cover" unoptimized />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <Music size={20} className="text-[var(--muted)]" />
@@ -459,7 +459,7 @@ function DetailView({ selected, selectedName, selectedCount, selectedFull, track
         <div className="flex flex-col items-center text-center mt-4">
           <div className="w-40 h-40 rounded-2xl overflow-hidden shadow-2xl mb-4 relative">
             {selectedFull?.cover_url ? (
-              <Image src={selectedFull.cover_url} alt={selectedName} fill className="object-cover" />
+              <Image src={selectedFull.cover_url} alt={selectedName} fill sizes="160px" className="object-cover" unoptimized />
             ) : selected === "liked" ? (
               <div className="w-full h-full bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center">
                 <Heart size={56} className="text-white fill-white" />
@@ -542,7 +542,7 @@ function TrackRow({ track, index, tracks, currentTrack, setQueue, isSignedIn, se
       {/* Cover */}
       <div className="relative w-12 h-12 rounded-xl overflow-hidden shrink-0 bg-[var(--surface-3)]">
         {track.coverUrl
-          ? <Image src={track.coverUrl} alt={track.title} fill className="object-cover" />
+          ? <Image src={track.coverUrl} alt={track.title} fill sizes="48px" className="object-cover" unoptimized />
           : <div className="w-full h-full flex items-center justify-center text-lg">♪</div>
         }
         {isActive && (

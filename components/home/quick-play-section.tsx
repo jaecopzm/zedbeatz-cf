@@ -44,7 +44,7 @@ export default function QuickPlaySection({ tracks }: { tracks: Track[] }) {
               {/* Cover */}
               <div className="relative w-12 h-12 md:w-14 md:h-14 rounded-lg md:rounded-xl overflow-hidden shrink-0 shadow-lg">
                 {track.coverUrl ? (
-                  <Image src={track.coverUrl} alt={track.title} fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" />
+                  <Image src={track.coverUrl} alt={track.title} fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" unoptimized />
                 ) : (
                   <div className="w-full h-full bg-gradient-to-br from-[var(--surface-3)] to-[var(--surface-2)]" />
                 )}

@@ -13,7 +13,12 @@ export default function RecentlyPlayedSection() {
 
   useEffect(() => {
     if (!isLoaded) return;
-    if (!isSignedIn) { setLoading(false); return; }
+    if (!isSignedIn) { 
+      setLoading(false); 
+      setTracks([]);
+      return; 
+    }
+    setLoading(true);
     fetch("/api/recently-played/list")
       .then(r => r.json())
       .then(data => setTracks(Array.isArray(data.tracks) ? data.tracks : []))

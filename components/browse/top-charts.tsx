@@ -57,7 +57,7 @@ export default function TopCharts({ tracks }: { tracks: Track[] }) {
               {/* Cover */}
               <div className="relative w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl overflow-hidden shrink-0 shadow-lg group-hover:shadow-[var(--primary)]/10 transition-all duration-500">
                 {track.coverUrl ? (
-                  <Image src={track.coverUrl} alt={track.title} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
+                  <Image src={track.coverUrl} alt={track.title} fill sizes="(max-width: 768px) 40px, 48px" className="object-cover transition-transform duration-700 group-hover:scale-110" unoptimized />
                 ) : (
                   <div className="w-full h-full bg-[var(--surface-3)] flex items-center justify-center text-lg">♪</div>
                 )}

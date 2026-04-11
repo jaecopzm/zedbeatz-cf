@@ -58,46 +58,46 @@ export default function FeaturedPlaylists() {
   if (playlists.length === 0) return null;
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 md:gap-4">
+    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-2 md:gap-3">
       {playlists.map((playlist, i) => (
         <motion.div key={playlist.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: i * 0.08 }}>
           <Link
             href={`/playlist/${playlist.id}`}
-            className="group flex flex-col gap-2 md:gap-3 p-2 md:p-3 rounded-xl md:rounded-2xl glass-card hover:bg-[var(--surface-hover)] border-white/5 hover:border-[var(--primary)]/30 hover:shadow-[0_8px_30px_rgba(30,215,96,0.12)] hover:-translate-y-1 transition-all duration-300"
+            className="group flex flex-col gap-1.5 md:gap-2 p-1.5 md:p-2 rounded-lg md:rounded-xl glass-card hover:bg-[var(--surface-hover)] border-white/5 hover:border-[var(--primary)]/30 hover:shadow-[0_8px_30px_rgba(30,215,96,0.12)] hover:-translate-y-1 transition-all duration-300"
           >
-            <div className="relative aspect-square rounded-lg md:rounded-xl bg-[var(--surface-3)] flex items-center justify-center overflow-hidden shadow-lg">
+            <div className="relative aspect-square rounded-md md:rounded-lg bg-[var(--surface-3)] flex items-center justify-center overflow-hidden shadow-lg">
               {playlist.cover_url ? (
-                <Image src={playlist.cover_url} alt={playlist.name} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
+                <Image src={playlist.cover_url} alt={playlist.name} fill sizes="(max-width: 768px) 33vw, 12vw" className="object-cover transition-transform duration-700 group-hover:scale-110" unoptimized />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-[var(--muted)]">
-                  <ListMusic size={32} className="transition-transform duration-500 group-hover:scale-110 md:w-12 md:h-12" />
+                  <ListMusic size={20} className="transition-transform duration-500 group-hover:scale-110 md:w-8 md:h-8" />
                 </div>
               )}
-              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center gap-2 backdrop-blur-[2px]">
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center gap-1 md:gap-2 backdrop-blur-[2px]">
                 <button onClick={(e) => { e.preventDefault(); playPlaylist(playlist.id); }}
-                  className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-[var(--primary)] text-black flex items-center justify-center translate-y-4 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-500 shadow-[var(--glow-primary)] hover:scale-105">
-                  <Play size={18} fill="currentColor" className="ml-0.5 md:w-5 md:h-5" />
+                  className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-[var(--primary)] text-black flex items-center justify-center translate-y-4 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-500 shadow-[var(--glow-primary)] hover:scale-105">
+                  <Play size={14} fill="currentColor" className="ml-0.5 md:w-4 md:h-4" />
                 </button>
                 {isSignedIn ? (
                   <button onClick={(e) => toggleSave(e, playlist.id)}
-                    className="w-9 h-9 rounded-full bg-black/60 border border-white/20 flex items-center justify-center translate-y-4 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-500 hover:scale-105">
+                    className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-black/60 border border-white/20 flex items-center justify-center translate-y-4 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-500 hover:scale-105">
                     {saved.has(playlist.id)
-                      ? <BookmarkCheck size={15} className="text-[var(--primary)]" />
-                      : <BookmarkPlus size={15} className="text-white" />}
+                      ? <BookmarkCheck size={12} className="text-[var(--primary)] md:w-3.5 md:h-3.5" />
+                      : <BookmarkPlus size={12} className="text-white md:w-3.5 md:h-3.5" />}
                   </button>
                 ) : (
                   <SignInButton mode="modal">
                     <button onClick={e => e.preventDefault()}
-                      className="w-9 h-9 rounded-full bg-black/60 border border-white/20 flex items-center justify-center translate-y-4 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-500 hover:scale-105">
-                      <BookmarkPlus size={15} className="text-white" />
+                      className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-black/60 border border-white/20 flex items-center justify-center translate-y-4 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-500 hover:scale-105">
+                      <BookmarkPlus size={12} className="text-white md:w-3.5 md:h-3.5" />
                     </button>
                   </SignInButton>
                 )}
               </div>
             </div>
             <div className="min-w-0">
-              <p className="text-xs md:text-sm font-semibold truncate group-hover:text-[var(--primary)] transition-colors mb-0.5">{playlist.name}</p>
-              <p className="text-[9px] md:text-[10px] text-[var(--muted)] font-semibold uppercase tracking-wider">{playlist.category || "Playlist"}</p>
+              <p className="text-[10px] md:text-xs font-semibold truncate group-hover:text-[var(--primary)] transition-colors mb-0.5">{playlist.name}</p>
+              <p className="text-[8px] md:text-[9px] text-[var(--muted)] font-semibold uppercase tracking-wider">{playlist.category || "Playlist"}</p>
             </div>
           </Link>
         </motion.div>

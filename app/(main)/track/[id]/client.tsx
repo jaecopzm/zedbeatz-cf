@@ -67,7 +67,7 @@ export default function TrackPageClient({ track }: { track: TrackWithMeta }) {
             )}
             <div className="relative w-48 h-48 sm:w-64 sm:h-64 md:w-80 md:h-80 rounded-2xl sm:rounded-3xl overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.4)] ring-1 ring-white/10 backdrop-blur-sm">
               {track.coverUrl ? (
-                <Image src={track.coverUrl} alt={track.title} fill sizes="(max-width: 640px) 192px, (max-width: 768px) 256px, 320px" className="object-cover transition-transform duration-700 group-hover:scale-110" priority />
+                <Image src={track.coverUrl} alt={track.title} fill sizes="(max-width: 640px) 192px, (max-width: 768px) 256px, 320px" className="object-cover transition-transform duration-700 group-hover:scale-110" priority unoptimized />
               ) : (
                 <div className="w-full h-full bg-gradient-to-br from-[var(--surface-2)] via-[var(--surface-3)] to-[var(--surface-2)] flex items-center justify-center">
                   <Music2 size={64} className="sm:w-20 sm:h-20 text-white/10" />
