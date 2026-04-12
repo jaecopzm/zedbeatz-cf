@@ -114,13 +114,17 @@ export default function TrackCard({ track, queue }: { track: Track; queue?: Trac
         <div className={`absolute inset-0 bg-black/50 backdrop-blur-[2px] flex items-center justify-center transition-all duration-300 ${
           isActive && playing ? "opacity-0 md:group-hover:opacity-100" : "opacity-0 md:group-hover:opacity-100"
         }`}>
-          <div className="w-9 h-9 md:w-12 md:h-12 rounded-full bg-[var(--primary)] flex items-center justify-center shadow-xl shadow-[var(--primary-glow)] transition-all duration-200 scale-90 group-hover:scale-100 hover:bg-[var(--primary-hover)]">
-            {isActive && loading ? (
-              <div className="w-4 h-4 md:w-5 md:h-5 border-2 border-black/20 border-t-black rounded-full animate-spin" />
-            ) : isActive && playing ? (
+          <div className="relative w-9 h-9 md:w-12 md:h-12 rounded-full bg-[var(--primary)] flex items-center justify-center shadow-xl shadow-[var(--primary-glow)] transition-all duration-200 scale-90 group-hover:scale-100 hover:bg-[var(--primary-hover)]">
+            {isActive && playing ? (
               <Pause size={16} className="text-black fill-black md:w-5 md:h-5" />
             ) : (
               <Play size={16} className="text-black fill-black ml-0.5 md:w-5 md:h-5" />
+            )}
+            {/* Loading spinner overlay */}
+            {isActive && loading && (
+              <div className="absolute inset-0 rounded-full bg-black/20 flex items-center justify-center">
+                <div className="w-4 h-4 md:w-5 md:h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+              </div>
             )}
           </div>
         </div>

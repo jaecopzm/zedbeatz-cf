@@ -9,7 +9,7 @@ import LikeButton from "@/components/like-button";
 import { parseFeaturedArtists, getArtistSlugFromName } from "@/lib/featured-artists";
 
 export default function TrackRow({ track, queue, index }: { track: Track; queue?: Track[]; index?: number }) {
-  const { queue: pQueue, currentIndex, playing, setQueue, play, toggle } = usePlayer();
+  const { queue: pQueue, currentIndex, playing, loading, setQueue, play, toggle } = usePlayer();
   const isActive = pQueue[currentIndex]?.id === track.id;
 
   function handlePlay() {
@@ -59,6 +59,12 @@ export default function TrackRow({ track, queue, index }: { track: Track; queue?
           <Image src={track.coverUrl} alt={track.title} fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" unoptimized />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-[var(--surface-3)] to-[var(--surface-2)]" />
+        )}
+        {/* Loading spinner overlay */}
+        {isActive && loading && (
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px] flex items-center justify-center">
+            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+          </div>
         )}
       </div>
 

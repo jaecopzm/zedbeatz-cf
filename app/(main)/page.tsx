@@ -1,4 +1,3 @@
-import { unstable_cache } from "next/cache";
 import { supabase } from "@/lib/db";
 import { getPublicUrl } from "@/lib/r2";
 import { sanitizeFeaturedArtists } from "@/lib/featured-artists";
@@ -38,10 +37,10 @@ export const metadata: Metadata = {
   },
 };
 
-export const revalidate = 300; // Revalidate every 5 minutes
+export const revalidate = 0;
+export const dynamic = 'force-dynamic';
 
 async function getHeroTracks(): Promise<Track[]> {
-  return unstable_cache(async () => {
   const { data } = await supabase
     .from("hero_tracks")
     .select("position, tracks(id, title, audio_key, cover_key, duration, slug, featured_artists, artist_id, artists(name, slug))")
@@ -61,7 +60,6 @@ async function getHeroTracks(): Promise<Track[]> {
       duration: t.duration, slug: t.slug,
     };
   });
-  }, ["hero-tracks"], { revalidate: 300 })();
 }
 
 function mapTrack(r: any): Track {
@@ -80,29 +78,24 @@ function mapTrack(r: any): Track {
 }
 
 async function getLatestTracks(limit: number = 10): Promise<Track[]> {
-  return unstable_cache(async () => {
   const { data } = await supabase
     .from("tracks")
     .select("id, title, audio_key, cover_key, duration, artist_id, slug, featured_artists, artists(name, slug)")
     .order("created_at", { ascending: false })
     .limit(limit);
   return (data ?? []).map(mapTrack);
-  }, [`latest-tracks-${limit}`], { revalidate: 600 })(); // Increased from 300
 }
 
 async function getTrending(): Promise<Track[]> {
-  return unstable_cache(async () => {
   const { data } = await supabase
     .from("tracks")
     .select("id, title, audio_key, cover_key, duration, artist_id, slug, featured_artists, artists(name, slug)")
     .order("plays", { ascending: false })
     .limit(8); // Reduced from 10
   return (data ?? []).map(mapTrack);
-  }, ["trending-tracks"], { revalidate: 900 })(); // Increased from 600
 }
 
 async function getFeaturedArtists() {
-  return unstable_cache(async () => {
   const priorityArtists = [
     "Yo Maps", 
     "Chile One Mr Zambia", 
@@ -139,11 +132,9 @@ async function getFeaturedArtists() {
     id: a.id, name: a.name, slug: a.slug,
     coverUrl: a.image_key ? getPublicUrl(a.image_key) : undefined,
   }));
-  }, ["featured-artists"], { revalidate: 3600 })(); // Increased to 1 hour
 }
 
 async function getPlaylists() {
-  return unstable_cache(async () => {
   const { data } = await supabase
     .from("playlists")
     .select("id, name, cover_key, category")
@@ -154,7 +145,6 @@ async function getPlaylists() {
     id: p.id, name: p.name, category: p.category,
     coverUrl: p.cover_key ? getPublicUrl(p.cover_key) : undefined,
   }));
-  }, ["featured-playlists"], { revalidate: 600 })();
 }
 
 function SectionHeader({
