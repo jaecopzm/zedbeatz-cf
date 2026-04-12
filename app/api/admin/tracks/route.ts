@@ -3,6 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { generateTrackSlug } from "@/lib/slugify";
 import { requireAdmin } from "@/lib/require-admin";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET(req: NextRequest) {
   const deny = await requireAdmin(); if (deny) return deny;
   const { searchParams } = new URL(req.url);

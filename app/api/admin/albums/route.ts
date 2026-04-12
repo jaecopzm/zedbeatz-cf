@@ -2,6 +2,9 @@ import { supabase } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/require-admin";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET() {
   const deny = await requireAdmin(); if (deny) return deny;
   const { data } = await supabase.from("albums").select("id, title, artist_id, release_year, artists(name)").order("created_at", { ascending: false });

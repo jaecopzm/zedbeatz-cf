@@ -4,6 +4,9 @@ import { auth } from "@clerk/nextjs/server";
 import { supabase } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 async function getFavouritesId(userId: string): Promise<number | null> {
   // Try to find existing Favourites playlist
   const { data: existing, error: selectError } = await supabase

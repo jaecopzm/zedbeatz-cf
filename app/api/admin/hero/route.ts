@@ -4,6 +4,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { sanitizeFeaturedArtists } from "@/lib/featured-artists";
 import { requireAdmin } from "@/lib/require-admin";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 const TRACK_SELECT = "track_id, position, tracks(id, title, audio_key, cover_key, duration, slug, featured_artists, artist_id, artists(name, slug))";
 
 function mapTrack(r: any) {

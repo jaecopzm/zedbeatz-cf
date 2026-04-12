@@ -4,6 +4,9 @@ import { supabase } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function POST(req: NextRequest) {
   const { userId } = await auth();
   const { track_id } = await req.json();

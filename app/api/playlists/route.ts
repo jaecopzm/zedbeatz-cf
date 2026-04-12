@@ -3,6 +3,9 @@ import { supabase } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 import { getPublicUrl } from "@/lib/r2";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // Fetches playlists with track count + first track cover for fallback
 const PLAYLIST_SELECT = "id, name, cover_key, is_featured, category, created_at, playlist_tracks(position, tracks(cover_key))";
 

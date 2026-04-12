@@ -2,6 +2,9 @@ import { supabase } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/require-admin";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET() {
   const deny = await requireAdmin(); if (deny) return deny;
   const checks = {

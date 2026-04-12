@@ -1,6 +1,9 @@
 import { getUploadUrl, getPublicUrl } from "@/lib/r2";
 import { NextRequest, NextResponse } from "next/server";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 function slugifyFilename(filename: string): string {
   const ext = filename.split(".").pop() ?? "";
   const base = filename.slice(0, filename.lastIndexOf("."));
