@@ -23,14 +23,18 @@ function enrichPlaylist(p: any) {
 
 export async function GET(req: NextRequest) {
   const { userId } = await auth();
-  const type = new URL(req.url).searchParams.get("type");
+  const searchParams = new URL(req.url).searchParams;
+  const type = searchParams.get("type");
+  const limit = parseInt(searchParams.get("limit") || "20");
+  const offset = parseInt(searchParams.get("offset") || "0");
 
   if (type === "admin") {
     const { data, error } = await supabase
       .from("playlists")
       .select(PLAYLIST_SELECT)
       .is("user_id", null)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .range(offset, offset + limit - 1);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json((data ?? []).map(enrichPlaylist));
   }
@@ -40,7 +44,8 @@ export async function GET(req: NextRequest) {
       .from("playlists")
       .select(PLAYLIST_SELECT)
       .eq("user_id", userId)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .range(offset, offset + limit - 1);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json((data ?? []).map(enrichPlaylist));
   }
@@ -49,7 +54,8 @@ export async function GET(req: NextRequest) {
     const { data, error } = await supabase
       .from("saved_playlists")
       .select(`playlist_id, playlists(${PLAYLIST_SELECT})`)
-      .eq("user_id", userId);
+      .eq("user_id", userId)
+      .range(offset, offset + limit - 1);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json((data ?? []).map((r: any) => enrichPlaylist(r.playlists)));
   }
@@ -58,7 +64,8 @@ export async function GET(req: NextRequest) {
   const { data, error } = await supabase
     .from("playlists")
     .select(PLAYLIST_SELECT)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .range(offset, offset + limit - 1);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json((data ?? []).map(enrichPlaylist));
 }
