@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
   const { data, error } = await supabase
     .from("artists")
     .select("id, name, slug, image_key, bio")
-    .limit(100);
+    .limit(1000);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
