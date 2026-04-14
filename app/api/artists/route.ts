@@ -8,6 +8,7 @@ export const revalidate = 0;
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const limit = parseInt(searchParams.get("limit") || "20");
+  const offset = parseInt(searchParams.get("offset") || "0");
 
   const { data, error } = await supabase
     .from("artists")
@@ -42,7 +43,8 @@ export async function GET(request: NextRequest) {
     return a.name.localeCompare(b.name);
   });
 
-  const artists = sorted.slice(0, limit).map((artist) => ({
+  const paginated = sorted.slice(offset, offset + limit);
+  const artists = paginated.map((artist) => ({
     id: artist.id,
     name: artist.name,
     slug: artist.slug,
