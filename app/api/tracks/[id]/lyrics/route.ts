@@ -12,7 +12,7 @@ export async function GET(
   
   const { data, error } = await supabase
     .from("tracks")
-    .select("id, title, artist, lyrics, synced_lyrics")
+    .select("id, title, lyrics, synced_lyrics, artists(name)")
     .eq("id", Number(id))
     .single();
 
@@ -27,7 +27,7 @@ export async function GET(
   return NextResponse.json({
     id: data.id,
     title: data.title,
-    artist: data.artist,
+    artist: (data.artists as any)?.name || "Unknown",
     lyrics: data.lyrics,
     synced_lyrics: data.synced_lyrics,
     has_lyrics: !!data.lyrics || !!data.synced_lyrics

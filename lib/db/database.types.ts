@@ -237,8 +237,10 @@ export type Database = {
           featured_artists: string | null
           genre: string | null
           id: number
+          lyrics: string | null
           plays: number | null
           slug: string | null
+          synced_lyrics: string | null
           title: string
         }
         Insert: {
@@ -251,8 +253,10 @@ export type Database = {
           featured_artists?: string | null
           genre?: string | null
           id?: number
+          lyrics?: string | null
           plays?: number | null
           slug?: string | null
+          synced_lyrics?: string | null
           title: string
         }
         Update: {
@@ -265,8 +269,10 @@ export type Database = {
           featured_artists?: string | null
           genre?: string | null
           id?: number
+          lyrics?: string | null
           plays?: number | null
           slug?: string | null
+          synced_lyrics?: string | null
           title?: string
         }
         Relationships: [
