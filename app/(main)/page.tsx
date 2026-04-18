@@ -10,6 +10,8 @@ import HeroSection from "@/components/home/hero-section";
 import QuickPlaySection from "@/components/home/quick-play-section";
 import TrendingSection from "@/components/home/trending-section";
 import RecentlyPlayedSection from "@/components/home/recently-played-section";
+import { Suspense } from "react";
+import { HeroSkeleton, TrendingSkeleton, TrackGridSkeleton, ArtistGridSkeleton, PlaylistGridSkeleton } from "@/components/home/home-skeletons";
 
 export const metadata: Metadata = {
   title: "ZedBeatz - Download Latest Zambian Music MP3 2026",
@@ -178,15 +180,6 @@ function SectionHeader({
 }
 
 export default async function HomePage() {
-  const [hero, latest, trending, artists, playlists] = await Promise.all([
-    getHeroTracks(),
-    getLatestTracks(12),
-    getTrending(),
-    getFeaturedArtists(),
-    getPlaylists(),
-  ]);
-
-  const heroTracks = hero.length > 0 ? hero : latest.slice(0, 5);
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zedbeatz.vercel.app";
 
   // JSON-LD structured data for homepage
@@ -217,20 +210,22 @@ export default async function HomePage() {
       />
     <div className="min-h-screen pb-32">
       {/* Hero */}
-      <HeroSection tracks={heroTracks} />
+      <Suspense fallback={<HeroSkeleton />}>
+        <HeroContent />
+      </Suspense>
 
       {/* Trending */}
-      {trending.length > 0 && (
-        <section className="px-4 md:px-8 mb-8 md:mb-14">
-          <SectionHeader
-            icon={Flame}
-            iconColor="text-orange-400"
-            title="Trending Now"
-            href="/tracks"
-          />
-          <TrendingSection tracks={trending} />
-        </section>
-      )}
+      <section className="px-4 md:px-8 mb-8 md:mb-14">
+        <SectionHeader
+          icon={Flame}
+          iconColor="text-orange-400"
+          title="Trending Now"
+          href="/tracks"
+        />
+        <Suspense fallback={<TrendingSkeleton />}>
+          <TrendingContent />
+        </Suspense>
+      </section>
 
       {/* Recently Played */}
       <section className="px-4 md:px-8 mb-8 md:mb-14">
@@ -253,90 +248,127 @@ export default async function HomePage() {
           title="New Releases"
           href="/tracks"
         />
-        <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 md:gap-4">
-          {latest.slice(0, 12).map((t) => (
-            <TrackCard key={t.id} track={t} queue={latest} />
-          ))}
-        </div>
+        <Suspense fallback={<TrackGridSkeleton />}>
+          <NewReleasesContent />
+        </Suspense>
       </section>
 
       {/* Featured Artists */}
-      {artists.length > 0 && (
-        <section className="px-4 md:px-8 mb-8 md:mb-14">
-          <SectionHeader
-            icon={Users}
-            iconColor="text-purple-400"
-            title="Featured Artists"
-            href="/browse"
-          />
-          <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 xl:grid-cols-8 gap-3 md:gap-6">
-            {artists.map((artist) => (
-              <Link
-                key={artist.id}
-                href={`/artist/${artist.slug || artist.id}`}
-                className="flex flex-col items-center gap-1.5 group"
-              >
-                <div className="relative w-full aspect-square rounded-full bg-[var(--surface-3)] flex items-center justify-center overflow-hidden shadow-lg group-hover:shadow-xl transition-shadow">
-                  {artist.coverUrl ? (
-                    <img src={artist.coverUrl} alt={artist.name} className="w-full h-full object-cover" loading="lazy" />
-                  ) : (
-                    <Users size={20} className="text-[var(--muted)]" />
-                  )}
-                </div>
-                
-                <p className="text-[10px] md:text-sm font-semibold text-center truncate w-full group-hover:underline leading-tight">
-                  {artist.name}
-                </p>
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
+      <section className="px-4 md:px-8 mb-8 md:mb-14">
+        <SectionHeader
+          icon={Users}
+          iconColor="text-purple-400"
+          title="Featured Artists"
+          href="/browse"
+        />
+        <Suspense fallback={<ArtistGridSkeleton />}>
+          <FeaturedArtistsContent />
+        </Suspense>
+      </section>
 
       {/* Playlists */}
-      {playlists.length > 0 && (
-        <section className="px-4 md:px-8 mb-14">
-          <SectionHeader
-            icon={ListMusic}
-            iconColor="bg-green-500/20 text-green-400"
-            title="Playlists"
-          />
-          <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 md:gap-4">
-            {playlists.map((playlist) => (
-              <Link
-                key={playlist.id}
-                href={`/playlist/${playlist.id}`}
-                className="flex flex-col gap-3 p-4 rounded-2xl glass-card hover:bg-[var(--surface-hover)] hover:border-[var(--primary)]/30 hover:shadow-[0_8px_30px_rgba(30,215,96,0.12)] hover:-translate-y-1.5 transition-all duration-500 group"
-              >
-                <div className="relative aspect-square rounded-xl bg-[var(--surface-3)] flex items-center justify-center overflow-hidden shadow-xl">
-                  {playlist.coverUrl ? (
-                    <img src={playlist.coverUrl} alt={playlist.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy" />
-                  ) : (
-                    <ListMusic size={40} className="text-[var(--muted)] transition-transform duration-500 group-hover:scale-110" />
-                  )}
-                  
-                  {/* Play Button Overlay */}
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]">
-                    <div className="w-14 h-14 rounded-full bg-[var(--primary)] text-black flex items-center justify-center translate-y-4 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-500 shadow-[var(--glow-primary)] hover:scale-105 hover:bg-[var(--primary-hover)]">
-                      <Play fill="currentColor" size={22} className="ml-1" />
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="mt-1">
-                  <p className="text-sm font-bold truncate group-hover:text-[var(--primary)] transition-colors">
-                    {playlist.name}
-                  </p>
-                  <p className="text-[11px] text-[var(--muted)] font-medium mt-1 tracking-wider uppercase">
-                    {playlist.category || "Playlist"}
-                  </p>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
+      <section className="px-4 md:px-8 mb-14">
+        <SectionHeader
+          icon={ListMusic}
+          iconColor="bg-green-500/20 text-green-400"
+          title="Playlists"
+        />
+        <Suspense fallback={<PlaylistGridSkeleton />}>
+          <PlaylistsContent />
+        </Suspense>
+      </section>
     </div>
     </>
+  );
+}
+
+async function HeroContent() {
+  const [hero, latest] = await Promise.all([getHeroTracks(), getLatestTracks(12)]);
+  const heroTracks = hero.length > 0 ? hero : latest.slice(0, 5);
+  return <HeroSection tracks={heroTracks} />;
+}
+
+async function TrendingContent() {
+  const trending = await getTrending();
+  if (trending.length === 0) return null;
+  return <TrendingSection tracks={trending} />;
+}
+
+async function NewReleasesContent() {
+  const latest = await getLatestTracks(12);
+  return (
+    <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 md:gap-4">
+      {latest.slice(0, 12).map((t) => (
+        <TrackCard key={t.id} track={t} queue={latest} />
+      ))}
+    </div>
+  );
+}
+
+async function FeaturedArtistsContent() {
+  const artists = await getFeaturedArtists();
+  if (artists.length === 0) return null;
+  return (
+    <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 xl:grid-cols-8 gap-3 md:gap-6">
+      {artists.map((artist) => (
+        <Link
+          key={artist.id}
+          href={`/artist/${artist.slug || artist.id}`}
+          className="flex flex-col items-center gap-1.5 group"
+        >
+          <div className="relative w-full aspect-square rounded-full bg-[var(--surface-3)] flex items-center justify-center overflow-hidden shadow-lg group-hover:shadow-xl transition-shadow">
+            {artist.coverUrl ? (
+              <img src={artist.coverUrl} alt={artist.name} className="w-full h-full object-cover" loading="lazy" />
+            ) : (
+              <Users size={20} className="text-[var(--muted)]" />
+            )}
+          </div>
+          
+          <p className="text-[10px] md:text-sm font-semibold text-center truncate w-full group-hover:underline leading-tight">
+            {artist.name}
+          </p>
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+async function PlaylistsContent() {
+  const playlists = await getPlaylists();
+  if (playlists.length === 0) return null;
+  return (
+    <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 md:gap-4">
+      {playlists.map((playlist) => (
+        <Link
+          key={playlist.id}
+          href={`/playlist/${playlist.id}`}
+          className="flex flex-col gap-3 p-4 rounded-2xl glass-card hover:bg-[var(--surface-hover)] hover:border-[var(--primary)]/30 hover:shadow-[0_8px_30px_rgba(30,215,96,0.12)] hover:-translate-y-1.5 transition-all duration-500 group"
+        >
+          <div className="relative aspect-square rounded-xl bg-[var(--surface-3)] flex items-center justify-center overflow-hidden shadow-xl">
+            {playlist.coverUrl ? (
+              <img src={playlist.coverUrl} alt={playlist.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy" />
+            ) : (
+              <ListMusic size={40} className="text-[var(--muted)] transition-transform duration-500 group-hover:scale-110" />
+            )}
+            
+            {/* Play Button Overlay */}
+            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]">
+              <div className="w-14 h-14 rounded-full bg-[var(--primary)] text-black flex items-center justify-center translate-y-4 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-500 shadow-[var(--glow-primary)] hover:scale-105 hover:bg-[var(--primary-hover)]">
+                <Play fill="currentColor" size={22} className="ml-1" />
+              </div>
+            </div>
+          </div>
+          
+          <div className="mt-1">
+            <p className="text-sm font-bold truncate group-hover:text-[var(--primary)] transition-colors">
+              {playlist.name}
+            </p>
+            <p className="text-[11px] text-[var(--muted)] font-medium mt-1 tracking-wider uppercase">
+              {playlist.category || "Playlist"}
+            </p>
+          </div>
+        </Link>
+      ))}
+    </div>
   );
 }
