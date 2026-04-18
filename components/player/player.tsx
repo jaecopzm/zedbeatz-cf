@@ -194,15 +194,17 @@ export default function Player() {
                 {playing && (
                   <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black/80 to-transparent rounded-b-2xl flex items-end justify-center gap-1 px-4 pb-3">
                     {Array.from({ length: 24 }).map((_, i) => (
-                      <div key={i} className="flex-1 bg-[var(--primary)] rounded-full opacity-70"
+                      <span key={i} className="rounded-full bg-gradient-to-t from-[var(--primary)] to-white shadow-[0_0_8px_rgba(30,215,96,0.6)]"
                         style={{
-                          height: '4px',
-                          animationName: 'eq-bounce',
-                          animationDuration: `${0.4 + Math.random() * 0.6}s`,
+                          width: '3px',
+                          height: `${10 + (i % 6) * 5}px`,
+                          animationName: 'bar-bounce',
+                          animationDuration: `${0.4 + (i % 4) * 0.15}s`,
                           animationTimingFunction: 'ease-in-out',
                           animationIterationCount: 'infinite',
-                          animationDirection: 'alternate',
-                          animationDelay: `${i * 0.05}s`
+                          animationDelay: `${i * 0.05}s`,
+                          transformOrigin: 'bottom',
+                          display: 'inline-block'
                         }} />
                     ))}
                   </div>

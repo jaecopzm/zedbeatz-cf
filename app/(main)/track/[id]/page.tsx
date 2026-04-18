@@ -9,7 +9,14 @@ async function getTrackData(id: string) {
   return unstable_cache(async () => {
     let query = supabase.from("tracks").select("id, title, audio_key, cover_key, duration, artist_id, genre, plays, featured_artists, artists(name, slug), slug");
     query = isNaN(Number(id)) ? query.eq("slug", id) : query.eq("id", Number(id));
-    const { data } = await query.single();
+    const { data, error } = await query.single();
+    if (error) {
+      if (error.code !== "PGRST116") {
+        console.error("Error fetching track data:", error);
+        throw error;
+      }
+      return null;
+    }
     if (!data) return null;
 
     const { data: artistTracks } = await supabase
@@ -56,7 +63,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   }
   
   return {
-    title: `${data.title} — ${fullArtist} | ZedBeatz`,
+    title: `${data.title} — ${fullArtist}`,
     description: `Stream and download ${data.title} by ${fullArtist} on ZedBeatz. ${genre} music from Zambia. Listen now or download MP3 free!`,
     keywords: keywords.join(", "),
     authors: [{ name: artist }], creator: artist, publisher: "ZedBeatz",
@@ -75,6 +82,20 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     robots: { index: true, follow: true, googleBot: { index: true, follow: true, "max-video-preview": -1, "max-image-preview": "large", "max-snippet": -1 } },
     alternates: { canonical: trackUrl },
   };
+}
+
+export async function generateStaticParams() {
+  const { data: topTracks } = await supabase
+    .from("tracks")
+    .select("slug, id")
+    .order("plays", { ascending: false })
+    .limit(50);
+
+  if (!topTracks) return [];
+
+  return topTracks.map((track) => ({
+    id: track.slug || track.id.toString(),
+  }));
 }
 
 export default async function TrackPage({ params }: { params: Promise<{ id: string }> }) {
@@ -116,26 +137,52 @@ export default async function TrackPage({ params }: { params: Promise<{ id: stri
   };
 
   // JSON-LD structured data for SEO
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "MusicRecording",
-    "name": data.title,
-    "byArtist": {
-      "@type": "MusicGroup",
-      "name": artist,
-      "url": artistSlug ? `${baseUrl}/artist/${artistSlug}` : undefined,
+  const jsonLd = [
+    {
+      "@context": "https://schema.org",
+      "@type": "MusicRecording",
+      "name": data.title,
+      "byArtist": {
+        "@type": "MusicGroup",
+        "name": artist,
+        "url": artistSlug ? `${baseUrl}/artist/${artistSlug}` : undefined,
+      },
+      "duration": data.duration ? `PT${data.duration}S` : undefined,
+      "genre": data.genre || "Music",
+      "image": coverUrl,
+      "url": trackUrl,
+      "inLanguage": "en-ZM",
+      "interactionStatistic": {
+        "@type": "InteractionCounter",
+        "interactionType": "https://schema.org/ListenAction",
+        "userInteractionCount": data.plays || 0,
+      },
     },
-    "duration": data.duration ? `PT${data.duration}S` : undefined,
-    "genre": data.genre || "Music",
-    "image": coverUrl,
-    "url": trackUrl,
-    "inLanguage": "en-ZM",
-    "interactionStatistic": {
-      "@type": "InteractionCounter",
-      "interactionType": "https://schema.org/ListenAction",
-      "userInteractionCount": data.plays || 0,
-    },
-  };
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": baseUrl
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": artist,
+          "item": artistSlug ? `${baseUrl}/artist/${artistSlug}` : `${baseUrl}/search?q=${encodeURIComponent(artist)}`
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": data.title,
+          "item": trackUrl
+        }
+      ]
+    }
+  ];
 
   return (
     <>
