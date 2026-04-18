@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/db";
 import { getPublicUrl } from "@/lib/r2";
+import { sanitizeFeaturedArtists } from "@/lib/featured-artists";
 import { notFound } from "next/navigation";
 import PlaylistPageClient from "./client";
 
@@ -22,7 +23,7 @@ export default async function PlaylistPage({ params }: { params: Promise<{ id: s
     artist: t.artists?.name ?? "Unknown",
     artistId: t.artists?.id,
     artistSlug: t.artists?.slug,
-    featuredArtists: t.featured_artists,
+    featuredArtists: sanitizeFeaturedArtists(t.featured_artists),
     slug: t.slug,
     audioUrl: getPublicUrl(t.audio_key),
     coverUrl: t.cover_key ? getPublicUrl(t.cover_key) : undefined,
