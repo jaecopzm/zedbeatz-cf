@@ -9,7 +9,7 @@ import AddToPlaylist from "@/components/add-to-playlist";
 import LikeButton from "@/components/like-button";
 import { useLongPress } from "@/lib/use-long-press";
 
-export default function TrackCard({ track, queue }: { track: Track; queue?: Track[] }) {
+export default function TrackCard({ track, queue, bare }: { track: Track; queue?: Track[]; bare?: boolean }) {
   const { queue: pQueue, currentIndex, playing, loading, setQueue, play, toggle } = usePlayer();
   const isActive = pQueue[currentIndex]?.id === track.id;
   const [showActions, setShowActions] = useState(false);
@@ -58,18 +58,26 @@ export default function TrackCard({ track, queue }: { track: Track; queue?: Trac
     <div
       {...longPress}
       onClick={handlePlay}
-      className={`group cursor-pointer rounded-lg md:rounded-xl p-1.5 md:p-3 transition-all duration-300 relative overflow-hidden ${
-        isActive
-          ? "bg-[var(--surface-2)] ring-1 ring-[var(--primary)]/30"
-          : "bg-[var(--surface)] hover:bg-[var(--surface-2)]"
+      className={`group cursor-pointer transition-all duration-300 relative overflow-hidden ${
+        bare
+          ? "rounded-none bg-transparent p-0"
+          : `rounded-lg md:rounded-xl p-1.5 md:p-3 ${
+              isActive
+                ? "bg-[var(--surface-2)] ring-1 ring-[var(--primary)]/30"
+                : "bg-[var(--surface)] hover:bg-[var(--surface-2)]"
+            }`
       }`}
-      style={{ boxShadow: isActive ? "var(--shadow-card), 0 0 20px rgba(30,215,96,0.08)" : "var(--shadow-card)" }}
+      style={!bare ? { boxShadow: isActive ? "var(--shadow-card), 0 0 20px rgba(30,215,96,0.08)" : "var(--shadow-card)" } : undefined}
     >
       {/* Subtle top gradient on hover */}
       <div className="absolute inset-0 bg-gradient-to-b from-white/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl pointer-events-none" />
 
       {/* Cover art */}
-      <div className="relative aspect-square rounded-md md:rounded-lg overflow-hidden mb-1.5 md:mb-3 bg-[var(--surface-2)] shadow-md">
+      <div className={`relative aspect-square overflow-hidden mb-1.5 md:mb-2.5 bg-[var(--surface-2)] shadow-lg ${
+        bare
+          ? "rounded-xl ring-1 ring-white/5 group-hover:ring-[var(--primary)]/40 group-hover:shadow-[0_8px_30px_rgba(30,215,96,0.15)]"
+          : "rounded-md md:rounded-lg shadow-md"
+      } transition-all duration-400`}>
         {track.coverUrl ? (
           <Image
             src={track.coverUrl}
@@ -110,6 +118,11 @@ export default function TrackCard({ track, queue }: { track: Track; queue?: Trac
           </div>
         )}
 
+        {/* Loading indicator */}
+        {isActive && loading && (
+          <div className="absolute inset-0 rounded-md md:rounded-lg ring-2 ring-[var(--primary)] animate-pulse pointer-events-none" />
+        )}
+
         {/* Hover overlay with play button */}
         <div className={`absolute inset-0 bg-black/50 backdrop-blur-[2px] flex items-center justify-center transition-all duration-300 ${
           isActive && playing ? "opacity-0 md:group-hover:opacity-100" : "opacity-0 md:group-hover:opacity-100"
@@ -119,12 +132,6 @@ export default function TrackCard({ track, queue }: { track: Track; queue?: Trac
               <Pause size={16} className="text-black fill-black md:w-5 md:h-5" />
             ) : (
               <Play size={16} className="text-black fill-black ml-0.5 md:w-5 md:h-5" />
-            )}
-            {/* Loading spinner overlay */}
-            {isActive && loading && (
-              <div className="absolute inset-0 rounded-full bg-black/20 flex items-center justify-center">
-                <div className="w-4 h-4 md:w-5 md:h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
-              </div>
             )}
           </div>
         </div>

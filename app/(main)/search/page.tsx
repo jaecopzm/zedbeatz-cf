@@ -200,7 +200,7 @@ function SearchContent() {
                 <TrendingUp size={16} className="text-orange-500 md:w-[18px] md:h-[18px]" />
                 <h2 className="text-base md:text-xl font-bold">Trending Searches</h2>
               </div>
-              <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 md:gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 md:gap-4">
                 {[
                   { term: "Yo Maps", color: "from-orange-600 to-amber-400" },
                   { term: "Chile One", color: "from-blue-600 to-cyan-400" },

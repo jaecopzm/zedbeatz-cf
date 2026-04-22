@@ -7,6 +7,7 @@ const nextConfig: NextConfig = {
   compress: true,
   poweredByHeader: false,
   reactStrictMode: true,
+  allowedDevOrigins: ['prescholastic-preabundantly-erline.ngrok-free.dev'],
 };
 
 export default nextConfig;

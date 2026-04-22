@@ -60,11 +60,8 @@ export default function TrackRow({ track, queue, index }: { track: Track; queue?
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-[var(--surface-3)] to-[var(--surface-2)]" />
         )}
-        {/* Loading spinner overlay */}
         {isActive && loading && (
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px] flex items-center justify-center">
-            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-          </div>
+          <div className="absolute inset-0 rounded-lg ring-2 ring-[var(--primary)] ring-offset-0 animate-pulse" />
         )}
       </div>
 

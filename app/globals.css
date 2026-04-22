@@ -24,6 +24,16 @@
   --primary-glow: rgba(30, 215, 96, 0.4);
   --brand: #1ed760;
 
+  /* Secondary accents */
+  --accent-purple: #a855f7;
+  --accent-purple-dim: rgba(168, 85, 247, 0.15);
+  --accent-amber: #f59e0b;
+  --accent-amber-dim: rgba(245, 158, 11, 0.15);
+  --accent-blue: #3b82f6;
+  --accent-blue-dim: rgba(59, 130, 246, 0.15);
+  --accent-rose: #f43f5e;
+  --accent-rose-dim: rgba(244, 63, 94, 0.15);
+
   /* Text */
   --foreground: #f0f0f5;
   --muted: #8888a0;
@@ -99,6 +109,42 @@ body {
   100% { background-position:  200% 0; }
 }
 
+@keyframes shimmer-wave {
+  0%   { background-position: -400% 0; }
+  100% { background-position:  400% 0; }
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+@keyframes wave-bar {
+  0%, 100% { transform: scaleY(0.3); }
+  25%       { transform: scaleY(1);   }
+  75%       { transform: scaleY(0.6); }
+}
+
+@keyframes spin-ring {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes ambient-drift {
+  0%   { transform: translate(0, 0) scale(1); }
+  33%  { transform: translate(30px, -20px) scale(1.05); }
+  66%  { transform: translate(-15px, 25px) scale(0.97); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+@keyframes vinyl-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes hero-progress {
+  from { width: 0%; }
+  to   { width: 100%; }
+}
+
 @keyframes glow-pulse {
   0%, 100% { opacity: 0.5; }
   50%       { opacity: 1;   }
@@ -151,12 +197,16 @@ body {
 }
 
 /* ─── Utility Classes ──────────────────────────────────── */
-.animate-float-up   { animation: float-up 0.4s ease forwards; }
-.animate-scale-in   { animation: scale-in 0.3s ease forwards; }
-.animate-slide-up   { animation: slide-up-fade 0.4s ease forwards; }
-.animate-toast-in   { animation: toast-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-.animate-heart-pop  { animation: heart-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
-.animate-glow-pulse { animation: glow-pulse 2s ease-in-out infinite; }
+.animate-float-up    { animation: float-up 0.4s ease forwards; }
+.animate-scale-in    { animation: scale-in 0.3s ease forwards; }
+.animate-slide-up    { animation: slide-up-fade 0.4s ease forwards; }
+.animate-toast-in    { animation: toast-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.animate-heart-pop   { animation: heart-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+.animate-glow-pulse  { animation: glow-pulse 2s ease-in-out infinite; }
+.animate-marquee     { animation: marquee 20s linear infinite; }
+.animate-vinyl-spin  { animation: vinyl-spin 3s linear infinite; }
+.animate-ambient     { animation: ambient-drift 12s ease-in-out infinite; }
+.animate-spin-ring   { animation: spin-ring 3s linear infinite; }
 
 /* Equalizer bars */
 .eq-bar {
@@ -203,6 +253,43 @@ body {
   );
   background-size: 200% 100%;
   animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.shimmer-wave {
+  background: linear-gradient(
+    90deg,
+    rgba(15,15,20,0.8) 0%,
+    rgba(20,20,28,0.9) 30%,
+    rgba(30,30,40,1) 50%,
+    rgba(20,20,28,0.9) 70%,
+    rgba(15,15,20,0.8) 100%
+  );
+  background-size: 400% 100%;
+  animation: shimmer-wave 2.5s ease-in-out infinite;
+  border: 1px solid rgba(255,255,255,0.03);
+}
+
+/* Wave bars (audio visualizer rows) */
+.wave-bar {
+  display: inline-block;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--primary);
+  transform-origin: bottom;
+  animation: wave-bar 0.9s ease-in-out infinite;
+}
+.wave-bar:nth-child(1) { animation-delay: 0s;    height: 8px; }
+.wave-bar:nth-child(2) { animation-delay: 0.15s; height: 14px; }
+.wave-bar:nth-child(3) { animation-delay: 0.3s;  height: 10px; }
+.wave-bar:nth-child(4) { animation-delay: 0.1s;  height: 12px; }
+
+/* Section accent bar */
+.section-accent-bar {
+  display: inline-block;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--gradient-primary);
+  flex-shrink: 0;
 }
 
 /* Hover glow on active elements */

@@ -32,6 +32,7 @@ export default function MobileMenu() {
         {/* Header */}
         <div className="flex items-center px-5 py-5 border-b border-[var(--glass-border)]">
           <img src="/Logo.png" alt="ZedBeatz" className="h-7 w-auto" />
+          <span className="sr-only">Navigation Menu</span>
         </div>
 
         {/* Nav links */}

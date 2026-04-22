@@ -44,48 +44,48 @@ export default async function BrowsePage() {
 
   return (
     <div className="min-h-screen pb-32">
-      <div className="px-4 md:px-8 pt-6 md:pt-8 pb-6 md:pb-8">
-        <h1 className="text-2xl md:text-5xl font-bold mb-2 md:mb-3 tracking-tight">Browse</h1>
-        <p className="text-sm md:text-base text-[var(--muted)]">Discover the best of Zambian music by genre, mood, and charts.</p>
+      <div className="px-4 md:px-8 pt-4 md:pt-8 pb-4 md:pb-8">
+        <h1 className="text-2xl md:text-5xl font-bold mb-1 md:mb-3 tracking-tight">Browse</h1>
+        <p className="text-xs md:text-base text-[var(--muted)]">Discover the best of Zambian music by genre, mood, and charts.</p>
       </div>
 
-      <section className="px-4 md:px-8 mb-10 md:mb-14 mt-4 md:mt-6">
-        <h2 className="text-base md:text-xl font-bold mb-4 md:mb-6 flex items-center gap-2">
-          <span className="w-1 h-5 md:w-1.5 md:h-6 bg-purple-500 rounded-full" />
+      <section className="px-4 md:px-8 mb-8 md:mb-14 mt-2 md:mt-6">
+        <h2 className="text-sm md:text-xl font-bold mb-3 md:mb-6 flex items-center gap-2">
+          <span className="w-1 h-4 md:w-1.5 md:h-6 bg-purple-500 rounded-full" />
           Browse by Genre
         </h2>
         <GenreGrid genres={genres} />
       </section>
 
-      <section className="px-4 md:px-8 mb-10 md:mb-14">
-        <div className="flex items-center justify-between mb-4 md:mb-6">
-          <h2 className="text-base md:text-xl font-bold flex items-center gap-2">
-            <span className="w-1 h-5 md:w-1.5 md:h-6 bg-[var(--primary)] rounded-full" />
+      <section className="px-4 md:px-8 mb-8 md:mb-14">
+        <div className="flex items-center justify-between mb-3 md:mb-6">
+          <h2 className="text-sm md:text-xl font-bold flex items-center gap-2">
+            <span className="w-1 h-4 md:w-1.5 md:h-6 bg-[var(--primary)] rounded-full" />
             Curated Playlists
           </h2>
-          <Link href="/library" className="group flex items-center gap-1 text-xs font-semibold text-[var(--muted)] hover:text-[var(--primary)] transition-all">
-            See all <ChevronRight size={12} className="group-hover:translate-x-0.5 transition-transform md:w-3.5 md:h-3.5" />
+          <Link href="/library" className="group flex items-center gap-1 text-[10px] md:text-xs font-semibold text-[var(--muted)] hover:text-[var(--primary)] transition-all">
+            See all <ChevronRight size={10} className="group-hover:translate-x-0.5 transition-transform md:w-3.5 md:h-3.5" />
           </Link>
         </div>
         <FeaturedPlaylists />
       </section>
 
-      <section className="px-4 md:px-8 mb-10 md:mb-14">
-        <h2 className="text-base md:text-xl font-bold mb-4 md:mb-6 flex items-center gap-2">
-          <span className="w-1 h-5 md:w-1.5 md:h-6 bg-yellow-500 rounded-full" />
+      <section className="px-4 md:px-8 mb-8 md:mb-14">
+        <h2 className="text-sm md:text-xl font-bold mb-3 md:mb-6 flex items-center gap-2">
+          <span className="w-1 h-4 md:w-1.5 md:h-6 bg-yellow-500 rounded-full" />
           Top Charts
         </h2>
         <TopCharts tracks={topTracks} />
       </section>
 
-      <section className="px-4 md:px-8 mb-10 md:mb-14">
-        <div className="flex items-center justify-between mb-4 md:mb-6">
-          <h2 className="text-base md:text-xl font-bold flex items-center gap-2">
-            <span className="w-1 h-5 md:w-1.5 md:h-6 bg-cyan-500 rounded-full" />
+      <section className="px-4 md:px-8 mb-8 md:mb-14">
+        <div className="flex items-center justify-between mb-3 md:mb-6">
+          <h2 className="text-sm md:text-xl font-bold flex items-center gap-2">
+            <span className="w-1 h-4 md:w-1.5 md:h-6 bg-cyan-500 rounded-full" />
             New Releases
           </h2>
-          <Link href="/tracks" className="group flex items-center gap-1 text-xs font-semibold text-[var(--muted)] hover:text-[var(--primary)] transition-all">
-            Show all <ChevronRight size={12} className="group-hover:translate-x-0.5 transition-transform md:w-3.5 md:h-3.5" />
+          <Link href="/tracks" className="group flex items-center gap-1 text-[10px] md:text-xs font-semibold text-[var(--muted)] hover:text-[var(--primary)] transition-all">
+            Show all <ChevronRight size={10} className="group-hover:translate-x-0.5 transition-transform md:w-3.5 md:h-3.5" />
           </Link>
         </div>
         <NewReleases tracks={tracks.slice(0, 12)} />
