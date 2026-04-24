@@ -3,6 +3,7 @@ import { supabase } from "@/lib/db";
 import { getPublicUrl } from "@/lib/r2";
 import { sanitizeFeaturedArtists } from "@/lib/featured-artists";
 import TrackCard from "@/components/track-card";
+import TracksSearch from "@/components/tracks-search";
 import type { Track } from "@/lib/player-store";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -40,33 +41,34 @@ export default async function AllTracksPage({ searchParams }: { searchParams: Pr
   const totalPages = Math.ceil((count || 0) / TRACKS_PER_PAGE);
 
   return (
-    <div className="space-y-6 pb-20">
-      <div className="pt-6">
-        <h1 className="text-3xl md:text-4xl font-bold mb-2">All Tracks</h1>
-        <p className="text-[var(--muted)]">{count || 0} tracks available</p>
+    <div className="space-y-6 pb-20 px-4 md:px-8">
+      <div className="pt-4">
+        <h1 className="text-2xl md:text-4xl font-bold mb-1">All Tracks</h1>
+        <p className="text-xs md:text-sm text-[var(--muted)] mb-3">{count || 0} tracks available</p>
+        <TracksSearch tracks={trackList} />
       </div>
 
       {/* Tracks Grid */}
-      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+      <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 xl:grid-cols-8 gap-2 md:gap-3">
         {trackList.map((track) => (
-          <TrackCard key={track.id} track={track} queue={trackList} />
+          <TrackCard key={track.id} track={track} queue={trackList} bare />
         ))}
       </div>
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2 pt-8 pb-24">
+        <div className="flex items-center justify-center gap-1.5 pt-6 pb-24">
           {page > 1 && (
             <Link
               href={`/tracks?page=${page - 1}`}
-              className="flex items-center gap-1 px-4 py-2 rounded-lg bg-[var(--surface)] hover:bg-[var(--surface-2)] transition-colors"
+              className="flex items-center gap-1 px-3 py-1.5 md:px-4 md:py-2 rounded-lg bg-[var(--surface)] hover:bg-[var(--surface-2)] transition-colors text-sm"
             >
-              <ChevronLeft size={18} />
-              Previous
+              <ChevronLeft size={15} />
+              <span className="hidden sm:inline">Previous</span>
             </Link>
           )}
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 md:gap-2">
             {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
               let pageNum;
               if (totalPages <= 5) {
@@ -83,7 +85,7 @@ export default async function AllTracksPage({ searchParams }: { searchParams: Pr
                 <Link
                   key={pageNum}
                   href={`/tracks?page=${pageNum}`}
-                  className={`w-10 h-10 flex items-center justify-center rounded-lg transition-colors ${
+                  className={`w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-lg text-sm transition-colors ${
                     page === pageNum
                       ? "bg-[var(--primary)] text-black font-semibold"
                       : "bg-[var(--surface)] hover:bg-[var(--surface-2)]"
@@ -98,10 +100,10 @@ export default async function AllTracksPage({ searchParams }: { searchParams: Pr
           {page < totalPages && (
             <Link
               href={`/tracks?page=${page + 1}`}
-              className="flex items-center gap-1 px-4 py-2 rounded-lg bg-[var(--surface)] hover:bg-[var(--surface-2)] transition-colors"
+              className="flex items-center gap-1 px-3 py-1.5 md:px-4 md:py-2 rounded-lg bg-[var(--surface)] hover:bg-[var(--surface-2)] transition-colors text-sm"
             >
-              Next
-              <ChevronRight size={18} />
+              <span className="hidden sm:inline">Next</span>
+              <ChevronRight size={15} />
             </Link>
           )}
         </div>

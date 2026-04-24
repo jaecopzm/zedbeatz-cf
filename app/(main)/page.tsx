@@ -92,7 +92,7 @@ async function getTrending(): Promise<Track[]> {
     .from("tracks")
     .select("id, title, audio_key, cover_key, duration, artist_id, slug, featured_artists, artists(name, slug)")
     .order("plays", { ascending: false })
-    .limit(8);
+    .limit(5);
   return (data ?? []).map(mapTrack);
 }
 
@@ -334,7 +334,7 @@ async function FeaturedArtistsContent() {
   const [artists] = await Promise.all([getFeaturedArtists(), delay(650)]);
   if (artists.length === 0) return null;
   return (
-    <ScrollRow>
+    <ScrollRow arrowTop={48}>
       {artists.map((artist) => (
         <Link
           key={artist.id}

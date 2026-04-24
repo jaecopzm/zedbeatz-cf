@@ -62,20 +62,19 @@ export default function ArtistHeader({ artist, tracks }: { artist: Artist; track
               unoptimized
             />
           )}
-          {/* Multi-layer gradient overlays */}
           <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0f]/40 via-[#0a0a0f]/60 to-[#0a0a0f]" />
           <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0f] via-transparent to-transparent" />
         </motion.div>
       </AnimatePresence>
 
       {/* Main Content */}
-      <div className="relative z-10 px-4 md:px-10 pt-16 md:pt-20 pb-8 md:pb-12 flex flex-col md:flex-row items-center md:items-end gap-6 md:gap-10">
+      <div className="absolute inset-0 z-10 px-4 md:px-10 pb-8 md:pb-12 flex flex-row items-end gap-5 md:gap-10">
         {/* Avatar with spinning conic gradient ring */}
         <motion.div
           initial={{ opacity: 0, scale: 0.88 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.7, ease: "easeOut" }}
-          className="relative shrink-0 group"
+          className="relative shrink-0 group w-24 h-24 md:w-56 md:h-56"
         >
           {/* Spinning ring */}
           <div className={`absolute -inset-2 rounded-full transition-opacity duration-700 ${isPlaying ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
@@ -85,7 +84,7 @@ export default function ArtistHeader({ artist, tracks }: { artist: Artist; track
             }}
           />
           <div className="absolute inset-0 rounded-full bg-[var(--background)] scale-[0.96]" />
-          <div className="relative w-40 h-40 md:w-56 md:h-56 rounded-full overflow-hidden shadow-2xl border-[3px] border-black">
+          <div className="relative w-24 h-24 md:w-56 md:h-56 rounded-full overflow-hidden shadow-2xl border-[3px] border-black">
             {artist.imageUrl ? (
               <Image
                 src={artist.imageUrl}
@@ -109,16 +108,10 @@ export default function ArtistHeader({ artist, tracks }: { artist: Artist; track
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.15, ease: "easeOut" }}
-          className="flex-1 text-center md:text-left flex flex-col items-center md:items-start"
+          className="flex-1 min-w-0 text-left flex flex-col items-start"
         >
-          {/* Label */}
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass-card border border-white/10 mb-3">
-            <span className="w-1.5 h-1.5 rounded-full bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.8)]" />
-            <span className="text-[10px] font-bold uppercase tracking-widest text-white/80">Artist Profile</span>
-          </div>
-
           {/* Name */}
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-black tracking-tight mb-3 md:mb-4 leading-[1.05] drop-shadow-[0_4px_24px_rgba(0,0,0,0.8)]">
+          <h1 className="text-2xl md:text-6xl lg:text-7xl font-black tracking-tight mb-2 md:mb-4 leading-[1.05] drop-shadow-[0_4px_24px_rgba(0,0,0,0.8)]">
             {artist.name}
           </h1>
 
@@ -130,7 +123,7 @@ export default function ArtistHeader({ artist, tracks }: { artist: Artist; track
           )}
 
           {/* Stats row */}
-          <div className="flex items-center gap-3 mb-6 flex-wrap justify-center md:justify-start">
+          <div className="flex items-center gap-3 mb-6 flex-wrap">
             <StatPill label="Tracks" value={artist.trackCount} />
             {artist.albumCount > 0 && <StatPill label="Albums" value={artist.albumCount} />}
             {artist.totalPlays > 0 && (
@@ -139,7 +132,7 @@ export default function ArtistHeader({ artist, tracks }: { artist: Artist; track
           </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-3 flex-wrap justify-center md:justify-start">
+          <div className="flex items-center gap-3 flex-wrap">
             <button
               onClick={handlePlay}
               className="group flex items-center gap-2.5 px-7 py-3.5 rounded-full bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-black font-bold transition-all hover:scale-105 active:scale-100 text-sm md:text-base shadow-[0_4px_20px_rgba(30,215,96,0.35)] btn-primary-glow"

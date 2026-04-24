@@ -106,13 +106,12 @@ export default function HeroSection({ tracks }: { tracks: Track[] }) {
           >
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass-card border border-white/10">
               <span className="w-1.5 h-1.5 rounded-full bg-[var(--primary)] animate-pulse" />
-              <span className="text-[10px] font-bold uppercase tracking-widest text-white/70">Featured Track</span>
               <span className="text-[10px] text-[var(--muted)]">{currentIndex + 1} / {tracks.length}</span>
             </div>
           </motion.div>
         </AnimatePresence>
 
-        <div className="absolute bottom-6 left-4 right-4 md:static md:flex md:flex-row md:items-center md:h-full md:px-10 md:py-14 md:gap-0">
+        <div className="absolute bottom-10 left-4 right-4 md:bottom-14 md:left-10 md:right-10 md:flex md:flex-row md:items-end md:gap-0">
 
         {/* ── Left: text + controls ── */}
         <div className="flex-1 max-w-xl">
@@ -127,12 +126,11 @@ export default function HeroSection({ tracks }: { tracks: Track[] }) {
               {/* Badge - desktop only */}
               <div className="hidden md:inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass-card border border-white/10 mb-4">
                 <span className="w-1.5 h-1.5 rounded-full bg-[var(--primary)] animate-pulse" />
-                <span className="text-[10px] font-bold uppercase tracking-widest text-white/70">Featured Track</span>
                 <span className="text-[10px] text-[var(--muted)]">{currentIndex + 1} / {tracks.length}</span>
               </div>
 
               {/* Title */}
-              <h2 className="text-2xl md:text-5xl lg:text-6xl font-black mb-2 leading-[1.05] tracking-tight drop-shadow-[0_4px_24px_rgba(0,0,0,0.9)]">
+              <h2 className="text-xl md:text-3xl lg:text-4xl font-black mb-2 leading-[1.1] tracking-tight drop-shadow-[0_4px_24px_rgba(0,0,0,0.9)]">
                 {track.title}
               </h2>
 

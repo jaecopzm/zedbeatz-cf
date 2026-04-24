@@ -21,7 +21,7 @@ export default function HomeGreeting({ hour }: { hour: number }) {
       initial={{ opacity: 0, y: -12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
-      className="px-4 md:px-8 pt-4 md:pt-8 pb-1 md:pb-2"
+      className="px-4 md:px-8 pt-3 md:pt-4 pb-1"
     >
       <h1 className="text-xl md:text-3xl font-bold tracking-tight">
         {text}
