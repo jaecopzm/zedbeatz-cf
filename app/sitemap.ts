@@ -6,9 +6,10 @@ export const revalidate = 0;
 const BASE_URL = 'https://zedbeatz.com';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [{ data: tracks }, { data: artists }] = await Promise.all([
+  const [{ data: tracks }, { data: artists }, { data: albums }] = await Promise.all([
     supabase.from('tracks').select('slug, id, created_at').order('created_at', { ascending: false }),
     supabase.from('artists').select('slug, id').order('name'),
+    supabase.from('albums').select('slug, id, release_year').order('release_year', { ascending: false }),
   ]);
 
   return [
@@ -26,6 +27,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(),
       changeFrequency: 'weekly' as const,
       priority: 0.7,
+    })),
+    ...(albums ?? []).map((a) => ({
+      url: `${BASE_URL}/album/${a.slug || a.id}`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly' as const,
+      priority: 0.6,
     })),
   ];
 }

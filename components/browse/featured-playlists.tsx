@@ -7,6 +7,7 @@ import Link from "next/link";
 import { Play, ListMusic, BookmarkPlus, BookmarkCheck, Pause } from "lucide-react";
 import { usePlayer } from "@/lib/player-store";
 import { useUser, SignInButton } from "@clerk/nextjs";
+import ScrollRow from "@/components/home/scroll-row";
 
 type Playlist = {
   id: number;
@@ -71,18 +72,18 @@ export default function FeaturedPlaylists() {
   if (playlists.length === 0) return null;
 
   return (
-    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-2 md:gap-3">
+    <ScrollRow>
       {playlists.map((playlist, i) => {
         const isCurrentlyPlaying = playingPlaylistId === playlist.id && currentTrack && playing;
         return (
-          <motion.div key={playlist.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: i * 0.08 }}>
+          <motion.div key={playlist.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: i * 0.08 }} className="flex-shrink-0 w-[140px] md:w-[176px] snap-start">
             <Link
               href={`/playlist/${playlist.id}`}
               className="group flex flex-col gap-1.5 md:gap-2 p-1.5 md:p-2 rounded-lg md:rounded-xl glass-card hover:bg-[var(--surface-hover)] border-white/5 hover:border-[var(--primary)]/30 hover:shadow-[0_8px_30px_rgba(30,215,96,0.12)] hover:-translate-y-1 transition-all duration-300"
             >
               <div className="relative aspect-square rounded-md md:rounded-lg bg-[var(--surface-3)] flex items-center justify-center overflow-hidden shadow-lg">
                 {playlist.cover_url ? (
-                  <Image src={playlist.cover_url} alt={playlist.name} fill sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, (max-width: 1024px) 20vw, (max-width: 1280px) 16vw, 12vw" className="object-cover transition-transform duration-700 group-hover:scale-110" unoptimized />
+                  <Image src={playlist.cover_url} alt={playlist.name} fill sizes="(max-width: 768px) 140px, 176px" className="object-cover transition-transform duration-700 group-hover:scale-110" unoptimized />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-[var(--muted)]">
                     <ListMusic size={20} className="transition-transform duration-500 group-hover:scale-110 md:w-8 md:h-8" />
@@ -122,6 +123,6 @@ export default function FeaturedPlaylists() {
           </motion.div>
         );
       })}
-    </div>
+    </ScrollRow>
   );
 }

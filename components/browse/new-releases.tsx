@@ -1,14 +1,17 @@
 "use client";
 
 import TrackCard from "@/components/track-card";
+import ScrollRow from "@/components/home/scroll-row";
 import type { Track } from "@/lib/player-store";
 
 export default function NewReleases({ tracks }: { tracks: Track[] }) {
   return (
-    <div className="grid grid-cols-3 gap-2 md:gap-4">
+    <ScrollRow>
       {tracks.slice(0, 12).map((track) => (
-        <TrackCard key={track.id} track={track} queue={tracks} />
+        <div key={track.id} className="flex-shrink-0 w-[140px] md:w-[176px] snap-start">
+          <TrackCard track={track} queue={tracks} bare />
+        </div>
       ))}
-    </div>
+    </ScrollRow>
   );
 }

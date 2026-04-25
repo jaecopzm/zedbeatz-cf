@@ -10,13 +10,13 @@ export const revalidate = 0;
 
 export async function GET(req: NextRequest) {
   const q = req.nextUrl.searchParams.get("q")?.trim();
-  if (!q) return NextResponse.json({ tracks: [], artists: [] });
+  if (!q) return NextResponse.json({ tracks: [], artists: [], albums: [], genres: [] });
 
   // Split query into words for better matching
   const words = q.toLowerCase().split(/\s+/).filter(w => w.length > 0);
   const searchPattern = words.join('%');
 
-  const [{ data: tracksByTitle }, { data: artists }] = await Promise.all([
+  const [{ data: tracksByTitle }, { data: artists }, { data: albums }, { data: genreTracks }] = await Promise.all([
     supabase
       .from("tracks")
       .select("id, title, audio_key, cover_key, duration, artist_id, slug, featured_artists, artists(name, slug)")
@@ -27,6 +27,17 @@ export async function GET(req: NextRequest) {
       .select("id, name, slug, image_key")
       .ilike("name", `%${searchPattern}%`)
       .limit(8),
+    supabase
+      .from("albums")
+      .select("id, title, cover_key, release_year, slug, artists(name, slug)")
+      .ilike("title", `%${searchPattern}%`)
+      .limit(8),
+    supabase
+      .from("tracks")
+      .select("genre")
+      .ilike("genre", `%${searchPattern}%`)
+      .not("genre", "is", null)
+      .limit(10),
   ]);
 
   // Find tracks by matched artist IDs
@@ -39,13 +50,16 @@ export async function GET(req: NextRequest) {
         .limit(15)
     : { data: [] };
 
-  // Merge and deduplicate
+  // Merge and deduplicate tracks
   const seen = new Set<number>();
   const allTracks = [...(tracksByTitle ?? []), ...(tracksByArtist ?? [])].filter(t => {
     if (seen.has(t.id)) return false;
     seen.add(t.id);
     return true;
   }).slice(0, 20);
+
+  // Get unique genres
+  const genres = Array.from(new Set((genreTracks ?? []).map(t => t.genre).filter(Boolean))) as string[];
 
   return NextResponse.json({
     tracks: allTracks.map((t) => ({
@@ -61,5 +75,13 @@ export async function GET(req: NextRequest) {
       id: a.id, name: a.name, slug: a.slug,
       imageUrl: a.image_key ? getPublicUrl(a.image_key) : null,
     })),
+    albums: (albums ?? []).map((a) => ({
+      id: a.id, title: a.title, slug: a.slug,
+      releaseYear: a.release_year,
+      coverUrl: a.cover_key ? getPublicUrl(a.cover_key) : null,
+      artistName: (a.artists as unknown as { name: string; slug?: string } | null)?.name ?? "Unknown",
+      artistSlug: (a.artists as unknown as { name: string; slug?: string } | null)?.slug,
+    })),
+    genres: genres.slice(0, 6),
   });
 }

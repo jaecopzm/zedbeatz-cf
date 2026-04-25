@@ -19,7 +19,7 @@ async function getArtistData(id: string) {
 
     const [{ data: rawTracks }, { data: rawAlbums }] = await Promise.all([
       supabase.from("tracks").select("id, title, audio_key, cover_key, duration, artist_id, slug, featured_artists, plays").eq("artist_id", artist.id).order("plays", { ascending: false }),
-      supabase.from("albums").select("id, title, cover_key, release_year").eq("artist_id", artist.id).order("release_year", { ascending: false }),
+      supabase.from("albums").select("id, title, cover_key, release_year, slug").eq("artist_id", artist.id).order("release_year", { ascending: false }),
     ]);
 
     return { artist, rawTracks: rawTracks ?? [], rawAlbums: rawAlbums ?? [] };
@@ -89,6 +89,7 @@ export default async function ArtistPage({ params }: { params: Promise<{ id: str
   const albums = (rawAlbums ?? []).map((a) => ({
     id: a.id,
     title: a.title,
+    slug: a.slug,
     releaseYear: a.release_year,
     coverUrl: a.cover_key ? getPublicUrl(a.cover_key) : null,
   }));
@@ -104,8 +105,38 @@ export default async function ArtistPage({ params }: { params: Promise<{ id: str
     totalPlays,
   };
 
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zedbeatz.vercel.app";
+  const artistUrl = `${baseUrl}/artist/${artist.slug || artist.id}`;
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "MusicGroup",
+    name: artist.name,
+    url: artistUrl,
+    ...(artist.bio && { description: artist.bio }),
+    ...(artistData.imageUrl && { image: artistData.imageUrl }),
+    genre: "Zambian Music",
+    ...(albums.length > 0 && {
+      album: albums.slice(0, 10).map((a) => ({
+        "@type": "MusicAlbum",
+        name: a.title,
+        ...(a.releaseYear && { datePublished: `${a.releaseYear}` }),
+        ...(a.coverUrl && { image: a.coverUrl }),
+      })),
+    }),
+    track: tracks.slice(0, 10).map((t) => ({
+      "@type": "MusicRecording",
+      name: t.title,
+      ...(t.duration && { duration: `PT${Math.floor(t.duration)}S` }),
+    })),
+  };
+
   return (
     <div className="min-h-screen pb-36">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <ArtistHeader artist={artistData} tracks={tracks} />
 
       {tracks.length === 0 ? (

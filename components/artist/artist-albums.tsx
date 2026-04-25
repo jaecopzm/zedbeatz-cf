@@ -8,6 +8,7 @@ import { Play, LayoutGrid } from "lucide-react";
 type Album = {
   id: number;
   title: string;
+  slug: string | null;
   releaseYear: number | null;
   coverUrl: string | null;
 };
@@ -31,7 +32,7 @@ export default function ArtistAlbums({ albums }: { albums: Album[] }) {
               transition={{ duration: 0.4, delay: i * 0.07 }}
               className="flex-shrink-0 w-[140px] md:w-[176px] snap-start"
             >
-              <Link href={`/album/${album.id}`} className="group block">
+              <Link href={`/album/${album.slug || album.id}`} className="group block">
                 {/* Cover */}
                 <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-[var(--surface-3)] mb-2.5 shadow-lg ring-1 ring-white/5 group-hover:ring-[var(--primary)]/40 group-hover:shadow-[0_8px_30px_rgba(30,215,96,0.15)] transition-all duration-400">
                   {album.coverUrl ? (

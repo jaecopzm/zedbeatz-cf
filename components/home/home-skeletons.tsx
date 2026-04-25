@@ -2,23 +2,57 @@ export function HeroSkeleton() {
   return (
     <div className="relative overflow-hidden mb-6 md:mb-10" style={{ minHeight: "460px" }}>
       <div className="absolute inset-0 shimmer-wave" />
+      
+      {/* Progress bar */}
+      <div className="absolute top-0 left-0 right-0 h-[2px] bg-white/10 z-10">
+        <div className="h-full w-1/3 bg-white/20" />
+      </div>
+
       <div className="relative h-full" style={{ minHeight: "460px" }}>
-        <div className="absolute bottom-6 left-4 right-4 md:static md:flex md:flex-row md:items-center md:h-full md:px-10 md:py-14 md:gap-6">
-          <div className="flex-1 max-w-xl space-y-3 md:space-y-4">
-            <div className="h-5 md:h-6 w-28 md:w-36 bg-[var(--surface-3)] rounded-full" />
-            <div className="h-8 md:h-16 bg-[var(--surface-3)] rounded-xl w-4/5" />
+        {/* Badge - mobile */}
+        <div className="absolute top-4 left-4 md:hidden">
+          <div className="h-7 w-16 bg-[var(--surface-3)] rounded-full" />
+        </div>
+
+        <div className="absolute bottom-10 left-4 right-4 md:bottom-14 md:left-10 md:right-10 md:flex md:flex-row md:items-end md:gap-0">
+          {/* Left: text + controls */}
+          <div className="flex-1 max-w-xl space-y-4 md:space-y-6">
+            {/* Badge - desktop */}
+            <div className="hidden md:block h-7 w-20 bg-[var(--surface-3)] rounded-full" />
+            
+            {/* Title */}
+            <div className="h-7 md:h-10 lg:h-12 bg-[var(--surface-3)] rounded-xl w-4/5" />
+            
+            {/* Artist */}
             <div className="h-4 md:h-5 bg-[var(--surface-3)] rounded-lg w-1/3" />
-            <div className="flex gap-2 md:gap-3 pt-1 md:pt-2">
-              <div className="h-9 md:h-11 w-28 md:w-32 bg-[var(--surface-3)] rounded-full" />
-              <div className="h-9 md:h-11 w-20 md:w-24 bg-[var(--surface-3)] rounded-full" />
+            
+            {/* CTA buttons */}
+            <div className="flex gap-3">
+              <div className="h-11 md:h-12 w-28 md:w-32 bg-[var(--surface-3)] rounded-full" />
+              <div className="h-11 md:h-12 w-24 md:w-28 bg-[var(--surface-3)] rounded-full" />
             </div>
-            <div className="flex gap-2 pt-1 md:pt-2">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-[var(--surface-3)]" />
-              ))}
+            
+            {/* Thumbnail strip */}
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-full bg-[var(--surface-3)] shrink-0" />
+              <div className="flex gap-2">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div 
+                    key={i} 
+                    className={`rounded-lg bg-[var(--surface-3)] shrink-0 ${
+                      i === 0 ? "w-14 h-14 md:w-16 md:h-16" : "w-10 h-10 md:w-12 md:h-12"
+                    }`} 
+                  />
+                ))}
+              </div>
+              <div className="w-7 h-7 rounded-full bg-[var(--surface-3)] shrink-0" />
             </div>
           </div>
-          <div className="hidden lg:block w-[280px] xl:w-[320px] aspect-square rounded-2xl bg-[var(--surface-3)] shrink-0" />
+
+          {/* Right: Large album art (desktop only) */}
+          <div className="hidden lg:block shrink-0 ml-auto pr-4">
+            <div className="w-[280px] h-[280px] xl:w-[320px] xl:h-[320px] rounded-2xl bg-[var(--surface-3)]" />
+          </div>
         </div>
       </div>
     </div>
@@ -27,11 +61,11 @@ export function HeroSkeleton() {
 
 export function TrendingSkeleton() {
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
       {/* Large card */}
       <div className="col-span-2 row-span-2 rounded-2xl shimmer-wave h-[260px] md:h-[340px]" />
       {/* Small cards */}
-      {Array.from({ length: 6 }).map((_, i) => (
+      {Array.from({ length: 4 }).map((_, i) => (
         <div key={i} className="rounded-2xl shimmer-wave h-[130px] md:h-[162px]" style={{ animationDelay: `${i * 60}ms` }} />
       ))}
     </div>

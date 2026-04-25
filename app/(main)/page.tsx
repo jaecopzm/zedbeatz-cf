@@ -136,12 +136,13 @@ async function getPlaylists() {
 async function getAlbums() {
   const { data } = await supabase
     .from("albums")
-    .select("id, title, cover_key, release_year, artist_id, artists(name, slug)")
+    .select("id, title, cover_key, release_year, artist_id, slug, artists(name, slug)")
     .order("release_year", { ascending: false })
     .limit(20);
   return (data ?? []).map((a: any) => ({
     id: a.id,
     title: a.title,
+    slug: a.slug,
     releaseYear: a.release_year ?? null,
     artistName: (a.artists as { name: string } | null)?.name ?? "Unknown",
     artistSlug: (a.artists as { slug: string } | null)?.slug ?? null,
@@ -426,7 +427,7 @@ async function AlbumsContent() {
   return (
     <ScrollRow>
       {albums.map((album) => (
-        <Link key={album.id} href={`/album/${album.id}`} className="group flex-shrink-0 w-[140px] md:w-[176px] snap-start">
+        <Link key={album.id} href={`/album/${album.slug || album.id}`} className="group flex-shrink-0 w-[140px] md:w-[176px] snap-start">
           <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-[var(--surface-3)] mb-2.5 shadow-lg ring-1 ring-white/5 group-hover:ring-[var(--primary)]/40 group-hover:shadow-[0_8px_30px_rgba(30,215,96,0.15)] transition-all duration-400">
             {album.coverUrl ? (
               <Image src={album.coverUrl} alt={album.title} fill className="object-cover transition-transform duration-600 group-hover:scale-105" unoptimized />

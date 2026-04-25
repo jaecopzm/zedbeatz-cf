@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { Menu, X, Home, Search, Library, Compass, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SignInButton, useUser, useClerk } from "@clerk/nextjs";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 
 const links = [
   { href: "/",        label: "Home",    icon: Home    },
@@ -29,10 +29,10 @@ export default function MobileMenu() {
         </button>
       </SheetTrigger>
       <SheetContent side="left" className="w-72 bg-black/90 border-r border-[var(--glass-border)] p-0 flex flex-col">
+        <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
         {/* Header */}
         <div className="flex items-center px-5 py-5 border-b border-[var(--glass-border)]">
           <img src="/Logo.png" alt="ZedBeatz" className="h-7 w-auto" />
-          <span className="sr-only">Navigation Menu</span>
         </div>
 
         {/* Nav links */}

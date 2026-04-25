@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { Play, Pause, Shuffle } from "lucide-react";
 import { usePlayer, type Track } from "@/lib/player-store";
+import FollowButton from "@/components/follow-button";
 
 type Artist = {
   id: number;
@@ -68,14 +69,37 @@ export default function ArtistHeader({ artist, tracks }: { artist: Artist; track
       </AnimatePresence>
 
       {/* Main Content */}
-      <div className="absolute inset-0 z-10 px-4 md:px-10 pb-8 md:pb-12 flex flex-row items-end gap-5 md:gap-10">
-        {/* Avatar with spinning conic gradient ring */}
+      <div className="absolute inset-0 z-10 px-4 md:px-10 pb-8 md:pb-12 flex flex-col md:flex-row items-center md:items-end justify-center md:justify-start gap-4 md:gap-10">
+        {/* Avatar with spinning conic gradient ring and waves */}
         <motion.div
           initial={{ opacity: 0, scale: 0.88 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.7, ease: "easeOut" }}
-          className="relative shrink-0 group w-24 h-24 md:w-56 md:h-56"
+          className="relative shrink-0 group w-32 h-32 md:w-56 md:h-56 mt-auto md:mt-0"
         >
+          {/* Animated waves when playing */}
+          {isPlaying && (
+            <>
+              {[0, 1, 2].map((i) => (
+                <motion.div
+                  key={i}
+                  className="absolute inset-0 rounded-full border-2 border-[var(--primary)]"
+                  initial={{ scale: 1, opacity: 0.6 }}
+                  animate={{
+                    scale: [1, 1.4, 1.8],
+                    opacity: [0.6, 0.3, 0],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    delay: i * 0.6,
+                    ease: "easeOut",
+                  }}
+                />
+              ))}
+            </>
+          )}
+          
           {/* Spinning ring */}
           <div className={`absolute -inset-2 rounded-full transition-opacity duration-700 ${isPlaying ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
             style={{
@@ -84,13 +108,13 @@ export default function ArtistHeader({ artist, tracks }: { artist: Artist; track
             }}
           />
           <div className="absolute inset-0 rounded-full bg-[var(--background)] scale-[0.96]" />
-          <div className="relative w-24 h-24 md:w-56 md:h-56 rounded-full overflow-hidden shadow-2xl border-[3px] border-black">
+          <div className="relative w-32 h-32 md:w-56 md:h-56 rounded-full overflow-hidden shadow-2xl border-[3px] border-black">
             {artist.imageUrl ? (
               <Image
                 src={artist.imageUrl}
                 alt={artist.name}
                 fill
-                sizes="(max-width: 768px) 100vw, 50vw"
+                sizes="(max-width: 768px) 128px, 224px"
                 className="object-cover"
                 priority
                 unoptimized
@@ -108,31 +132,31 @@ export default function ArtistHeader({ artist, tracks }: { artist: Artist; track
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.15, ease: "easeOut" }}
-          className="flex-1 min-w-0 text-left flex flex-col items-start"
+          className="flex-1 min-w-0 text-center md:text-left flex flex-col items-center md:items-start"
         >
           {/* Name */}
-          <h1 className="text-2xl md:text-6xl lg:text-7xl font-black tracking-tight mb-2 md:mb-4 leading-[1.05] drop-shadow-[0_4px_24px_rgba(0,0,0,0.8)]">
+          <h1 className="text-3xl md:text-6xl lg:text-7xl font-black tracking-tight mb-2 md:mb-4 leading-[1.05] drop-shadow-[0_4px_24px_rgba(0,0,0,0.8)]">
             {artist.name}
           </h1>
 
           {/* Bio */}
           {artist.bio && (
-            <p className="text-sm md:text-base text-white/70 mb-5 max-w-2xl leading-relaxed line-clamp-2 px-4 md:px-0">
+            <p className="text-sm md:text-base text-white/70 mb-4 md:mb-5 max-w-2xl leading-relaxed line-clamp-2 text-center md:text-left">
               {artist.bio}
             </p>
           )}
 
           {/* Stats row */}
-          <div className="flex items-center gap-3 mb-6 flex-wrap">
+          <div className="flex items-center gap-2 md:gap-3 mb-4 md:mb-6 flex-wrap justify-center md:justify-start">
             <StatPill label="Tracks" value={artist.trackCount} />
             {artist.albumCount > 0 && <StatPill label="Albums" value={artist.albumCount} />}
             {artist.totalPlays > 0 && (
-              <StatPill label="Total Plays" value={artist.totalPlays.toLocaleString()} accent />
+              <StatPill label="Plays" value={artist.totalPlays.toLocaleString()} accent />
             )}
           </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-3 flex-wrap justify-center md:justify-start">
             <button
               onClick={handlePlay}
               className="group flex items-center gap-2.5 px-7 py-3.5 rounded-full bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-black font-bold transition-all hover:scale-105 active:scale-100 text-sm md:text-base shadow-[0_4px_20px_rgba(30,215,96,0.35)] btn-primary-glow"
@@ -148,6 +172,7 @@ export default function ArtistHeader({ artist, tracks }: { artist: Artist; track
             >
               <Shuffle size={16} /> Shuffle
             </button>
+            <FollowButton artistId={artist.id} />
           </div>
         </motion.div>
       </div>
