@@ -15,6 +15,7 @@ import DownloadButton from "@/components/download-button";
 import WhatsAppBanner from "@/components/whatsapp-banner";
 import LyricsView from "./lyrics-view";
 import AudioVisualizer from "@/components/audio-visualizer";
+import { useAudioAnalyser } from "@/lib/use-audio-analyser";
 
 function fmt(s: number) {
   const m = Math.floor(s / 60);
@@ -25,6 +26,7 @@ export default function Player() {
   const { queue, currentIndex, playing, loading, shuffle, repeat, toggle, next, prev, toggleShuffle, cycleRepeat, setQueue, setLoading, reorderQueue } = usePlayer();
   const track = queue[currentIndex];
   const audioRef = useRef<HTMLAudioElement>(null);
+  const { gainNode } = useAudioAnalyser(audioRef, playing, 32);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
@@ -79,9 +81,10 @@ export default function Player() {
   }, [playing]);
 
   useEffect(() => {
-    if (audioRef.current) audioRef.current.volume = volume;
+    // Set initial volume on audio element (will be overridden by GainNode if Web Audio is active)
+    if (audioRef.current && !gainNode) audioRef.current.volume = volume;
     if (typeof window !== "undefined") localStorage.setItem("player-volume", volume.toString());
-  }, [volume]);
+  }, [volume, gainNode]);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -103,36 +106,35 @@ export default function Player() {
 
   // ─── Soft Fade & Gapless Playback Logic ──────────────────
   useEffect(() => {
-    if (!playing || !audioRef.current || duration <= 0) return;
+    if (!playing || !audioRef.current || duration <= 0 || !gainNode) return;
     
     let raf: number;
     const fade = () => {
       if (audioRef.current && !audioRef.current.paused) {
         const currentTime = audioRef.current.currentTime;
         const remaining = duration - currentTime;
-        const targetVol = volume; // user's chosen volume
+        const targetVol = volume;
         
         // FADE OUT at the end (last 3 seconds)
         if (remaining <= 3 && remaining > 0) {
-          audioRef.current.volume = Math.max(0, targetVol * (remaining / 3));
+          gainNode.gain.value = Math.max(0, targetVol * (remaining / 3));
         } 
         // FADE IN at the beginning (first 1.5 seconds)
         else if (currentTime <= 1.5) {
-          audioRef.current.volume = Math.min(targetVol, targetVol * (currentTime / 1.5));
+          gainNode.gain.value = Math.min(targetVol, targetVol * (currentTime / 1.5));
         }
         // NORMAL PLAYBACK
         else {
-          audioRef.current.volume = targetVol;
+          gainNode.gain.value = targetVol;
         }
       }
       raf = requestAnimationFrame(fade);
     };
     raf = requestAnimationFrame(fade);
     return () => cancelAnimationFrame(raf);
-  }, [playing, duration, volume, track]);
+  }, [playing, duration, volume, track, gainNode]);
 
   function handleEnded() {
-    if (audioRef.current) audioRef.current.volume = volume;
     if (repeat === "one" && audioRef.current) {
       audioRef.current.currentTime = 0; audioRef.current.play();
     } else {

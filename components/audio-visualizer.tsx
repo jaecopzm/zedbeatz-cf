@@ -21,7 +21,7 @@ export default function AudioVisualizer({
   barCount = BAR_COUNT,
   className = "",
 }: Props) {
-  const frequencyData = useAudioAnalyser(audioRef, playing, barCount);
+  const { frequencyData } = useAudioAnalyser(audioRef, playing, barCount);
 
   if (!playing) return null;
 
