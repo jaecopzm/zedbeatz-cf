@@ -107,7 +107,10 @@ export default function TrackPageClient({ track }: { track: TrackWithMeta }) {
                         className="w-1 rounded-full bg-gradient-to-t from-[var(--primary)] to-white shadow-[0_0_12px_rgba(30,215,96,0.8)]"
                         style={{
                           height: `${12 + Math.random() * 20}px`,
-                          animation: `bar-bounce 0.${4 + Math.floor(Math.random() * 4)}s ease-in-out infinite`,
+                          animationName: 'bar-bounce',
+                          animationDuration: `0.${4 + Math.floor(Math.random() * 4)}s`,
+                          animationTimingFunction: 'ease-in-out',
+                          animationIterationCount: 'infinite',
                           animationDelay: `${i * 0.05}s`
                         }}
                       />
