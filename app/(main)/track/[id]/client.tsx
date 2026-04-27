@@ -145,44 +145,45 @@ export default function TrackPageClient({ track }: { track: TrackWithMeta }) {
               </span>
             </div>
 
+            {/* Title & Artist */}
             <div>
-                <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-black tracking-tight leading-[1.05] mb-2 sm:mb-3 lg:mb-4 bg-gradient-to-br from-white via-white to-white/60 bg-clip-text text-transparent drop-shadow-[0_4px_12px_rgba(0,0,0,0.4)] px-2 lg:px-0">
-                  {track.title}
-                </h1>
+              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-black tracking-tight leading-[1.05] mb-2 sm:mb-3 bg-gradient-to-br from-white via-white to-white/60 bg-clip-text text-transparent drop-shadow-[0_4px_12px_rgba(0,0,0,0.4)]">
+                {track.title}
+              </h1>
 
-                <div className="flex flex-wrap items-center justify-center lg:justify-start gap-1.5 sm:gap-2 text-sm sm:text-base md:text-lg px-2 lg:px-0 mb-3 sm:mb-4">
-                  <Link
-                    href={track.artistSlug ? `/artist/${track.artistSlug}` : `/artist/${track.artistId}`}
-                    className="font-bold text-white/90 hover:text-[var(--primary)] transition-colors underline decoration-white/20 hover:decoration-[var(--primary)] underline-offset-4"
-                  >
-                    {track.artist}
-                  </Link>
-                  {track.featuredArtists && (
-                    <span className="text-white/50 font-medium text-sm sm:text-base">feat. {track.featuredArtists}</span>
-                  )}
-                </div>
-
-                {/* Metadata Pills */}
-                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 text-xs text-white/50">
-                  {actualDuration && (
-                    <div className="flex items-center gap-1.5">
-                      <Clock size={13} />
-                      <span className="font-semibold tabular-nums">{fmt(actualDuration)}</span>
-                    </div>
-                  )}
-                  <div className="flex items-center gap-1.5">
-                    <Calendar size={13} />
-                    <span className="font-semibold">{track.releaseYear || new Date().getFullYear()}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <Disc3 size={13} />
-                    <span className="font-semibold">Single</span>
-                  </div>
-                </div>
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-1.5 sm:gap-2 text-sm sm:text-base md:text-lg mb-3 sm:mb-4">
+                <Link
+                  href={track.artistSlug ? `/artist/${track.artistSlug}` : `/artist/${track.artistId}`}
+                  className="font-bold text-white/90 hover:text-[var(--primary)] transition-colors underline decoration-white/20 hover:decoration-[var(--primary)] underline-offset-4"
+                >
+                  {track.artist}
+                </Link>
+                {track.featuredArtists && (
+                  <span className="text-white/50 font-medium text-sm sm:text-base">feat. {track.featuredArtists}</span>
+                )}
               </div>
 
+              {/* Metadata Pills */}
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 text-xs text-white/50">
+                {actualDuration && (
+                  <div className="flex items-center gap-1.5">
+                    <Clock size={13} />
+                    <span className="font-semibold tabular-nums">{fmt(actualDuration)}</span>
+                  </div>
+                )}
+                <div className="flex items-center gap-1.5">
+                  <Calendar size={13} />
+                  <span className="font-semibold">{track.releaseYear || new Date().getFullYear()}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Disc3 size={13} />
+                  <span className="font-semibold">Single</span>
+                </div>
+              </div>
+            </div>
+
             {/* Premium Actions */}
-            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 sm:gap-3 mt-4 sm:mt-5">
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 sm:gap-3">
               <button
                 onClick={() => isActive ? toggle() : play(track)}
                 className="flex items-center gap-2 sm:gap-2.5 px-8 sm:px-10 py-3 sm:py-4 rounded-full bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-black font-black text-xs sm:text-sm uppercase tracking-wide transition-all hover:scale-105 active:scale-95 shadow-[0_8px_32px_rgba(30,215,96,0.4)] hover:shadow-[0_12px_40px_rgba(30,215,96,0.5)]"
