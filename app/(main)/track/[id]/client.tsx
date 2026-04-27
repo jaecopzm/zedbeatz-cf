@@ -10,6 +10,7 @@ import AddToPlaylist from "@/components/add-to-playlist";
 import ShareButton from "@/components/share-button";
 import DownloadButton from "@/components/download-button";
 import WhatsAppBanner from "@/components/whatsapp-banner";
+import TrackComments from "@/components/track-comments";
 
 type TrackWithMeta = Track & { genre: string | null; plays: number | null };
 
@@ -266,6 +267,11 @@ export default function TrackPageClient({ track }: { track: TrackWithMeta }) {
           </div>
         </section>
       )}
+
+      {/* ── Comments ───────────────────────────────────────── */}
+      <section className="px-3 sm:px-4 md:px-8 max-w-3xl mx-auto mb-8 sm:mb-10 md:mb-12">
+        <TrackComments trackId={track.id} />
+      </section>
     </div>
   );
 }

@@ -20,6 +20,8 @@ import {
   HeroSkeleton, TrendingSkeleton, TrackGridSkeleton,
   ArtistGridSkeleton, PlaylistGridSkeleton, RecentlyPlayedSkeleton,
 } from "@/components/home/home-skeletons";
+import ContinueListening from "@/components/home/continue-listening";
+import ReleaseRadar from "@/components/home/release-radar";
 
 export const metadata: Metadata = {
   title: "ZedBeatz - Download Latest Zambian Music MP3 2026",
@@ -235,6 +237,9 @@ export default async function HomePage() {
         {/* Greeting */}
         <HomeGreeting hour={hour} />
 
+        {/* Continue Listening */}
+        <ContinueListening />
+
         {/* Hero */}
         <div className="mt-4">
           <Suspense fallback={<HeroSkeleton />}>
@@ -257,6 +262,9 @@ export default async function HomePage() {
             <RecentlyPlayedSection />
           </Suspense>
         </section>
+
+        {/* Release Radar */}
+        <ReleaseRadar />
 
         {/* New Releases */}
         <section className="mb-10 md:mb-14">
@@ -350,12 +358,11 @@ async function FeaturedArtistsContent() {
               }} />
             <div className="absolute inset-0 rounded-full bg-[var(--background)] scale-[0.94]" />
             <div className="absolute inset-[3px] rounded-full overflow-hidden bg-[var(--surface-3)] shadow-lg transition-transform duration-300 group-hover:scale-105">
-              {artist.coverUrl ? (
+              <div className="absolute inset-0 bg-gradient-to-br from-[var(--surface-3)] to-[var(--surface-2)] flex items-center justify-center -z-10">
+                <Users size={24} className="text-[var(--muted)]/50" />
+              </div>
+              {artist.coverUrl && (
                 <Image src={artist.coverUrl} alt={artist.name} fill className="object-cover" unoptimized />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-[var(--surface-3)] to-[var(--surface-2)] flex items-center justify-center">
-                  <Users size={24} className="text-[var(--muted)]" />
-                </div>
               )}
             </div>
           </div>
@@ -392,12 +399,11 @@ async function PlaylistsContent() {
               className="group flex-shrink-0 w-[140px] md:w-[176px] snap-start"
             >
               <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-[var(--surface-3)] mb-2.5 shadow-lg ring-1 ring-white/5 group-hover:ring-[var(--primary)]/40 group-hover:shadow-[0_8px_30px_rgba(30,215,96,0.15)] transition-all duration-400">
-                {playlist.coverUrl ? (
+                <div className="absolute inset-0 bg-gradient-to-br from-[var(--surface-3)] to-[var(--surface-2)] flex items-center justify-center -z-10">
+                  <ListMusic size={32} className="text-[var(--muted)]/40" />
+                </div>
+                {playlist.coverUrl && (
                   <Image src={playlist.coverUrl} alt={playlist.name} fill className="object-cover transition-transform duration-600 group-hover:scale-105" unoptimized />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-[var(--surface-3)] to-[var(--surface-2)] flex items-center justify-center">
-                    <ListMusic size={32} className="text-[var(--muted)]/40" />
-                  </div>
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                 {playlist.category && (
@@ -429,12 +435,11 @@ async function AlbumsContent() {
       {albums.map((album) => (
         <Link key={album.id} href={`/album/${album.slug || album.id}`} className="group flex-shrink-0 w-[140px] md:w-[176px] snap-start">
           <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-[var(--surface-3)] mb-2.5 shadow-lg ring-1 ring-white/5 group-hover:ring-[var(--primary)]/40 group-hover:shadow-[0_8px_30px_rgba(30,215,96,0.15)] transition-all duration-400">
-            {album.coverUrl ? (
+            <div className="absolute inset-0 bg-gradient-to-br from-[var(--surface-3)] to-[var(--surface-2)] flex items-center justify-center -z-10">
+              <LayoutGrid size={32} className="text-[var(--muted)]/40" />
+            </div>
+            {album.coverUrl && (
               <Image src={album.coverUrl} alt={album.title} fill className="object-cover transition-transform duration-600 group-hover:scale-105" unoptimized />
-            ) : (
-              <div className="w-full h-full bg-gradient-to-br from-[var(--surface-3)] to-[var(--surface-2)] flex items-center justify-center">
-                <LayoutGrid size={32} className="text-[var(--muted)]/40" />
-              </div>
             )}
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
             {album.releaseYear && (

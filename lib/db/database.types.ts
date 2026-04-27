@@ -79,6 +79,70 @@ export type Database = {
         }
         Relationships: []
       }
+      comments: {
+        Row: {
+          id: number
+          track_id: number
+          user_id: string
+          user_name: string
+          content: string
+          created_at: string | null
+        }
+        Insert: {
+          id?: number
+          track_id: number
+          user_id: string
+          user_name: string
+          content: string
+          created_at?: string | null
+        }
+        Update: {
+          id?: number
+          track_id?: number
+          user_id?: string
+          user_name?: string
+          content?: string
+          created_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      follows: {
+        Row: {
+          id: number
+          user_id: string
+          artist_id: number
+          created_at: string | null
+        }
+        Insert: {
+          id?: number
+          user_id: string
+          artist_id: number
+          created_at?: string | null
+        }
+        Update: {
+          id?: number
+          user_id?: string
+          artist_id?: number
+          created_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "follows_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "artists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hero_tracks: {
         Row: {
           created_at: string | null

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { usePlayer } from "@/lib/player-store";
 import {
   Play, Pause, SkipBack, SkipForward, Volume2, VolumeX,
-  Shuffle, Repeat, Repeat1, List, X, ChevronDown,
+  Shuffle, Repeat, Repeat1, List, X, ChevronDown, Mic2
 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import Image from "next/image";
@@ -13,6 +13,8 @@ import LikeButton from "@/components/like-button";
 import ShareButton from "@/components/share-button";
 import DownloadButton from "@/components/download-button";
 import WhatsAppBanner from "@/components/whatsapp-banner";
+import LyricsView from "./lyrics-view";
+import AudioVisualizer from "@/components/audio-visualizer";
 
 function fmt(s: number) {
   const m = Math.floor(s / 60);
@@ -20,11 +22,13 @@ function fmt(s: number) {
 }
 
 export default function Player() {
-  const { queue, currentIndex, playing, loading, shuffle, repeat, toggle, next, prev, toggleShuffle, cycleRepeat, setQueue, setLoading } = usePlayer();
+  const { queue, currentIndex, playing, loading, shuffle, repeat, toggle, next, prev, toggleShuffle, cycleRepeat, setQueue, setLoading, reorderQueue } = usePlayer();
   const track = queue[currentIndex];
   const audioRef = useRef<HTMLAudioElement>(null);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const dragIndexRef = useRef<number | null>(null);
 
   const haptic = () => {
     if ('vibrate' in navigator) navigator.vibrate(10);
@@ -38,6 +42,7 @@ export default function Player() {
   });
   const [prevVolume, setPrevVolume] = useState(0.8);
   const [showQueue, setShowQueue]         = useState(false);
+  const [showLyrics, setShowLyrics]       = useState(false);
   const [showFullScreen, setShowFullScreen] = useState(false);
   const playedTracksRef = useRef<Set<number>>(new Set());
 
@@ -96,6 +101,36 @@ export default function Player() {
     return () => { document.body.style.overflow = ""; };
   }, [showFullScreen]);
 
+  // ─── Soft Fade & Gapless Playback Logic ──────────────────
+  useEffect(() => {
+    if (!playing || !audioRef.current || duration <= 0) return;
+    
+    let raf: number;
+    const fade = () => {
+      if (audioRef.current && !audioRef.current.paused) {
+        const currentTime = audioRef.current.currentTime;
+        const remaining = duration - currentTime;
+        const targetVol = volume; // user's chosen volume
+        
+        // FADE OUT at the end (last 3 seconds)
+        if (remaining <= 3 && remaining > 0) {
+          audioRef.current.volume = Math.max(0, targetVol * (remaining / 3));
+        } 
+        // FADE IN at the beginning (first 1.5 seconds)
+        else if (currentTime <= 1.5) {
+          audioRef.current.volume = Math.min(targetVol, targetVol * (currentTime / 1.5));
+        }
+        // NORMAL PLAYBACK
+        else {
+          audioRef.current.volume = targetVol;
+        }
+      }
+      raf = requestAnimationFrame(fade);
+    };
+    raf = requestAnimationFrame(fade);
+    return () => cancelAnimationFrame(raf);
+  }, [playing, duration, volume, track]);
+
   function handleEnded() {
     if (audioRef.current) audioRef.current.volume = volume;
     if (repeat === "one" && audioRef.current) {
@@ -120,6 +155,44 @@ export default function Player() {
     }
   }
 
+  // ─── Keyboard Shortcuts ──────────────────────────────────
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      // Don't intercept shortcuts when typing in inputs
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      if (!track) return;
+
+      switch (e.key) {
+        case " ":
+          e.preventDefault();
+          toggle();
+          break;
+        case "ArrowRight":
+          if (!e.shiftKey) { e.preventDefault(); next(); }
+          break;
+        case "ArrowLeft":
+          if (!e.shiftKey) { e.preventDefault(); handlePrev(); }
+          break;
+        case "m":
+        case "M":
+          toggleMute();
+          break;
+        case "f":
+        case "F":
+          setShowFullScreen((v) => !v);
+          break;
+        case "s":
+        case "S":
+          toggleShuffle();
+          break;
+      }
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [track, toggle, next, toggleShuffle]);
+
   if (!track) return null;
 
   /* ───────────────────────── Shared UI pieces ─────────────────────── */
@@ -138,8 +211,25 @@ export default function Player() {
         ref={audioRef}
         preload="auto"
         crossOrigin="anonymous"
-        onTimeUpdate={(e) => setProgress(e.currentTarget.currentTime)}
-        onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
+        onTimeUpdate={(e) => {
+          const t = e.currentTarget.currentTime;
+          setProgress(t);
+          // Save last-played state for Continue Listening
+          if (track && t > 5) {
+            localStorage.setItem('zedbeatz-last-played', JSON.stringify({
+              track, currentTime: t, duration: e.currentTarget.duration
+            }));
+          }
+        }}
+        onLoadedMetadata={(e) => {
+          setDuration(e.currentTarget.duration);
+          // Resume from saved position
+          const resume = sessionStorage.getItem('zedbeatz-resume-time');
+          if (resume) {
+            e.currentTarget.currentTime = parseFloat(resume);
+            sessionStorage.removeItem('zedbeatz-resume-time');
+          }
+        }}
         onEnded={handleEnded}
         onWaiting={() => setLoading(true)}
         onCanPlay={() => setLoading(false)}
@@ -178,38 +268,34 @@ export default function Player() {
                 </div>
               </div>
 
-              {/* Cover art */}
-              <div className="relative w-full max-w-xs aspect-square mb-4">
-                {/* Glow */}
-                <div className={`absolute -inset-6 rounded-full blur-3xl transition-opacity duration-1000 pointer-events-none ${playing ? "opacity-30" : "opacity-0"}`}
-                  style={{ background: "radial-gradient(circle, var(--primary) 0%, transparent 65%)" }} />
-                {track.coverUrl ? (
-                  <Image src={track.coverUrl} alt={track.title} fill priority unoptimized
-                    className={`object-cover rounded-2xl shadow-2xl transition-all duration-700 ${playing ? "scale-100" : "scale-[0.97]"}`}
-                    style={{ boxShadow: "0 24px 60px rgba(0,0,0,0.6)" }} />
-                ) : (
-                  <div className="w-full h-full rounded-2xl bg-gradient-to-br from-[var(--surface-2)] to-[var(--surface-3)]" />
-                )}
-                {/* Visualizer overlay */}
-                {playing && (
-                  <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black/80 to-transparent rounded-b-2xl flex items-end justify-center gap-1 px-4 pb-3">
-                    {Array.from({ length: 24 }).map((_, i) => (
-                      <span key={i} className="rounded-full bg-gradient-to-t from-[var(--primary)] to-white shadow-[0_0_8px_rgba(30,215,96,0.6)]"
-                        style={{
-                          width: '3px',
-                          height: `${10 + (i % 6) * 5}px`,
-                          animationName: 'bar-bounce',
-                          animationDuration: `${0.4 + (i % 4) * 0.15}s`,
-                          animationTimingFunction: 'ease-in-out',
-                          animationIterationCount: 'infinite',
-                          animationDelay: `${i * 0.05}s`,
-                          transformOrigin: 'bottom',
-                          display: 'inline-block'
-                        }} />
-                    ))}
+              {/* Cover art or Lyrics */}
+              {showLyrics ? (
+                <div className="flex-1 w-full max-w-2xl min-h-0 relative mb-4 rounded-2xl overflow-hidden glass-card border-none bg-black/20">
+                  <LyricsView trackId={track.id} progress={progress} className="absolute inset-0" />
+                </div>
+              ) : (
+                <div className="relative w-full max-w-xs aspect-square mb-4">
+                  {/* Glow */}
+                  <div className={`absolute -inset-6 rounded-full blur-3xl transition-opacity duration-1000 pointer-events-none ${playing ? "opacity-30" : "opacity-0"}`}
+                    style={{ background: "radial-gradient(circle, var(--primary) 0%, transparent 65%)" }} />
+                  {track.coverUrl ? (
+                    <Image src={track.coverUrl} alt={track.title} fill priority unoptimized
+                      className={`object-cover rounded-2xl shadow-2xl transition-all duration-700 ${playing ? "scale-100" : "scale-[0.97]"}`}
+                      style={{ boxShadow: "0 24px 60px rgba(0,0,0,0.6)" }} />
+                  ) : (
+                    <div className="w-full h-full rounded-2xl bg-gradient-to-br from-[var(--surface-2)] to-[var(--surface-3)]" />
+                  )}
+                  {/* Visualizer overlay — driven by real audio frequency data */}
+                  <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black/80 to-transparent rounded-b-2xl flex items-end justify-center px-4 pb-3">
+                    <AudioVisualizer
+                      audioRef={audioRef}
+                      playing={playing}
+                      height={40}
+                      barCount={32}
+                    />
                   </div>
-                )}
-              </div>
+                </div>
+              )}
 
               {/* Track info */}
               <div className="w-full max-w-xs flex items-start justify-between mb-3">
@@ -287,16 +373,31 @@ export default function Player() {
               </div>
               <div className="flex-1 overflow-y-auto py-2">
                 {queue.map((t, i) => (
-                  <div key={`${t.id}-${i}`} onClick={() => setQueue(queue, i)}
-                    className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer transition-colors ${i === currentIndex ? "bg-white/[0.08]" : "hover:bg-white/[0.04]"}`}>
-                    <span className={`text-xs w-5 text-center tabular-nums shrink-0 flex items-center justify-center ${i === currentIndex ? "text-[var(--primary)]" : "text-white/30"}`}>
+                  <div
+                    key={`${t.id}-${i}`}
+                    draggable
+                    onDragStart={() => { dragIndexRef.current = i; }}
+                    onDragOver={(e) => { e.preventDefault(); setDragOverIndex(i); }}
+                    onDragLeave={() => setDragOverIndex(null)}
+                    onDrop={() => {
+                      if (dragIndexRef.current !== null && dragIndexRef.current !== i) {
+                        reorderQueue(dragIndexRef.current, i);
+                      }
+                      setDragOverIndex(null);
+                      dragIndexRef.current = null;
+                    }}
+                    onClick={() => setQueue(queue, i)}
+                    className={`flex items-center gap-3 px-4 py-2.5 cursor-grab active:cursor-grabbing transition-all border-t-2 ${
+                      dragOverIndex === i ? 'border-[var(--primary)]' : 'border-transparent'
+                    } ${i === currentIndex ? 'bg-white/[0.08]' : 'hover:bg-white/[0.04]'}`}>
+                    <span className={`text-xs w-5 text-center tabular-nums shrink-0 flex items-center justify-center ${i === currentIndex ? 'text-[var(--primary)]' : 'text-white/30'}`}>
                       {i === currentIndex && playing ? <EqBars /> : i + 1}
                     </span>
                     <div className="w-9 h-9 rounded-lg overflow-hidden bg-[var(--surface-2)] shrink-0">
                       {t.coverUrl && <Image src={t.coverUrl} alt={t.title} width={36} height={36} className="object-cover" />}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className={`text-xs font-semibold truncate ${i === currentIndex ? "text-[var(--primary)]" : "text-white"}`}>{t.title}</p>
+                      <p className={`text-xs font-semibold truncate ${i === currentIndex ? 'text-[var(--primary)]' : 'text-white'}`}>{t.title}</p>
                       <p className="text-xs text-white/40 truncate">{t.artist}</p>
                     </div>
                   </div>
@@ -316,26 +417,40 @@ export default function Player() {
                 <span className="w-1.5 h-1.5 rounded-full bg-[var(--primary)] animate-pulse" />
                 <span className="text-xs font-semibold text-white/90 uppercase tracking-widest">Now Playing</span>
               </div>
-              <button
-                onClick={() => setShowQueue(!showQueue)}
-                className={`p-2.5 rounded-full transition-all active:scale-95 ${showQueue ? "text-[var(--primary)] bg-[var(--primary-dim)]" : "text-white/70 hover:bg-white/10"}`}
-              >
-                <List size={22} strokeWidth={2.5} />
-              </button>
+              <div className="flex items-center">
+                <button
+                  onClick={() => { setShowLyrics(!showLyrics); setShowQueue(false); }}
+                  className={`p-2 rounded-full transition-all active:scale-95 ${showLyrics ? "text-[var(--primary)]" : "text-white/70 hover:bg-white/10"}`}
+                >
+                  <Mic2 size={22} strokeWidth={2.5} />
+                </button>
+                <button
+                  onClick={() => { setShowQueue(!showQueue); setShowLyrics(false); }}
+                  className={`p-2 rounded-full transition-all active:scale-95 ${showQueue ? "text-[var(--primary)]" : "text-white/70 hover:bg-white/10"}`}
+                >
+                  <List size={22} strokeWidth={2.5} />
+                </button>
+              </div>
             </div>
 
             <div className="relative flex-1 flex flex-col items-center px-6 pb-8 gap-3 overflow-hidden" style={{ paddingBottom: "max(2rem, env(safe-area-inset-bottom))" }}>
-              {/* Album art */}
-              <div className="relative w-full max-w-[320px] aspect-square shrink-0 mt-2">
-                <div className={`absolute -inset-6 rounded-full blur-3xl transition-opacity duration-700 ${playing ? "opacity-40" : "opacity-0"}`}
-                  style={{ background: "radial-gradient(circle, var(--primary) 0%, transparent 70%)" }} />
-                {track.coverUrl ? (
-                  <Image src={track.coverUrl} alt={track.title} fill sizes="(max-width: 640px) 100vw, 320px"
-                    className={`object-cover rounded-2xl shadow-2xl transition-transform duration-700 ${playing ? "scale-100" : "scale-95"}`} priority unoptimized />
-                ) : (
-                  <div className="w-full h-full rounded-2xl bg-gradient-to-br from-[var(--surface-2)] to-[var(--surface-3)]" />
-                )}
-              </div>
+              {/* Album art or Lyrics */}
+              {showLyrics ? (
+                <div className="flex-1 w-full relative mt-2 mb-2 min-h-0 rounded-2xl overflow-hidden glass-card border-none bg-black/20">
+                  <LyricsView trackId={track.id} progress={progress} className="absolute inset-0" />
+                </div>
+              ) : (
+                <div className="relative w-full max-w-[320px] aspect-square shrink-0 mt-2">
+                  <div className={`absolute -inset-6 rounded-full blur-3xl transition-opacity duration-700 ${playing ? "opacity-40" : "opacity-0"}`}
+                    style={{ background: "radial-gradient(circle, var(--primary) 0%, transparent 70%)" }} />
+                  {track.coverUrl ? (
+                    <Image src={track.coverUrl} alt={track.title} fill sizes="(max-width: 640px) 100vw, 320px"
+                      className={`object-cover rounded-2xl shadow-2xl transition-transform duration-700 ${playing ? "scale-100" : "scale-95"}`} priority unoptimized />
+                  ) : (
+                    <div className="w-full h-full rounded-2xl bg-gradient-to-br from-[var(--surface-2)] to-[var(--surface-3)]" />
+                  )}
+                </div>
+              )}
 
               {/* Track info */}
               <div className="w-full max-w-md text-center px-4">
@@ -518,11 +633,19 @@ export default function Player() {
             </div>
           </div>
 
-          {/* Right: volume + queue */}
-          <div className="flex items-center gap-3 w-44 shrink-0 justify-end">
+          {/* Right: volume + queue + lyrics */}
+          <div className="flex items-center gap-3 w-48 shrink-0 justify-end">
             <button
-              onClick={() => setShowQueue(!showQueue)}
+              onClick={() => { setShowLyrics(!showLyrics); if (!showFullScreen) setShowFullScreen(true); setShowQueue(false); }}
+              className={`transition-all ${showLyrics && showFullScreen ? "text-[var(--primary)]" : "text-[var(--muted)] hover:text-white"}`}
+              title="Lyrics"
+            >
+              <Mic2 size={17} />
+            </button>
+            <button
+              onClick={() => { setShowQueue(!showQueue); setShowLyrics(false); }}
               className={`transition-all ${showQueue ? "text-[var(--primary)]" : "text-[var(--muted)] hover:text-white"}`}
+              title="Queue"
             >
               <List size={17} />
             </button>
@@ -547,14 +670,26 @@ export default function Player() {
           onTouchStart={(e) => {
             const touch = e.touches[0];
             (e.currentTarget as any)._touchStartX = touch.clientX;
+            (e.currentTarget as any)._touchStartY = touch.clientY;
           }}
           onTouchEnd={(e) => {
-            const startX = (e.currentTarget as any)._touchStartX;
-            if (startX == null) return;
+            const el = e.currentTarget as any;
+            const startX = el._touchStartX;
+            const startY = el._touchStartY;
+            if (startX == null || startY == null) return;
             const dx = e.changedTouches[0].clientX - startX;
-            if (Math.abs(dx) < 50) return;
-            e.preventDefault();
-            if (dx < 0) next(); else handlePrev();
+            const dy = e.changedTouches[0].clientY - startY;
+            // Swipe up → open fullscreen
+            if (dy < -40 && Math.abs(dy) > Math.abs(dx)) {
+              e.preventDefault();
+              setShowFullScreen(true);
+              return;
+            }
+            // Swipe left/right → skip tracks
+            if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+              e.preventDefault();
+              if (dx < 0) next(); else handlePrev();
+            }
           }}
           className="glass-card rounded-lg shadow-2xl overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
         >
@@ -621,17 +756,30 @@ export default function Player() {
             {queue.map((t, i) => (
               <div
                 key={`${t.id}-${i}`}
+                draggable
+                onDragStart={() => { dragIndexRef.current = i; }}
+                onDragOver={(e) => { e.preventDefault(); setDragOverIndex(i); }}
+                onDragLeave={() => setDragOverIndex(null)}
+                onDrop={() => {
+                  if (dragIndexRef.current !== null && dragIndexRef.current !== i) {
+                    reorderQueue(dragIndexRef.current, i);
+                  }
+                  setDragOverIndex(null);
+                  dragIndexRef.current = null;
+                }}
                 onClick={() => setQueue(queue, i)}
-                className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer transition-colors ${i === currentIndex ? "bg-white/10" : "hover:bg-white/5"}`}
+                className={`flex items-center gap-3 px-4 py-2.5 cursor-grab active:cursor-grabbing transition-all border-t-2 ${
+                  dragOverIndex === i ? 'border-[var(--primary)]' : 'border-transparent'
+                } ${i === currentIndex ? 'bg-white/10' : 'hover:bg-white/5'}`}
               >
-                <span className={`text-xs w-5 text-center tabular-nums shrink-0 ${i === currentIndex ? "text-[var(--primary)]" : "text-[var(--muted)]"}`}>
+                <span className={`text-xs w-5 text-center tabular-nums shrink-0 ${i === currentIndex ? 'text-[var(--primary)]' : 'text-[var(--muted)]'}`}>
                   {i + 1}
                 </span>
                 <div className="w-9 h-9 rounded-lg overflow-hidden bg-[var(--surface-2)] shrink-0">
                   {t.coverUrl ? <Image src={t.coverUrl} alt={t.title} width={36} height={36} className="object-cover" /> : <div className="w-full h-full" />}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className={`text-xs font-semibold truncate ${i === currentIndex ? "text-[var(--primary)]" : "text-white"}`}>{t.title}</p>
+                  <p className={`text-xs font-semibold truncate ${i === currentIndex ? 'text-[var(--primary)]' : 'text-white'}`}>{t.title}</p>
                   <p className="text-xs text-[var(--muted)] truncate">{t.artist}</p>
                 </div>
               </div>

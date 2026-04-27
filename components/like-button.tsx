@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Heart } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import { useLikes } from "@/lib/likes-context";
+import { showToast } from "@/components/toast";
 
 export default function LikeButton({ trackId, size = 18 }: { trackId: number; size?: number }) {
   const { isSignedIn } = useUser();
@@ -23,6 +24,7 @@ export default function LikeButton({ trackId, size = 18 }: { trackId: number; si
     if (!wasLiked) { setPopping(true); setTimeout(() => setPopping(false), 400); }
     
     await toggleLike(trackId);
+    showToast(wasLiked ? "Removed from Liked Songs" : "Added to Liked Songs ♥", wasLiked ? "info" : "success");
     setLoading(false);
   }
 

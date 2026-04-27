@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
-import { Clock, Play, Pause, LogIn } from "lucide-react";
+import { Clock, Play, Pause, LogIn, Music } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePlayer, type Track } from "@/lib/player-store";
@@ -12,6 +12,7 @@ export default function RecentlyPlayedSection() {
   const { isSignedIn, isLoaded } = useUser();
   const [tracks, setTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
   const { queue: pQueue, currentIndex, playing, setQueue, toggle } = usePlayer();
 
   useEffect(() => {
@@ -19,9 +20,12 @@ export default function RecentlyPlayedSection() {
     if (!isSignedIn) { setLoading(false); setTracks([]); return; }
     setLoading(true);
     fetch("/api/recently-played/list")
-      .then(r => r.json())
-      .then(data => setTracks(Array.isArray(data.tracks) ? data.tracks : []))
-      .catch(() => setTracks([]))
+      .then(r => {
+        if (!r.ok) throw new Error("Network response was not ok");
+        return r.json();
+      })
+      .then(data => { setTracks(Array.isArray(data.tracks) ? data.tracks : []); setError(false); })
+      .catch(() => { setTracks([]); setError(true); })
       .finally(() => setLoading(false));
   }, [isSignedIn, isLoaded]);
 
@@ -52,6 +56,18 @@ export default function RecentlyPlayedSection() {
     );
   }
 
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center p-8 rounded-2xl glass-card border border-white/5 text-center">
+        <Clock size={24} className="text-[var(--muted)] mb-3 opacity-50" />
+        <p className="text-sm font-bold text-white mb-1">Couldn't load history</p>
+        <p className="text-xs text-[var(--muted)] max-w-xs">
+          You appear to be offline. Please check your connection to sync your listening history.
+        </p>
+      </div>
+    );
+  }
+
   if (tracks.length === 0) {
     return (
       <div className="flex items-center gap-4 p-5 rounded-2xl glass-card border border-white/5">
@@ -59,7 +75,7 @@ export default function RecentlyPlayedSection() {
           <Clock size={20} className="text-[var(--muted)]" />
         </div>
         <div>
-          <p className="text-sm font-semibold">No tracks played yet</p>
+          <p className="text-sm font-semibold text-white">No tracks played yet</p>
           <p className="text-xs text-[var(--muted)] mt-0.5">Start listening to build your history</p>
         </div>
       </div>
@@ -90,12 +106,13 @@ export default function RecentlyPlayedSection() {
 
             {/* Album art */}
             <div className="relative w-11 h-11 rounded-lg overflow-hidden shrink-0 shadow-md">
-              {track.coverUrl ? (
+              {/* Fallback background with Music icon */}
+              <div className="absolute inset-0 bg-[var(--surface-3)] flex items-center justify-center -z-10">
+                <Music size={18} className="opacity-30 text-white" />
+              </div>
+
+              {track.coverUrl && (
                 <Image src={track.coverUrl} alt={track.title} fill className="object-cover" unoptimized />
-              ) : (
-                <div className="w-full h-full bg-[var(--surface-3)] flex items-center justify-center">
-                  <span className="text-lg opacity-20">♪</span>
-                </div>
               )}
               {/* Active overlay */}
               {isActive && (

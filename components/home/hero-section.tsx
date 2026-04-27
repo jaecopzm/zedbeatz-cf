@@ -35,7 +35,20 @@ export default function HeroSection({ tracks }: { tracks: Track[] }) {
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, [tracks.length]);
 
-  if (!track) return null;
+  if (!track || tracks.length === 0) {
+    return (
+      <section className="relative overflow-hidden mb-6 md:mb-10 rounded-[2rem] glass-card border border-white/5 flex flex-col items-center justify-center text-center p-8 md:p-16" style={{ minHeight: "460px" }}>
+        <div className="w-20 h-20 rounded-full bg-[var(--surface-3)] flex items-center justify-center mb-6 shadow-xl relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-tr from-[var(--primary)]/20 to-transparent opacity-50" />
+          <Play size={32} className="text-[var(--muted)] ml-2 relative z-10" />
+        </div>
+        <h2 className="text-2xl md:text-3xl font-black mb-3 text-white">Ready to Play</h2>
+        <p className="text-[var(--muted)] max-w-md text-sm md:text-base">
+          We're having trouble reaching our servers. Check your connection to see the latest hits, or play your downloaded tracks from your Library.
+        </p>
+      </section>
+    );
+  }
 
   function handlePlay() {
     if (isActive) toggle();

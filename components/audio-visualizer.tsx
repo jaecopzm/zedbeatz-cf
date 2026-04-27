@@ -1,27 +1,62 @@
 "use client";
 
-export default function AudioVisualizer({ playing }: { playing: boolean }) {
+import { useAudioAnalyser } from "@/lib/use-audio-analyser";
+
+const BAR_COUNT = 32;
+
+interface Props {
+  audioRef: React.RefObject<HTMLAudioElement | null>;
+  playing: boolean;
+  /** Visual height of the container in px */
+  height?: number;
+  /** Number of bars to render */
+  barCount?: number;
+  className?: string;
+}
+
+export default function AudioVisualizer({
+  audioRef,
+  playing,
+  height = 48,
+  barCount = BAR_COUNT,
+  className = "",
+}: Props) {
+  const frequencyData = useAudioAnalyser(audioRef, playing, barCount);
+
   if (!playing) return null;
 
+  const hasData = frequencyData.some((v) => v > 0);
+
   return (
-    <div className="flex items-end gap-1 h-10">
-      {[1,2,3,4,5,6,7,8,9,10,11,12].map((i) => (
-        <span
-          key={i}
-          className="rounded-full bg-gradient-to-t from-[var(--primary)] to-white shadow-[0_0_8px_rgba(30,215,96,0.6)]"
-          style={{
-            width: "3px",
-            animationName: "bar-bounce",
-            animationDuration: `${0.4 + (i % 4) * 0.15}s`,
-            animationTimingFunction: "ease-in-out",
-            animationIterationCount: "infinite",
-            animationDelay: `${i * 0.05}s`,
-            height: `${10 + (i % 6) * 5}px`,
-            transformOrigin: "bottom",
-            display: "inline-block",
-          }}
-        />
-      ))}
+    <div
+      className={`flex items-end gap-[2px] ${className}`}
+      style={{ height: `${height}px` }}
+      aria-hidden="true"
+    >
+      {Array.from({ length: barCount }).map((_, i) => {
+        const raw = frequencyData[i] ?? 0;
+        // Normalize 0-255 → min 8% - max 100% of container height
+        const pct = hasData ? Math.max(0.08, raw / 255) : 0.08 + 0.1 * Math.sin(Date.now() / 300 + i);
+        const barH = Math.round(pct * height);
+
+        return (
+          <span
+            key={i}
+            style={{
+              display: "inline-block",
+              width: "3px",
+              height: `${barH}px`,
+              borderRadius: "2px",
+              background: `linear-gradient(to top, var(--primary), ${
+                raw > 200 ? "#fff" : raw > 128 ? "#a0f0c0" : "var(--primary)"
+              })`,
+              boxShadow: raw > 100 ? `0 0 6px rgba(30,215,96,${raw / 512})` : "none",
+              transition: "height 0.05s ease-out",
+              transformOrigin: "bottom",
+            }}
+          />
+        );
+      })}
     </div>
   );
 }

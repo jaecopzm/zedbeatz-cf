@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Search, Library, Compass } from "lucide-react";
+import { Home, Search, Library, Compass, BarChart3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SignInButton, UserButton, useUser } from "@clerk/nextjs";
 
@@ -11,6 +11,7 @@ const links = [
   { href: "/search",  label: "Search",  icon: Search  },
   { href: "/browse",  label: "Browse",  icon: Compass },
   { href: "/library", label: "Library", icon: Library },
+  { href: "/stats",   label: "Your Stats", icon: BarChart3 },
 ];
 
 export default function Sidebar() {

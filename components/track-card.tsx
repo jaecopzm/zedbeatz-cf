@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Play, Pause, X } from "lucide-react";
+import { Play, Pause, X, Music } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePlayer, type Track } from "@/lib/player-store";
@@ -78,17 +78,18 @@ export default function TrackCard({ track, queue, bare }: { track: Track; queue?
           ? "rounded-xl ring-1 ring-white/5 group-hover:ring-[var(--primary)]/40 group-hover:shadow-[0_8px_30px_rgba(30,215,96,0.15)]"
           : "rounded-md md:rounded-lg shadow-md"
       } transition-all duration-400`}>
-        {track.coverUrl ? (
+        {/* Fallback background with Music icon */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[var(--surface-3)] to-[var(--surface-2)] flex items-center justify-center -z-10">
+          <Music size={24} className="opacity-20 text-white md:w-8 md:h-8" />
+        </div>
+
+        {track.coverUrl && (
           <Image
             src={track.coverUrl}
             alt={track.title}
             fill
             className="object-cover transition-transform duration-500 group-hover:scale-105"
           />
-        ) : (
-          <div className="w-full h-full bg-gradient-to-br from-[var(--surface-3)] to-[var(--surface-2)] flex items-center justify-center">
-            <span className="text-2xl md:text-3xl opacity-20">♪</span>
-          </div>
         )}
 
         {/* New badge */}

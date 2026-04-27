@@ -14,12 +14,7 @@ export async function POST(req: NextRequest) {
   if (!track_id) return NextResponse.json({ error: "Missing track_id" }, { status: 400 });
 
   if (userId) {
-    // Delete existing entry for this user+track, then insert new one
-    await supabase
-      .from("recently_played")
-      .delete()
-      .eq("user_id", userId)
-      .eq("track_id", track_id);
+    // Append play event to history
 
     await supabase
       .from("recently_played")

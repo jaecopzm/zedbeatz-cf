@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { Play, Pause, Flame } from "lucide-react";
+import { Play, Pause, Flame, Music } from "lucide-react";
 import { usePlayer, type Track } from "@/lib/player-store";
 
 const RANK_STYLE: Record<number, string> = {
@@ -15,6 +15,20 @@ const RANK_STYLE: Record<number, string> = {
 export default function TrendingSection({ tracks }: { tracks: Track[] }) {
   const { queue: pQueue, currentIndex, playing, setQueue, toggle } = usePlayer();
   const [featured, ...rest] = tracks;
+
+  if (!tracks || tracks.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center p-8 md:p-12 rounded-2xl glass-card border border-white/5 text-center">
+        <div className="w-16 h-16 rounded-full bg-[var(--surface-3)] flex items-center justify-center mb-4">
+          <Flame size={24} className="text-[var(--muted)]" />
+        </div>
+        <h3 className="text-lg font-bold mb-2 text-white">Nothing trending right now</h3>
+        <p className="text-sm text-[var(--muted)] max-w-sm">
+          We couldn't load the trending tracks. You might be offline, or there's an issue with your connection.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 auto-rows-auto">
@@ -51,13 +65,16 @@ function BentoCard({ track, index, tracks, isLarge, pQueue, pIndex, playing, set
         } ${isLarge ? "h-[140px] md:h-[340px]" : "h-[120px] md:h-[162px]"}`}
         onClick={() => isActive ? toggle() : setQueue(tracks, index)}
       >
-        {track.coverUrl ? (
+        {/* Fallback background with Music icon */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[var(--surface-3)] to-[var(--surface-2)] flex items-center justify-center -z-10">
+          <Music size={isLarge ? 48 : 28} className="opacity-20 text-white" />
+        </div>
+
+        {track.coverUrl && (
           <Image src={track.coverUrl} alt={track.title} fill
             className="object-cover transition-transform duration-700 group-hover:scale-105" unoptimized />
-        ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-[var(--surface-2)] to-[var(--surface-3)]" />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent pointer-events-none" />
 
         {/* Rank chip */}
         <div className={`absolute top-2 left-2 md:top-2.5 md:left-2.5 flex items-center justify-center font-black rounded-lg shadow-lg ${

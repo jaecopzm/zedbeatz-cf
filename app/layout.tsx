@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import Script from "next/script";
+import PwaManager from "@/components/pwa-manager";
+import ToastContainer from "@/components/toast";
+import KeyboardShortcutsModal from "@/components/keyboard-shortcuts-modal";
 import "./globals.css";
 
 const geist = Geist({ 
@@ -62,6 +65,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             gtag('js', new Date());
             gtag('config', 'G-55D0XM6BJB');
           `}</Script>
+          <PwaManager />
+          <ToastContainer />
+          <KeyboardShortcutsModal />
           {children}
         </body>
       </html>

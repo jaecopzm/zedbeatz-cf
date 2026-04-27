@@ -30,6 +30,7 @@ type PlayerState = {
   toggleShuffle: () => void;
   cycleRepeat: () => void;
   setLoading: (loading: boolean) => void;
+  reorderQueue: (fromIndex: number, toIndex: number) => void;
 };
 
 export const usePlayer = create<PlayerState>((set, get) => ({
@@ -51,6 +52,22 @@ export const usePlayer = create<PlayerState>((set, get) => ({
   toggleShuffle: () => set((s) => ({ shuffle: !s.shuffle })),
   cycleRepeat: () => set((s) => ({ repeat: s.repeat === "off" ? "all" : s.repeat === "all" ? "one" : "off" })),
   setLoading: (loading) => set({ loading }),
+
+  reorderQueue: (fromIndex, toIndex) => set((s) => {
+    const newQueue = [...s.queue];
+    const [removed] = newQueue.splice(fromIndex, 1);
+    newQueue.splice(toIndex, 0, removed);
+    // Adjust currentIndex to follow the currently playing track
+    let newIndex = s.currentIndex;
+    if (fromIndex === s.currentIndex) {
+      newIndex = toIndex;
+    } else if (fromIndex < s.currentIndex && toIndex >= s.currentIndex) {
+      newIndex = s.currentIndex - 1;
+    } else if (fromIndex > s.currentIndex && toIndex <= s.currentIndex) {
+      newIndex = s.currentIndex + 1;
+    }
+    return { queue: newQueue, currentIndex: newIndex };
+  }),
 
   next: () => {
     const { queue, currentIndex, shuffle, repeat } = get();
