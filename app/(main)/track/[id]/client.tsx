@@ -223,7 +223,7 @@ export default function TrackPageClient({ track }: { track: TrackWithMeta }) {
               </button>
 
               <div className="flex items-center gap-1 sm:gap-2 p-1.5 sm:p-2 bg-white/[0.05] backdrop-blur-md border border-white/10 rounded-full shadow-lg">
-                <LikeButton trackId={track.id} size={16} className="sm:w-[18px] sm:h-[18px]" />
+                <LikeButton trackId={track.id} size={16} />
                 <AddToPlaylist trackId={track.id} />
                 <DownloadButton audioUrl={track.audioUrl} title={track.title} artist={track.artist} coverUrl={track.coverUrl} />
                 <ShareButton title={`${track.title} by ${track.artist}`} />

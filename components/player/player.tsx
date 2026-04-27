@@ -239,30 +239,29 @@ export default function Player() {
 
       {/* ─────────────────── FULL-SCREEN NOW PLAYING ──────────────────── */}
       {showFullScreen && (
-        <div className="fixed inset-0 z-[100] flex flex-col overflow-hidden"
-          style={{ background: "linear-gradient(160deg, #1a1a2e 0%, #0d0d14 50%, #0a0a0f 100%)" }}>
-          {/* Ambient glow */}
+        <div className="fixed inset-0 z-[100] flex flex-col overflow-hidden bg-black">
+          {/* Dynamic ambient background with color extraction */}
           {track.coverUrl && (
             <div className="absolute inset-0 overflow-hidden z-0">
-              <Image src={track.coverUrl} alt="" fill sizes="100vw" className="object-cover opacity-10 blur-3xl scale-110" unoptimized />
-              <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-[#0d0d14]/80 to-[#0a0a0f]" />
+              <Image src={track.coverUrl} alt="" fill sizes="100vw" className="object-cover opacity-20 blur-[100px] scale-125 animate-pulse" unoptimized />
+              <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/70 to-black" />
             </div>
           )}
 
-          {/* ── DESKTOP: full two-column layout ── */}
+          {/* ── DESKTOP: Enhanced two-column layout ── */}
           <div className="hidden lg:flex h-full relative z-10">
 
             {/* Left column: cover + controls */}
-            <div className="flex-1 flex flex-col items-center justify-center px-12 py-4 min-w-0">
+            <div className="flex-1 flex flex-col items-center justify-center px-16 py-8 min-w-0">
 
               {/* Top bar */}
-              <div className="w-full max-w-xs flex items-center justify-between mb-3">
+              <div className="w-full max-w-md flex items-center justify-between mb-6">
                 <button onClick={() => setShowFullScreen(false)}
-                  className="flex items-center gap-2 text-white/50 hover:text-white transition-colors group">
-                  <ChevronDown size={18} className="group-hover:-translate-y-0.5 transition-transform" />
-                  <span className="text-[10px] font-semibold uppercase tracking-widest">Now Playing</span>
+                  className="flex items-center gap-2 text-white/60 hover:text-white transition-all group">
+                  <ChevronDown size={20} className="group-hover:-translate-y-1 transition-transform" />
+                  <span className="text-xs font-bold uppercase tracking-wider">Now Playing</span>
                 </button>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-2">
                   <DownloadButton audioUrl={track.audioUrl} title={track.title} artist={track.artist} coverUrl={track.coverUrl} />
                   <ShareButton title={`${track.title} by ${track.artist}`} url={`${typeof window !== "undefined" ? window.location.origin : ""}/track/${track.slug || track.id}`} />
                 </div>
@@ -270,108 +269,120 @@ export default function Player() {
 
               {/* Cover art or Lyrics */}
               {showLyrics ? (
-                <div className="flex-1 w-full max-w-2xl min-h-0 relative mb-4 rounded-2xl overflow-hidden glass-card border-none bg-black/20">
+                <div className="flex-1 w-full max-w-2xl min-h-0 relative mb-6 rounded-3xl overflow-hidden bg-black/40 backdrop-blur-xl border border-white/10 shadow-2xl">
                   <LyricsView trackId={track.id} progress={progress} className="absolute inset-0" />
                 </div>
               ) : (
-                <div className="relative w-full max-w-xs aspect-square mb-4">
-                  {/* Glow */}
-                  <div className={`absolute -inset-6 rounded-full blur-3xl transition-opacity duration-1000 pointer-events-none ${playing ? "opacity-30" : "opacity-0"}`}
-                    style={{ background: "radial-gradient(circle, var(--primary) 0%, transparent 65%)" }} />
-                  {track.coverUrl ? (
-                    <Image src={track.coverUrl} alt={track.title} fill priority unoptimized
-                      className={`object-cover rounded-2xl shadow-2xl transition-all duration-700 ${playing ? "scale-100" : "scale-[0.97]"}`}
-                      style={{ boxShadow: "0 24px 60px rgba(0,0,0,0.6)" }} />
-                  ) : (
-                    <div className="w-full h-full rounded-2xl bg-gradient-to-br from-[var(--surface-2)] to-[var(--surface-3)]" />
-                  )}
-                  {/* Visualizer overlay — driven by real audio frequency data */}
-                  <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black/80 to-transparent rounded-b-2xl flex items-end justify-center px-4 pb-3">
-                    <AudioVisualizer
-                      audioRef={audioRef}
-                      playing={playing}
-                      height={40}
-                      barCount={32}
-                    />
+                <div className="relative w-full max-w-md aspect-square mb-6 group">
+                  {/* Enhanced glow effect */}
+                  <div className={`absolute -inset-12 rounded-full blur-[80px] transition-all duration-1000 pointer-events-none ${playing ? "opacity-50 scale-110" : "opacity-0 scale-100"}`}
+                    style={{ background: "radial-gradient(circle, var(--primary) 0%, rgba(30,215,96,0.3) 40%, transparent 70%)" }} />
+                  
+                  {/* Album art with enhanced shadow */}
+                  <div className="relative w-full h-full rounded-3xl overflow-hidden shadow-[0_30px_80px_rgba(0,0,0,0.8)] ring-1 ring-white/10">
+                    {track.coverUrl ? (
+                      <Image src={track.coverUrl} alt={track.title} fill priority unoptimized
+                        className={`object-cover transition-all duration-700 ${playing ? "scale-100" : "scale-95"}`} />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-[var(--surface-2)] to-[var(--surface-3)]" />
+                    )}
+                    
+                    {/* Enhanced visualizer overlay */}
+                    <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black via-black/80 to-transparent flex items-end justify-center px-6 pb-4">
+                      <AudioVisualizer
+                        audioRef={audioRef}
+                        playing={playing}
+                        height={56}
+                        barCount={40}
+                      />
+                    </div>
+                    
+                    {/* Shine effect */}
+                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                   </div>
                 </div>
               )}
 
               {/* Track info */}
-              <div className="w-full max-w-xs flex items-start justify-between mb-3">
-                <div className="min-w-0 flex-1 mr-3">
-                  <h1 className="text-xl font-black tracking-tight leading-tight text-white truncate">{track.title}</h1>
-                  <p className="text-xs text-white/50 mt-0.5 truncate">
+              <div className="w-full max-w-md flex items-start justify-between mb-5">
+                <div className="min-w-0 flex-1 mr-4">
+                  <h1 className="text-2xl font-black tracking-tight leading-tight text-white mb-1 truncate">{track.title}</h1>
+                  <p className="text-sm text-white/60 truncate">
                     <Link href={track.artistSlug ? `/artist/${track.artistSlug}` : `/artist/${track.artistId}`}
-                      className="hover:text-white transition-colors">
+                      className="hover:text-[var(--primary)] transition-colors font-semibold">
                       {track.artist}
                     </Link>
-                    {track.featuredArtists && <span className="text-[11px]"> feat. {track.featuredArtists}</span>}
+                    {track.featuredArtists && <span className="text-xs"> feat. {track.featuredArtists}</span>}
                   </p>
                 </div>
                 <div onClick={e => e.stopPropagation()} className="shrink-0">
-                  <LikeButton trackId={track.id} size={18} />
+                  <LikeButton trackId={track.id} size={22} />
                 </div>
               </div>
 
-              {/* Progress */}
-              <div className="w-full max-w-xs mb-3">
+              {/* Enhanced Progress */}
+              <div className="w-full max-w-md mb-6">
                 <Slider value={[progress]} max={duration || 1} step={0.1}
                   onValueChange={([v]: number[]) => { if (audioRef.current) audioRef.current.currentTime = v; }}
-                  className="mb-1.5" />
-                <div className="flex justify-between text-[10px] text-white/40 tabular-nums font-medium">
+                  className="mb-2" />
+                <div className="flex justify-between text-xs text-white/50 tabular-nums font-semibold">
                   <span>{fmt(progress)}</span><span>{fmt(duration)}</span>
                 </div>
               </div>
 
-              {/* Transport */}
-              <div className="w-full max-w-xs flex items-center justify-between mb-3">
+              {/* Enhanced Transport */}
+              <div className="w-full max-w-md flex items-center justify-between mb-5">
                 <button onClick={() => { haptic(); toggleShuffle(); }}
-                  className={`p-2 rounded-full transition-all ${shuffle ? "text-[var(--primary)]" : "text-white/30 hover:text-white hover:bg-white/10"}`}>
-                  <Shuffle size={16} />
+                  className={`p-3 rounded-full transition-all hover:scale-110 active:scale-95 ${shuffle ? "text-[var(--primary)] bg-[var(--primary)]/20" : "text-white/40 hover:text-white hover:bg-white/10"}`}>
+                  <Shuffle size={18} />
                 </button>
-                <button onClick={handlePrev} className="p-1.5 text-white/70 hover:text-white active:scale-90 transition-all">
-                  <SkipBack size={24} fill="currentColor" />
+                <button onClick={handlePrev} className="p-2 text-white/70 hover:text-white active:scale-90 transition-all hover:scale-110">
+                  <SkipBack size={28} fill="currentColor" />
                 </button>
                 <button onClick={() => { haptic(); toggle(); }}
-                  className="w-12 h-12 rounded-full bg-white flex items-center justify-center text-black shadow-2xl active:scale-95 hover:scale-105 transition-all relative"
-                  style={{ boxShadow: "0 0 30px rgba(255,255,255,0.15), 0 6px 24px rgba(0,0,0,0.5)" }}>
+                  className="w-16 h-16 rounded-full bg-gradient-to-br from-white to-white/90 flex items-center justify-center text-black shadow-[0_0_40px_rgba(255,255,255,0.3),0_8px_32px_rgba(0,0,0,0.6)] active:scale-95 hover:scale-110 transition-all relative group">
                   {loading ? (
-                    <div className="w-5 h-5 border-2 border-black/20 border-t-black rounded-full animate-spin" />
+                    <div className="w-6 h-6 border-3 border-black/20 border-t-black rounded-full animate-spin" />
                   ) : playing ? (
-                    <Pause size={22} fill="currentColor" />
+                    <Pause size={26} fill="currentColor" />
                   ) : (
-                    <Play size={22} fill="currentColor" className="ml-0.5" />
+                    <Play size={26} fill="currentColor" className="ml-1" />
                   )}
+                  <div className="absolute inset-0 rounded-full bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </button>
-                <button onClick={() => { haptic(); next(); }} className="p-1.5 text-white/70 hover:text-white active:scale-90 transition-all">
-                  <SkipForward size={24} fill="currentColor" />
+                <button onClick={() => { haptic(); next(); }} className="p-2 text-white/70 hover:text-white active:scale-90 transition-all hover:scale-110">
+                  <SkipForward size={28} fill="currentColor" />
                 </button>
                 <button onClick={cycleRepeat}
-                  className={`p-2 rounded-full transition-all ${repeat !== "off" ? "text-[var(--primary)]" : "text-white/30 hover:text-white hover:bg-white/10"}`}>
-                  {repeat === "one" ? <Repeat1 size={16} /> : <Repeat size={16} />}
+                  className={`p-3 rounded-full transition-all hover:scale-110 active:scale-95 ${repeat !== "off" ? "text-[var(--primary)] bg-[var(--primary)]/20" : "text-white/40 hover:text-white hover:bg-white/10"}`}>
+                  {repeat === "one" ? <Repeat1 size={18} /> : <Repeat size={18} />}
                 </button>
               </div>
 
-              {/* Volume */}
-              <div className="w-full max-w-xs flex items-center gap-2.5">
-                <button onClick={toggleMute} className="text-white/40 hover:text-white transition-colors shrink-0">
-                  {volume === 0 ? <VolumeX size={15} /> : <Volume2 size={15} />}
+              {/* Enhanced Volume */}
+              <div className="w-full max-w-md flex items-center gap-3">
+                <button onClick={toggleMute} className="text-white/50 hover:text-white transition-all shrink-0 hover:scale-110 active:scale-95">
+                  {volume === 0 ? <VolumeX size={18} /> : <Volume2 size={18} />}
                 </button>
                 <Slider value={[volume]} max={1} step={0.01} onValueChange={([v]: number[]) => setVolume(v)} className="flex-1" />
+                <span className="text-xs text-white/40 font-semibold tabular-nums w-10 text-right">{Math.round(volume * 100)}%</span>
               </div>
             </div>
 
-            {/* Right column: queue */}
-            <div className="w-80 shrink-0 flex flex-col border-l border-white/[0.06] bg-black/20 backdrop-blur-sm">
-              <div className="flex items-center justify-between px-5 py-5 border-b border-white/[0.06]">
-                <div className="flex items-center gap-2">
-                  <List size={16} className="text-[var(--primary)]" />
-                  <h3 className="font-bold text-sm text-white">Queue</h3>
-                  <span className="text-xs text-white/30 tabular-nums">({queue.length})</span>
+            {/* Right column: Enhanced queue */}
+            <div className="w-96 shrink-0 flex flex-col border-l border-white/10 bg-black/30 backdrop-blur-xl">
+              <div className="flex items-center justify-between px-6 py-6 border-b border-white/10">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-[var(--primary)]/20 flex items-center justify-center">
+                    <List size={16} className="text-[var(--primary)]" />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-sm text-white">Up Next</h3>
+                    <p className="text-xs text-white/40">{queue.length} tracks</p>
+                  </div>
                 </div>
               </div>
-              <div className="flex-1 overflow-y-auto py-2">
+              <div className="flex-1 overflow-y-auto custom-scrollbar">
                 {queue.map((t, i) => (
                   <div
                     key={`${t.id}-${i}`}
@@ -387,18 +398,18 @@ export default function Player() {
                       dragIndexRef.current = null;
                     }}
                     onClick={() => setQueue(queue, i)}
-                    className={`flex items-center gap-3 px-4 py-2.5 cursor-grab active:cursor-grabbing transition-all border-t-2 ${
-                      dragOverIndex === i ? 'border-[var(--primary)]' : 'border-transparent'
-                    } ${i === currentIndex ? 'bg-white/[0.08]' : 'hover:bg-white/[0.04]'}`}>
-                    <span className={`text-xs w-5 text-center tabular-nums shrink-0 flex items-center justify-center ${i === currentIndex ? 'text-[var(--primary)]' : 'text-white/30'}`}>
+                    className={`flex items-center gap-3 px-5 py-3 cursor-grab active:cursor-grabbing transition-all border-l-2 ${
+                      dragOverIndex === i ? 'border-[var(--primary)] bg-[var(--primary)]/10' : 'border-transparent'
+                    } ${i === currentIndex ? 'bg-white/10' : 'hover:bg-white/5'}`}>
+                    <span className={`text-xs w-6 text-center tabular-nums shrink-0 font-bold ${i === currentIndex ? 'text-[var(--primary)]' : 'text-white/40'}`}>
                       {i === currentIndex && playing ? <EqBars /> : i + 1}
                     </span>
-                    <div className="w-9 h-9 rounded-lg overflow-hidden bg-[var(--surface-2)] shrink-0">
-                      {t.coverUrl && <Image src={t.coverUrl} alt={t.title} width={36} height={36} className="object-cover" />}
+                    <div className="w-11 h-11 rounded-lg overflow-hidden bg-[var(--surface-2)] shrink-0 shadow-lg">
+                      {t.coverUrl && <Image src={t.coverUrl} alt={t.title} width={44} height={44} className="object-cover" />}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className={`text-xs font-semibold truncate ${i === currentIndex ? 'text-[var(--primary)]' : 'text-white'}`}>{t.title}</p>
-                      <p className="text-xs text-white/40 truncate">{t.artist}</p>
+                      <p className={`text-sm font-bold truncate ${i === currentIndex ? 'text-[var(--primary)]' : 'text-white'}`}>{t.title}</p>
+                      <p className="text-xs text-white/50 truncate">{t.artist}</p>
                     </div>
                   </div>
                 ))}
@@ -406,108 +417,120 @@ export default function Player() {
             </div>
           </div>
 
-          {/* ── MOBILE: original centered layout ── */}
+          {/* ── MOBILE: Enhanced centered layout ── */}
           <div className="lg:hidden flex flex-col h-full">
-            {/* Header */}
-            <div className="relative flex items-center justify-between px-5 py-4 shrink-0">
-              <button onClick={() => setShowFullScreen(false)} className="p-2.5 rounded-full hover:bg-white/10 transition-all active:scale-95">
-                <ChevronDown size={24} className="text-white" strokeWidth={2.5} />
+            {/* Enhanced Header */}
+            <div className="relative flex items-center justify-between px-4 py-4 shrink-0 backdrop-blur-xl bg-black/20">
+              <button onClick={() => setShowFullScreen(false)} className="p-3 rounded-full hover:bg-white/10 transition-all active:scale-90">
+                <ChevronDown size={26} className="text-white" strokeWidth={2.5} />
               </button>
-              <div className="flex items-center gap-2 px-4 py-1.5 rounded-full glass-card">
-                <span className="w-1.5 h-1.5 rounded-full bg-[var(--primary)] animate-pulse" />
-                <span className="text-xs font-semibold text-white/90 uppercase tracking-widest">Now Playing</span>
+              <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-xl border border-white/20">
+                <span className="w-2 h-2 rounded-full bg-[var(--primary)] animate-pulse shadow-[0_0_8px_var(--primary)]" />
+                <span className="text-xs font-black text-white uppercase tracking-wider">Now Playing</span>
               </div>
-              <div className="flex items-center">
+              <div className="flex items-center gap-1">
                 <button
                   onClick={() => { setShowLyrics(!showLyrics); setShowQueue(false); }}
-                  className={`p-2 rounded-full transition-all active:scale-95 ${showLyrics ? "text-[var(--primary)]" : "text-white/70 hover:bg-white/10"}`}
+                  className={`p-3 rounded-full transition-all active:scale-90 ${showLyrics ? "text-[var(--primary)] bg-[var(--primary)]/20" : "text-white/70 hover:bg-white/10"}`}
                 >
                   <Mic2 size={22} strokeWidth={2.5} />
                 </button>
                 <button
                   onClick={() => { setShowQueue(!showQueue); setShowLyrics(false); }}
-                  className={`p-2 rounded-full transition-all active:scale-95 ${showQueue ? "text-[var(--primary)]" : "text-white/70 hover:bg-white/10"}`}
+                  className={`p-3 rounded-full transition-all active:scale-90 ${showQueue ? "text-[var(--primary)] bg-[var(--primary)]/20" : "text-white/70 hover:bg-white/10"}`}
                 >
                   <List size={22} strokeWidth={2.5} />
                 </button>
               </div>
             </div>
 
-            <div className="relative flex-1 flex flex-col items-center px-6 pb-8 gap-3 overflow-hidden" style={{ paddingBottom: "max(2rem, env(safe-area-inset-bottom))" }}>
-              {/* Album art or Lyrics */}
+            <div className="relative flex-1 flex flex-col items-center px-5 pb-8 gap-4 overflow-hidden" style={{ paddingBottom: "max(2rem, env(safe-area-inset-bottom))" }}>
+              {/* Enhanced Album art or Lyrics */}
               {showLyrics ? (
-                <div className="flex-1 w-full relative mt-2 mb-2 min-h-0 rounded-2xl overflow-hidden glass-card border-none bg-black/20">
+                <div className="flex-1 w-full relative mt-3 mb-3 min-h-0 rounded-3xl overflow-hidden bg-black/40 backdrop-blur-xl border border-white/10 shadow-2xl">
                   <LyricsView trackId={track.id} progress={progress} className="absolute inset-0" />
                 </div>
               ) : (
-                <div className="relative w-full max-w-[320px] aspect-square shrink-0 mt-2">
-                  <div className={`absolute -inset-6 rounded-full blur-3xl transition-opacity duration-700 ${playing ? "opacity-40" : "opacity-0"}`}
-                    style={{ background: "radial-gradient(circle, var(--primary) 0%, transparent 70%)" }} />
-                  {track.coverUrl ? (
-                    <Image src={track.coverUrl} alt={track.title} fill sizes="(max-width: 640px) 100vw, 320px"
-                      className={`object-cover rounded-2xl shadow-2xl transition-transform duration-700 ${playing ? "scale-100" : "scale-95"}`} priority unoptimized />
-                  ) : (
-                    <div className="w-full h-full rounded-2xl bg-gradient-to-br from-[var(--surface-2)] to-[var(--surface-3)]" />
-                  )}
+                <div className="relative w-full max-w-sm aspect-square shrink-0 mt-4 group">
+                  <div className={`absolute -inset-8 rounded-full blur-[60px] transition-all duration-700 ${playing ? "opacity-50 scale-110" : "opacity-0 scale-100"}`}
+                    style={{ background: "radial-gradient(circle, var(--primary) 0%, rgba(30,215,96,0.4) 40%, transparent 70%)" }} />
+                  <div className="relative w-full h-full rounded-3xl overflow-hidden shadow-[0_30px_80px_rgba(0,0,0,0.8)] ring-1 ring-white/10">
+                    {track.coverUrl ? (
+                      <Image src={track.coverUrl} alt={track.title} fill sizes="(max-width: 640px) 100vw, 448px"
+                        className={`object-cover transition-all duration-700 ${playing ? "scale-100" : "scale-95"}`} priority unoptimized />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-[var(--surface-2)] to-[var(--surface-3)]" />
+                    )}
+                    {/* Enhanced visualizer */}
+                    <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-black via-black/80 to-transparent flex items-end justify-center px-4 pb-3">
+                      <AudioVisualizer
+                        audioRef={audioRef}
+                        playing={playing}
+                        height={48}
+                        barCount={32}
+                      />
+                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent opacity-0 group-active:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                  </div>
                 </div>
               )}
 
-              {/* Track info */}
-              <div className="w-full max-w-md text-center px-4">
-                <h1 className="text-xl font-bold mb-1 leading-tight text-white truncate">{track.title}</h1>
-                <p className="text-sm text-[var(--muted)] font-medium truncate">
-                  <Link href={track.artistSlug ? `/artist/${track.artistSlug}` : `/artist/${track.artistId}`} className="hover:text-white transition-colors">
+              {/* Enhanced Track info */}
+              <div className="w-full max-w-md text-center px-2">
+                <h1 className="text-2xl font-black mb-1.5 leading-tight text-white truncate">{track.title}</h1>
+                <p className="text-sm text-white/60 font-semibold truncate">
+                  <Link href={track.artistSlug ? `/artist/${track.artistSlug}` : `/artist/${track.artistId}`} className="hover:text-[var(--primary)] transition-colors">
                     {track.artist}
                   </Link>
                   {track.featuredArtists && <span className="text-xs"> feat. {track.featuredArtists}</span>}
                 </p>
               </div>
 
-              {/* Progress */}
+              {/* Enhanced Progress */}
               <div className="w-full max-w-md px-2">
                 <WhatsAppBanner className="mb-4" />
                 <Slider value={[progress]} max={duration || 1} step={0.1}
-                  onValueChange={([v]: number[]) => { if (audioRef.current) audioRef.current.currentTime = v; }} className="mb-2.5" />
-                <div className="flex justify-between text-xs text-[var(--muted)] tabular-nums font-medium">
+                  onValueChange={([v]: number[]) => { if (audioRef.current) audioRef.current.currentTime = v; }} className="mb-3" />
+                <div className="flex justify-between text-xs text-white/50 tabular-nums font-bold">
                   <span>{fmt(progress)}</span><span>{fmt(duration)}</span>
                 </div>
               </div>
 
-              {/* Transport */}
-              <div className="flex items-center justify-center gap-5 w-full max-w-xs">
-                <button onClick={toggleShuffle} className={`p-2.5 rounded-full transition-all active:scale-90 ${shuffle ? "text-[var(--primary)] bg-[var(--primary-dim)]" : "text-white/50 hover:text-white hover:bg-white/10"}`}>
-                  <Shuffle size={20} />
+              {/* Enhanced Transport */}
+              <div className="flex items-center justify-center gap-4 w-full max-w-sm">
+                <button onClick={toggleShuffle} className={`p-3 rounded-full transition-all active:scale-90 ${shuffle ? "text-[var(--primary)] bg-[var(--primary)]/20" : "text-white/50 hover:text-white hover:bg-white/10"}`}>
+                  <Shuffle size={22} />
                 </button>
                 <button onClick={handlePrev} className="p-2 text-white/80 hover:text-white active:scale-90 transition-all">
-                  <SkipBack size={28} fill="currentColor" />
+                  <SkipBack size={32} fill="currentColor" />
                 </button>
                 <button onClick={toggle}
-                  className="w-16 h-16 rounded-full bg-white flex items-center justify-center text-black shadow-2xl active:scale-95 transition-all hover:scale-105 relative"
-                  style={{ boxShadow: "0 0 40px rgba(255,255,255,0.2), 0 8px 32px rgba(0,0,0,0.4)" }}>
+                  className="w-20 h-20 rounded-full bg-gradient-to-br from-white to-white/90 flex items-center justify-center text-black shadow-[0_0_50px_rgba(255,255,255,0.3),0_10px_40px_rgba(0,0,0,0.5)] active:scale-95 transition-all relative group">
                   {loading ? (
-                    <div className="w-7 h-7 border-2 border-black/20 border-t-black rounded-full animate-spin" />
+                    <div className="w-8 h-8 border-3 border-black/20 border-t-black rounded-full animate-spin" />
                   ) : playing ? (
-                    <Pause size={28} fill="currentColor" />
+                    <Pause size={32} fill="currentColor" />
                   ) : (
-                    <Play size={28} fill="currentColor" className="ml-1" />
+                    <Play size={32} fill="currentColor" className="ml-1" />
                   )}
+                  <div className="absolute inset-0 rounded-full bg-white/20 opacity-0 group-active:opacity-100 transition-opacity" />
                 </button>
                 <button onClick={next} className="p-2 text-white/80 hover:text-white active:scale-90 transition-all">
-                  <SkipForward size={28} fill="currentColor" />
+                  <SkipForward size={32} fill="currentColor" />
                 </button>
-                <button onClick={cycleRepeat} className={`p-2.5 rounded-full transition-all active:scale-90 ${repeat !== "off" ? "text-[var(--primary)] bg-[var(--primary-dim)]" : "text-white/50 hover:text-white hover:bg-white/10"}`}>
-                  {repeat === "one" ? <Repeat1 size={20} /> : <Repeat size={20} />}
+                <button onClick={cycleRepeat} className={`p-3 rounded-full transition-all active:scale-90 ${repeat !== "off" ? "text-[var(--primary)] bg-[var(--primary)]/20" : "text-white/50 hover:text-white hover:bg-white/10"}`}>
+                  {repeat === "one" ? <Repeat1 size={22} /> : <Repeat size={22} />}
                 </button>
               </div>
 
-              {/* Like + Volume + Share + Download */}
-              <div className="flex items-center justify-between w-full max-w-xs">
-                <div onClick={e => e.stopPropagation()}><LikeButton trackId={track.id} size={20} /></div>
+              {/* Enhanced Like + Volume + Share + Download */}
+              <div className="flex items-center justify-between w-full max-w-md px-2">
+                <div onClick={e => e.stopPropagation()}><LikeButton trackId={track.id} size={24} /></div>
                 <div className="flex items-center gap-3">
-                  <button onClick={toggleMute} className="text-[var(--muted)] hover:text-white transition-colors">
-                    {volume === 0 ? <VolumeX size={20} /> : <Volume2 size={20} />}
+                  <button onClick={toggleMute} className="text-white/50 hover:text-white transition-colors active:scale-90">
+                    {volume === 0 ? <VolumeX size={22} /> : <Volume2 size={22} />}
                   </button>
-                  <Slider value={[volume]} max={1} step={0.01} onValueChange={([v]: number[]) => setVolume(v)} className="w-24" />
+                  <Slider value={[volume]} max={1} step={0.01} onValueChange={([v]: number[]) => setVolume(v)} className="w-28" />
                 </div>
                 <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
                   <DownloadButton audioUrl={track.audioUrl} title={track.title} artist={track.artist} coverUrl={track.coverUrl} />
@@ -516,27 +539,35 @@ export default function Player() {
               </div>
             </div>
 
-            {/* Mobile queue panel */}
+            {/* Enhanced Mobile queue panel */}
             {showQueue && (
-              <div className="absolute right-0 top-0 bottom-0 w-full glass-card border-l border-[var(--glass-border)] flex flex-col z-10 animate-slide-up">
-                <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--glass-border)]">
-                  <h3 className="font-bold text-white">Queue</h3>
-                  <button onClick={() => setShowQueue(false)} className="p-2 rounded-full hover:bg-white/10 transition-colors">
-                    <X size={18} className="text-white" />
+              <div className="absolute right-0 top-0 bottom-0 w-full bg-black/95 backdrop-blur-2xl border-l border-white/10 flex flex-col z-10 animate-slide-up">
+                <div className="flex items-center justify-between px-5 py-5 border-b border-white/10">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-[var(--primary)]/20 flex items-center justify-center">
+                      <List size={16} className="text-[var(--primary)]" />
+                    </div>
+                    <div>
+                      <h3 className="font-black text-sm text-white">Up Next</h3>
+                      <p className="text-xs text-white/40">{queue.length} tracks</p>
+                    </div>
+                  </div>
+                  <button onClick={() => setShowQueue(false)} className="p-2 rounded-full hover:bg-white/10 transition-all active:scale-90">
+                    <X size={20} className="text-white" />
                   </button>
                 </div>
-                <div className="flex-1 overflow-y-auto py-2">
+                <div className="flex-1 overflow-y-auto custom-scrollbar">
                   {queue.map((t, i) => (
                     <div key={`${t.id}-${i}`} onClick={() => { setQueue(queue, i); setShowQueue(false); }}
-                      className={`flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors ${i === currentIndex ? "bg-white/10" : "hover:bg-white/5 active:bg-white/10"}`}>
-                      <span className={`text-xs w-6 text-center tabular-nums shrink-0 ${i === currentIndex ? "text-[var(--primary)]" : "text-[var(--muted)]"}`}>
+                      className={`flex items-center gap-3 px-4 py-3 cursor-pointer transition-all active:scale-[0.98] ${i === currentIndex ? "bg-white/10" : "hover:bg-white/5 active:bg-white/10"}`}>
+                      <span className={`text-xs w-6 text-center tabular-nums shrink-0 font-bold ${i === currentIndex ? "text-[var(--primary)]" : "text-white/40"}`}>
                         {i === currentIndex && playing ? <EqBars /> : i + 1}
                       </span>
-                      <div className="w-10 h-10 rounded-lg overflow-hidden bg-[var(--surface-2)] shrink-0">
-                        {t.coverUrl && <Image src={t.coverUrl} alt={t.title} width={40} height={40} className="object-cover" />}
+                      <div className="w-11 h-11 rounded-lg overflow-hidden bg-[var(--surface-2)] shrink-0 shadow-lg">
+                        {t.coverUrl && <Image src={t.coverUrl} alt={t.title} width={44} height={44} className="object-cover" />}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className={`text-sm truncate font-medium ${i === currentIndex ? "text-[var(--primary)]" : "text-white"}`}>{t.title}</p>
+                        <p className={`text-sm truncate font-bold ${i === currentIndex ? "text-[var(--primary)]" : "text-white"}`}>{t.title}</p>
                         <p className="text-xs text-[var(--muted)] truncate">{t.artist}</p>
                       </div>
                     </div>
