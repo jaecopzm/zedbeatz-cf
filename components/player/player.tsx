@@ -196,22 +196,6 @@ export default function Player() {
   if (!track) return null;
 
   /* ───────────────────────── Shared UI pieces ─────────────────────── */
-  const EqBars = () => (
-    <div className="flex items-end gap-[2px] h-3.5">
-      {[1, 2, 3, 4].map((i) => (
-        <span 
-          key={i} 
-          className="w-[2.5px] bg-[var(--primary)] rounded-full" 
-          style={{ 
-            animation: 'bar-bounce 0.6s ease-in-out infinite',
-            animationDelay: `${i * 0.1}s`,
-            height: `${8 + i * 2}px`,
-            transformOrigin: 'bottom'
-          }} 
-        />
-      ))}
-    </div>
-  );
 
   return (
     <>
@@ -417,7 +401,7 @@ export default function Player() {
                       dragOverIndex === i ? 'border-[var(--primary)] bg-[var(--primary)]/10' : 'border-transparent'
                     } ${i === currentIndex ? 'bg-white/10' : 'hover:bg-white/5'}`}>
                     <span className={`text-xs w-6 text-center tabular-nums shrink-0 font-bold ${i === currentIndex ? 'text-[var(--primary)]' : 'text-white/40'}`}>
-                      {i === currentIndex && playing ? <EqBars /> : i + 1}
+                      {i + 1}
                     </span>
                     <div className="w-11 h-11 rounded-lg overflow-hidden bg-[var(--surface-2)] shrink-0 shadow-lg">
                       {t.coverUrl && <Image src={t.coverUrl} alt={t.title} width={44} height={44} className="object-cover" />}
@@ -576,7 +560,7 @@ export default function Player() {
                     <div key={`${t.id}-${i}`} onClick={() => { setQueue(queue, i); setShowQueue(false); }}
                       className={`flex items-center gap-3 px-4 py-3 cursor-pointer transition-all active:scale-[0.98] ${i === currentIndex ? "bg-white/10" : "hover:bg-white/5 active:bg-white/10"}`}>
                       <span className={`text-xs w-6 text-center tabular-nums shrink-0 font-bold ${i === currentIndex ? "text-[var(--primary)]" : "text-white/40"}`}>
-                        {i === currentIndex && playing ? <EqBars /> : i + 1}
+                        {i + 1}
                       </span>
                       <div className="w-11 h-11 rounded-lg overflow-hidden bg-[var(--surface-2)] shrink-0 shadow-lg">
                         {t.coverUrl && <Image src={t.coverUrl} alt={t.title} width={44} height={44} className="object-cover" />}
