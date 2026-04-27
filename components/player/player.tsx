@@ -197,9 +197,18 @@ export default function Player() {
 
   /* ───────────────────────── Shared UI pieces ─────────────────────── */
   const EqBars = () => (
-    <div className="flex items-end gap-[3px] h-4">
-      {[1, 2, 3].map((i) => (
-        <span key={i} className="w-[3px] bg-[var(--primary)] rounded-full eq-bar" style={{ animationDelay: `${i * 0.15}s` }} />
+    <div className="flex items-end gap-[2px] h-3.5">
+      {[1, 2, 3, 4].map((i) => (
+        <span 
+          key={i} 
+          className="w-[2.5px] bg-[var(--primary)] rounded-full" 
+          style={{ 
+            animation: 'bar-bounce 0.6s ease-in-out infinite',
+            animationDelay: `${i * 0.1}s`,
+            height: `${8 + i * 2}px`,
+            transformOrigin: 'bottom'
+          }} 
+        />
       ))}
     </div>
   );
