@@ -262,6 +262,12 @@ export default function Player() {
                   <span className="text-xs font-bold uppercase tracking-wider">Now Playing</span>
                 </button>
                 <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setShowLyrics(!showLyrics)}
+                    className={`p-2 rounded-full transition-all hover:scale-110 active:scale-95 ${showLyrics ? "text-[var(--primary)] bg-[var(--primary)]/20" : "text-white/60 hover:text-white hover:bg-white/10"}`}
+                  >
+                    <Mic2 size={18} />
+                  </button>
                   <DownloadButton audioUrl={track.audioUrl} title={track.title} artist={track.artist} coverUrl={track.coverUrl} />
                   <ShareButton title={`${track.title} by ${track.artist}`} url={`${typeof window !== "undefined" ? window.location.origin : ""}/track/${track.slug || track.id}`} />
                 </div>
