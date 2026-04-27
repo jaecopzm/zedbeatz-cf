@@ -131,7 +131,7 @@ export default async function TrackPage({ params }: { params: Promise<{ id: stri
     featuredArtists: featuredArtists,
     audioUrl: getPublicUrl(data.audio_key),
     coverUrl: coverUrl,
-    duration: data.duration ?? undefined,
+    duration: data.duration || undefined,
     genre: data.genre, plays: data.plays, slug: data.slug ?? undefined,
     moreFromArtist,
   };

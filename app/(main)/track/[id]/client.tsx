@@ -25,6 +25,7 @@ export default function TrackPageClient({ track }: { track: TrackWithMeta }) {
   const isActive = currentTrack?.id === track.id;
   const [plays, setPlays] = useState<number | null>(track.plays);
   const [activeTab, setActiveTab] = useState<"about" | "lyrics" | "credits">("about");
+  const [actualDuration, setActualDuration] = useState<number | undefined>(track.duration);
   const heroRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
   const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
@@ -36,6 +37,21 @@ export default function TrackPageClient({ track }: { track: TrackWithMeta }) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Get actual duration from audio element
+  useEffect(() => {
+    const audio = document.querySelector('audio');
+    if (isActive && audio) {
+      const updateDuration = () => {
+        if (audio.duration && !isNaN(audio.duration)) {
+          setActualDuration(Math.floor(audio.duration));
+        }
+      };
+      audio.addEventListener('loadedmetadata', updateDuration);
+      if (audio.duration) updateDuration();
+      return () => audio.removeEventListener('loadedmetadata', updateDuration);
+    }
+  }, [isActive]);
 
   // Refresh play count when this track becomes active (just played)
   useEffect(() => {
@@ -148,10 +164,6 @@ export default function TrackPageClient({ track }: { track: TrackWithMeta }) {
                 <TrendingUp size={11} />
                 Trending
               </span>
-              <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-[10px] font-bold text-blue-400 backdrop-blur-sm">
-                <Users size={11} />
-                {Math.floor(Math.random() * 50) + 10} listening
-              </span>
             </motion.div>
 
             <motion.div
@@ -159,7 +171,7 @@ export default function TrackPageClient({ track }: { track: TrackWithMeta }) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
             >
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black tracking-tight leading-[1.05] mb-3 sm:mb-4 bg-gradient-to-br from-white via-white to-white/60 bg-clip-text text-transparent drop-shadow-[0_4px_12px_rgba(0,0,0,0.4)] px-2 lg:px-0">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black tracking-tight leading-[1.05] mb-3 sm:mb-4 bg-gradient-to-br from-white via-white to-white/60 bg-clip-text text-transparent drop-shadow-[0_4px_12px_rgba(0,0,0,0.4)] px-2 lg:px-0">
                 {track.title}
               </h1>
 
@@ -177,10 +189,10 @@ export default function TrackPageClient({ track }: { track: TrackWithMeta }) {
 
               {/* Metadata Pills */}
               <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 text-xs text-white/50">
-                {track.duration && (
+                {actualDuration && (
                   <div className="flex items-center gap-1.5">
                     <Clock size={13} />
-                    <span className="font-semibold tabular-nums">{fmt(track.duration)}</span>
+                    <span className="font-semibold tabular-nums">{fmt(actualDuration)}</span>
                   </div>
                 )}
                 <div className="flex items-center gap-1.5">
@@ -261,22 +273,14 @@ export default function TrackPageClient({ track }: { track: TrackWithMeta }) {
                   <BarChart3 size={20} className="text-[var(--primary)]" />
                   Track Stats
                 </h3>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   <div className="bg-white/5 rounded-xl p-4 border border-white/10">
                     <div className="text-2xl font-black text-white mb-1">{plays?.toLocaleString() || "0"}</div>
                     <div className="text-xs text-white/50 font-semibold">Total Plays</div>
                   </div>
                   <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                    <div className="text-2xl font-black text-white mb-1">{Math.floor(Math.random() * 500) + 100}</div>
-                    <div className="text-xs text-white/50 font-semibold">Likes</div>
-                  </div>
-                  <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                    <div className="text-2xl font-black text-white mb-1">{Math.floor(Math.random() * 50) + 10}</div>
-                    <div className="text-xs text-white/50 font-semibold">Playlists</div>
-                  </div>
-                  <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                    <div className="text-2xl font-black text-white mb-1">{Math.floor(Math.random() * 20) + 5}</div>
-                    <div className="text-xs text-white/50 font-semibold">Shares</div>
+                    <div className="text-2xl font-black text-white mb-1">{actualDuration ? fmt(actualDuration) : "—"}</div>
+                    <div className="text-xs text-white/50 font-semibold">Duration</div>
                   </div>
                 </div>
               </div>
@@ -327,7 +331,7 @@ export default function TrackPageClient({ track }: { track: TrackWithMeta }) {
                 </div>
                 <div className="flex items-start justify-between py-3 border-b border-white/10">
                   <span className="text-sm text-white/50 font-semibold">Duration</span>
-                  <span className="text-sm text-white font-bold">{track.duration ? fmt(track.duration) : "N/A"}</span>
+                  <span className="text-sm text-white font-bold">{actualDuration ? fmt(actualDuration) : "Unknown"}</span>
                 </div>
                 <div className="flex items-start justify-between py-3">
                   <span className="text-sm text-white/50 font-semibold">Release Year</span>
