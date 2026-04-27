@@ -73,8 +73,8 @@ export default function TrackPageClient({ track }: { track: TrackWithMeta }) {
       if (data.tracks && data.tracks.length > 0) {
         // Start with current track, then add radio tracks
         const radioQueue = [track, ...data.tracks];
-        setQueue(radioQueue, 0);
-        if (!playing) toggle();
+        // Use play function to start the radio
+        play(radioQueue[0], radioQueue);
       }
     } catch (error) {
       console.error('Failed to start radio:', error);
