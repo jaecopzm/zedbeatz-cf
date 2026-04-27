@@ -57,7 +57,7 @@ export default function StatsPage() {
   }
 
   return (
-    <div className="px-4 py-6 lg:px-8 max-w-5xl mx-auto pb-32 animate-fade-in">
+    <div className="px-4 py-6 lg:px-8 max-w-7xl mx-auto pb-32 animate-fade-in">
       <div className="flex items-center gap-2 sm:gap-3 mb-6 sm:mb-8">
         <BarChart3 className="text-[var(--primary)]" size={28} />
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight">Your Listening Stats</h1>

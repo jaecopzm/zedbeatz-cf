@@ -12,7 +12,6 @@ import ShareButton from "@/components/share-button";
 import DownloadButton from "@/components/download-button";
 import WhatsAppBanner from "@/components/whatsapp-banner";
 import TrackComments from "@/components/track-comments";
-import { motion, useScroll, useTransform } from "framer-motion";
 
 type TrackWithMeta = Track & { genre: string | null; plays: number | null; lyrics?: string | null; releaseYear?: number };
 
@@ -29,9 +28,6 @@ export default function TrackPageClient({ track }: { track: TrackWithMeta }) {
   const [activeTab, setActiveTab] = useState<"about" | "lyrics" | "credits">("about");
   const [actualDuration, setActualDuration] = useState<number | undefined>(track.duration);
   const heroRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
-  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
-  const scale = useTransform(scrollYProgress, [0, 0.5], [1, 0.95]);
 
   useEffect(() => {
     if (!isActive && queue.length === 0) {
@@ -67,15 +63,14 @@ export default function TrackPageClient({ track }: { track: TrackWithMeta }) {
   return (
     <div className="min-h-screen pb-32 bg-gradient-to-b from-[var(--background)] via-[var(--background)] to-black/40">
       {/* ── Premium Hero with Parallax ─────────────────────── */}
-      <motion.section 
+      <section 
         ref={heroRef}
-        style={{ opacity, scale }}
         className="relative px-3 sm:px-4 md:px-8 pt-4 sm:pt-6 md:pt-10 pb-6 sm:pb-8 md:pb-16 max-w-7xl mx-auto overflow-hidden"
       >
         {/* Dynamic ambient glow */}
         {track.coverUrl && (
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] sm:w-[800px] h-[500px] sm:h-[800px] opacity-20 sm:opacity-30 blur-[120px] sm:blur-[150px] pointer-events-none animate-pulse">
-            <div className="w-full h-full bg-gradient-radial from-[var(--primary)] via-purple-500/40 to-pink-500/20" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[400px] sm:w-[600px] h-[400px] sm:h-[600px] opacity-20 sm:opacity-30 blur-[100px] sm:blur-[120px] pointer-events-none animate-pulse">
+            <div className="w-full h-full bg-gradient-radial from-[var(--primary)] via-purple-500/30 to-pink-500/20" />
           </div>
         )}
 
@@ -88,20 +83,15 @@ export default function TrackPageClient({ track }: { track: TrackWithMeta }) {
           Back
         </Link>
 
-        <div className="relative flex flex-col lg:flex-row items-center lg:items-start gap-5 sm:gap-6 md:gap-8 lg:gap-12">
+        <div className="relative flex flex-col sm:flex-row items-center sm:items-start gap-5 sm:gap-6 md:gap-8">
           {/* Enhanced Artwork */}
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
-            className="relative shrink-0 group"
-          >
+          <div className="relative shrink-0 group">
             {isActive && playing && (
-              <div className="absolute -inset-3 sm:-inset-4 lg:-inset-6 rounded-3xl bg-gradient-to-br from-[var(--primary)]/30 via-purple-500/20 to-pink-500/10 blur-xl sm:blur-2xl lg:blur-3xl animate-pulse pointer-events-none" />
+              <div className="absolute -inset-3 sm:-inset-4 rounded-3xl bg-gradient-to-br from-[var(--primary)]/30 via-purple-500/20 to-pink-500/10 blur-xl sm:blur-2xl animate-pulse pointer-events-none" />
             )}
-            <div className="relative w-56 h-56 sm:w-72 sm:h-72 md:w-80 md:h-80 lg:w-96 lg:h-96 rounded-2xl sm:rounded-3xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.5)] ring-1 ring-white/10 backdrop-blur-sm">
+            <div className="relative w-48 h-48 sm:w-64 sm:h-64 md:w-80 md:h-80 rounded-2xl sm:rounded-3xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.5)] ring-1 ring-white/10 backdrop-blur-sm">
               {track.coverUrl ? (
-                <Image src={track.coverUrl} alt={track.title} fill sizes="(max-width: 640px) 256px, (max-width: 768px) 320px, 384px" className="object-cover transition-transform duration-700 group-hover:scale-110" priority unoptimized />
+                <Image src={track.coverUrl} alt={track.title} fill sizes="(max-width: 640px) 192px, (max-width: 768px) 256px, 320px" className="object-cover transition-transform duration-700 group-hover:scale-110" priority unoptimized />
               ) : (
                 <div className="w-full h-full bg-gradient-to-br from-[var(--surface-2)] via-[var(--surface-3)] to-[var(--surface-2)] flex items-center justify-center">
                   <Music2 size={96} className="text-white/10" />
@@ -112,20 +102,13 @@ export default function TrackPageClient({ track }: { track: TrackWithMeta }) {
                 <div className="absolute inset-0 flex items-end justify-center pb-8 bg-gradient-to-t from-black/80 via-black/30 to-transparent">
                   <div className="flex items-end gap-1">
                     {[...Array(16)].map((_, i) => (
-                      <motion.span
+                      <span
                         key={i}
                         className="w-1 rounded-full bg-gradient-to-t from-[var(--primary)] to-white shadow-[0_0_12px_rgba(30,215,96,0.8)]"
-                        animate={{
-                          height: [
-                            `${12 + Math.random() * 20}px`,
-                            `${20 + Math.random() * 30}px`,
-                            `${12 + Math.random() * 20}px`,
-                          ],
-                        }}
-                        transition={{
-                          duration: 0.5 + Math.random() * 0.5,
-                          repeat: Infinity,
-                          ease: "easeInOut",
+                        style={{
+                          height: `${12 + Math.random() * 20}px`,
+                          animation: `bar-bounce 0.${4 + Math.floor(Math.random() * 4)}s ease-in-out infinite`,
+                          animationDelay: `${i * 0.05}s`
                         }}
                       />
                     ))}
@@ -134,38 +117,28 @@ export default function TrackPageClient({ track }: { track: TrackWithMeta }) {
               )}
               <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
             </div>
-          </motion.div>
+          </div>
 
           {/* Enhanced Info */}
-          <div className="flex-1 w-full text-center lg:text-left lg:flex lg:flex-col lg:justify-between lg:min-h-[384px]">
-            <div className="space-y-3 sm:space-y-4 md:space-y-5">
-              {/* Stats Row */}
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="flex flex-wrap items-center justify-center lg:justify-start gap-1.5 sm:gap-2"
-              >
-                <span className="px-3 py-1 rounded-full bg-white/[0.08] backdrop-blur-sm border border-white/10 text-[10px] font-black uppercase tracking-widest text-white/70 shadow-sm">
-                  {track.genre || "Music"}
+          <div className="flex-1 w-full text-center sm:text-left space-y-3 sm:space-y-4 md:space-y-6">
+            {/* Stats Row */}
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+              <span className="px-2 sm:px-3 py-0.5 sm:py-1 rounded-full bg-white/[0.07] backdrop-blur-sm border border-white/10 text-[10px] font-black uppercase tracking-widest text-white/70 shadow-sm">
+                {track.genre || "Music"}
+              </span>
+              {plays != null && (
+                <span className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full bg-[var(--primary)]/10 border border-[var(--primary)]/20 text-[10px] font-bold text-[var(--primary)] backdrop-blur-sm">
+                  <Headphones size={11} />
+                  {plays.toLocaleString()} plays
                 </span>
-                {plays != null && (
-                  <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--primary)]/10 border border-[var(--primary)]/20 text-[10px] font-bold text-[var(--primary)] backdrop-blur-sm">
-                    <Headphones size={11} />
-                    {plays.toLocaleString()} plays
-                  </span>
-                )}
-                <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-[10px] font-bold text-purple-400 backdrop-blur-sm">
-                  <TrendingUp size={11} />
-                  Trending
-                </span>
-              </motion.div>
+              )}
+              <span className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-[10px] font-bold text-purple-400 backdrop-blur-sm">
+                <TrendingUp size={11} />
+                Trending
+              </span>
+            </div>
 
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-              >
+            <div>
                 <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-black tracking-tight leading-[1.05] mb-2 sm:mb-3 lg:mb-4 bg-gradient-to-br from-white via-white to-white/60 bg-clip-text text-transparent drop-shadow-[0_4px_12px_rgba(0,0,0,0.4)] px-2 lg:px-0">
                   {track.title}
                 </h1>
@@ -183,7 +156,7 @@ export default function TrackPageClient({ track }: { track: TrackWithMeta }) {
                 </div>
 
                 {/* Metadata Pills */}
-                <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 text-xs text-white/50">
+                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 text-xs text-white/50">
                   {actualDuration && (
                     <div className="flex items-center gap-1.5">
                       <Clock size={13} />
@@ -199,16 +172,10 @@ export default function TrackPageClient({ track }: { track: TrackWithMeta }) {
                     <span className="font-semibold">Single</span>
                   </div>
                 </div>
-              </motion.div>
-            </div>
+              </div>
 
             {/* Premium Actions */}
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="flex flex-wrap items-center justify-center lg:justify-start gap-2 sm:gap-3 mt-4 sm:mt-5 lg:mt-6"
-            >
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 sm:gap-3 mt-4 sm:mt-5">
               <button
                 onClick={() => isActive ? toggle() : play(track)}
                 className="flex items-center gap-2 sm:gap-2.5 px-8 sm:px-10 py-3 sm:py-4 rounded-full bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-black font-black text-xs sm:text-sm uppercase tracking-wide transition-all hover:scale-105 active:scale-95 shadow-[0_8px_32px_rgba(30,215,96,0.4)] hover:shadow-[0_12px_40px_rgba(30,215,96,0.5)]"
@@ -232,10 +199,10 @@ export default function TrackPageClient({ track }: { track: TrackWithMeta }) {
                 <DownloadButton audioUrl={track.audioUrl} title={track.title} artist={track.artist} coverUrl={track.coverUrl} />
                 <ShareButton title={`${track.title} by ${track.artist}`} />
               </div>
-            </motion.div>
+            </div>
           </div>
         </div>
-      </motion.section>
+      </section>
 
       {/* ── Premium Tabs Section ──────────────────────────── */}
       <section className="px-3 sm:px-4 md:px-8 max-w-7xl mx-auto mb-8 sm:mb-12">
@@ -257,13 +224,7 @@ export default function TrackPageClient({ track }: { track: TrackWithMeta }) {
         </div>
 
         {/* Tab Content */}
-        <motion.div
-          key={activeTab}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          className="bg-gradient-to-br from-white/[0.05] to-white/[0.02] backdrop-blur-md border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl"
-        >
+        <div className="bg-gradient-to-br from-white/[0.05] to-white/[0.02] backdrop-blur-md border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl">
           {activeTab === "about" && (
             <div className="space-y-6">
               <div>
@@ -339,7 +300,7 @@ export default function TrackPageClient({ track }: { track: TrackWithMeta }) {
               </div>
             </div>
           )}
-        </motion.div>
+        </div>
       </section>
 
       {/* ── WhatsApp Banner ──────────────────────────────── */}
@@ -374,12 +335,7 @@ export default function TrackPageClient({ track }: { track: TrackWithMeta }) {
             {(track as any).moreFromArtist.map((t: any, idx: number) => {
               const isThisActive = currentTrack?.id === t.id;
               return (
-                <motion.div
-                  key={t.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.05 }}
-                >
+                <div key={t.id}>
                   <Link
                     href={`/track/${t.slug || t.id}`}
                     className="group flex items-center gap-3.5 p-3 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/5 hover:border-white/10 transition-all duration-300 backdrop-blur-sm"
@@ -408,7 +364,7 @@ export default function TrackPageClient({ track }: { track: TrackWithMeta }) {
                       }
                     </button>
                   </Link>
-                </motion.div>
+                </div>
               );
             })}
           </div>
@@ -424,11 +380,8 @@ export default function TrackPageClient({ track }: { track: TrackWithMeta }) {
           </h2>
           <div className="rounded-2xl overflow-hidden bg-gradient-to-br from-white/[0.05] to-white/[0.02] backdrop-blur-md border border-white/10 shadow-2xl divide-y divide-white/5">
             {queue.slice(currentIndex + 1, currentIndex + 6).map((t, i) => (
-              <motion.div
+              <div
                 key={`${t.id}-${i}`}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.05 }}
                 className="group flex items-center gap-3 px-4 py-3 hover:bg-white/[0.04] transition-all cursor-pointer"
               >
                 <span className="text-xs font-black text-white/30 w-4 text-center shrink-0 tabular-nums">{i + 1}</span>
@@ -444,7 +397,7 @@ export default function TrackPageClient({ track }: { track: TrackWithMeta }) {
                 {t.duration && (
                   <span className="text-xs text-[var(--muted)] tabular-nums shrink-0 font-semibold">{fmt(t.duration)}</span>
                 )}
-              </motion.div>
+              </div>
             ))}
             {queue.length - currentIndex - 1 > 5 && (
               <div className="px-4 py-3 text-center bg-white/[0.02]">
