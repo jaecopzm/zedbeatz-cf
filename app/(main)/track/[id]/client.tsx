@@ -101,20 +101,24 @@ export default function TrackPageClient({ track }: { track: TrackWithMeta }) {
               {isActive && playing && (
                 <div className="absolute inset-0 flex items-end justify-center pb-8 bg-gradient-to-t from-black/80 via-black/30 to-transparent">
                   <div className="flex items-end gap-1">
-                    {[...Array(16)].map((_, i) => (
-                      <span
-                        key={i}
-                        className="w-1 rounded-full bg-gradient-to-t from-[var(--primary)] to-white shadow-[0_0_12px_rgba(30,215,96,0.8)]"
-                        style={{
-                          height: `${12 + Math.random() * 20}px`,
-                          animationName: 'bar-bounce',
-                          animationDuration: `0.${4 + Math.floor(Math.random() * 4)}s`,
-                          animationTimingFunction: 'ease-in-out',
-                          animationIterationCount: 'infinite',
-                          animationDelay: `${i * 0.05}s`
-                        }}
-                      />
-                    ))}
+                    {[...Array(16)].map((_, i) => {
+                      const heights = [16, 24, 20, 28, 18, 26, 22, 30, 19, 25, 21, 27, 17, 23, 20, 29];
+                      const durations = [0.6, 0.5, 0.7, 0.4, 0.6, 0.5, 0.7, 0.6, 0.5, 0.6, 0.7, 0.5, 0.6, 0.7, 0.5, 0.6];
+                      return (
+                        <span
+                          key={i}
+                          className="w-1 rounded-full bg-gradient-to-t from-[var(--primary)] to-white shadow-[0_0_12px_rgba(30,215,96,0.8)]"
+                          style={{
+                            height: `${heights[i]}px`,
+                            animationName: 'bar-bounce',
+                            animationDuration: `${durations[i]}s`,
+                            animationTimingFunction: 'ease-in-out',
+                            animationIterationCount: 'infinite',
+                            animationDelay: `${i * 0.05}s`
+                          }}
+                        />
+                      );
+                    })}
                   </div>
                 </div>
               )}
