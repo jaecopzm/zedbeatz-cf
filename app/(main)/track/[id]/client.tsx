@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { usePlayer, type Track } from "@/lib/player-store";
 import { Play, Pause, Music2, ChevronLeft, Headphones, Clock, Calendar, Radio, Sparkles, TrendingUp, Users, BarChart3, Disc3 } from "lucide-react";
 import LikeButton from "@/components/like-button";
@@ -20,13 +21,13 @@ function fmt(s: number) {
 }
 
 export default function TrackPageClient({ track }: { track: TrackWithMeta }) {
-  const { play, toggle, queue, currentIndex, playing, setQueue } = usePlayer();
+  const router = useRouter();
+  const { play, toggle, queue, currentIndex, playing } = usePlayer();
   const currentTrack = queue[currentIndex];
   const isActive = currentTrack?.id === track.id;
   const [plays, setPlays] = useState<number | null>(track.plays);
   const [activeTab, setActiveTab] = useState<"about" | "lyrics" | "credits">("about");
   const [actualDuration, setActualDuration] = useState<number | undefined>(track.duration);
-  const [loadingRadio, setLoadingRadio] = useState(false);
   const heroRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
   const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
@@ -62,26 +63,6 @@ export default function TrackPageClient({ track }: { track: TrackWithMeta }) {
       .then(data => { if (data?.plays != null) setPlays(data.plays); })
       .catch(() => {});
   }, [isActive, track.id]);
-
-  // Start Artist Radio
-  const startRadio = async () => {
-    setLoadingRadio(true);
-    try {
-      const res = await fetch(`/api/radio?trackId=${track.id}`);
-      const data = await res.json();
-      
-      if (data.tracks && data.tracks.length > 0) {
-        // Start with current track, then add radio tracks
-        const radioQueue = [track, ...data.tracks];
-        // Use play function to start the radio
-        play(radioQueue[0], radioQueue);
-      }
-    } catch (error) {
-      console.error('Failed to start radio:', error);
-    } finally {
-      setLoadingRadio(false);
-    }
-  };
 
   return (
     <div className="min-h-screen pb-32 bg-gradient-to-b from-[var(--background)] via-[var(--background)] to-black/40">
@@ -239,15 +220,10 @@ export default function TrackPageClient({ track }: { track: TrackWithMeta }) {
               </button>
 
               <button 
-                onClick={startRadio}
-                disabled={loadingRadio}
-                className="flex items-center gap-1.5 sm:gap-2 px-5 sm:px-6 py-3 sm:py-4 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold text-xs sm:text-sm transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
-                {loadingRadio ? (
-                  <div className="w-3.5 h-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                ) : (
-                  <Radio size={14} className="sm:w-4 sm:h-4" />
-                )}
-                <span className="hidden sm:inline">{loadingRadio ? 'Loading...' : 'Radio'}</span>
+                onClick={() => router.push(`/radio/${track.id}`)}
+                className="flex items-center gap-1.5 sm:gap-2 px-5 sm:px-6 py-3 sm:py-4 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold text-xs sm:text-sm transition-all hover:scale-105 active:scale-95">
+                <Radio size={14} className="sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Radio</span>
               </button>
 
               <div className="flex items-center gap-1 sm:gap-2 p-1.5 sm:p-2 bg-white/[0.05] backdrop-blur-md border border-white/10 rounded-full shadow-lg">
