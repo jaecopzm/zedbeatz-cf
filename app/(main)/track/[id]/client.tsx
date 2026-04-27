@@ -240,7 +240,7 @@ export default function TrackPageClient({ track }: { track: TrackWithMeta }) {
       </motion.section>
 
       {/* ── Premium Tabs Section ──────────────────────────── */}
-      <section className="px-3 sm:px-4 md:px-8 max-w-5xl mx-auto mb-8 sm:mb-12">
+      <section className="px-3 sm:px-4 md:px-8 max-w-7xl mx-auto mb-8 sm:mb-12">
         {/* Tab Navigation */}
         <div className="flex items-center gap-2 mb-6 p-1.5 bg-white/[0.03] backdrop-blur-md border border-white/10 rounded-2xl w-fit mx-auto lg:mx-0">
           {(["about", "lyrics", "credits"] as const).map((tab) => (
@@ -288,7 +288,8 @@ export default function TrackPageClient({ track }: { track: TrackWithMeta }) {
               <div>
                 <h3 className="text-lg font-black text-white mb-3">About This Track</h3>
                 <p className="text-sm text-white/70 leading-relaxed">
-                  {track.title} is a {track.genre?.toLowerCase() || "music"} track by {track.artist}. 
+                  {track.title} is a {track.genre?.toLowerCase() || "music"} track by {track.artist}
+                  {track.featuredArtists && ` featuring ${track.featuredArtists}`}. 
                   This song showcases their unique style and has been gaining popularity among listeners worldwide.
                 </p>
               </div>
@@ -418,12 +419,12 @@ export default function TrackPageClient({ track }: { track: TrackWithMeta }) {
 
       {/* ── Up Next (Premium) ──────────────────────────────── */}
       {queue.length > 1 && (
-        <section className="px-3 sm:px-4 md:px-8 max-w-5xl mx-auto mb-8 sm:mb-10 md:mb-12">
+        <section className="px-3 sm:px-4 md:px-8 max-w-7xl mx-auto mb-8 sm:mb-10 md:mb-12">
           <h2 className="text-xl sm:text-2xl font-black mb-6 flex items-center gap-2">
             <span>Up Next</span>
             <span className="text-sm font-bold text-white/40">({queue.length - currentIndex - 1} tracks)</span>
           </h2>
-          <div className="rounded-3xl overflow-hidden bg-gradient-to-br from-white/[0.05] to-white/[0.02] backdrop-blur-md border border-white/10 shadow-2xl divide-y divide-white/5">
+          <div className="rounded-2xl overflow-hidden bg-gradient-to-br from-white/[0.05] to-white/[0.02] backdrop-blur-md border border-white/10 shadow-2xl divide-y divide-white/5">
             {queue.slice(currentIndex + 1, currentIndex + 6).map((t, i) => (
               <motion.div
                 key={`${t.id}-${i}`}
@@ -459,7 +460,7 @@ export default function TrackPageClient({ track }: { track: TrackWithMeta }) {
       )}
 
       {/* ── Comments ───────────────────────────────────────── */}
-      <section className="px-3 sm:px-4 md:px-8 max-w-3xl mx-auto mb-8 sm:mb-10 md:mb-12">
+      <section className="px-3 sm:px-4 md:px-8 max-w-7xl mx-auto mb-8 sm:mb-10 md:mb-12">
         <TrackComments trackId={track.id} />
       </section>
     </div>
