@@ -2,11 +2,13 @@ import { notFound } from "next/navigation";
 import { supabase } from "@/lib/db";
 import RadioClient from "./client";
 
-export default async function RadioPage({ params }: { params: { id: string } }) {
+export default async function RadioPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  
   const { data: track } = await supabase
     .from("tracks")
     .select("id, title, audio_key, cover_key, duration, artist_id, genre, slug, featured_artists, artists(name, slug)")
-    .eq("id", parseInt(params.id))
+    .eq("id", parseInt(id))
     .single();
 
   if (!track || !track.artists) return notFound();
