@@ -7,7 +7,7 @@ import TrackPageClient from "./client";
 
 async function getTrackData(id: string) {
   return unstable_cache(async () => {
-    let query = supabase.from("tracks").select("id, title, audio_key, cover_key, duration, artist_id, genre, plays, featured_artists, artists(name, slug), slug");
+    let query = supabase.from("tracks").select("id, title, audio_key, cover_key, duration, artist_id, genre, plays, featured_artists, created_at, artists(name, slug), slug");
     query = isNaN(Number(id)) ? query.eq("slug", id) : query.eq("id", Number(id));
     const { data, error } = await query.single();
     if (error) {
@@ -133,6 +133,7 @@ export default async function TrackPage({ params }: { params: Promise<{ id: stri
     coverUrl: coverUrl,
     duration: data.duration || undefined,
     genre: data.genre, plays: data.plays, slug: data.slug ?? undefined,
+    releaseYear: data.created_at ? new Date(data.created_at).getFullYear() : new Date().getFullYear(),
     moreFromArtist,
   };
 

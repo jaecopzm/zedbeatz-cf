@@ -13,7 +13,7 @@ import WhatsAppBanner from "@/components/whatsapp-banner";
 import TrackComments from "@/components/track-comments";
 import { motion, useScroll, useTransform } from "framer-motion";
 
-type TrackWithMeta = Track & { genre: string | null; plays: number | null; lyrics?: string | null };
+type TrackWithMeta = Track & { genre: string | null; plays: number | null; lyrics?: string | null; releaseYear?: number };
 
 function fmt(s: number) {
   return `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
@@ -86,7 +86,7 @@ export default function TrackPageClient({ track }: { track: TrackWithMeta }) {
           Back
         </Link>
 
-        <div className="relative flex flex-col lg:flex-row items-center lg:items-start gap-6 sm:gap-8 md:gap-12">
+        <div className="relative flex flex-col lg:flex-row items-center lg:items-start gap-5 sm:gap-6 md:gap-8 lg:gap-12">
           {/* Enhanced Artwork */}
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }}
@@ -95,9 +95,9 @@ export default function TrackPageClient({ track }: { track: TrackWithMeta }) {
             className="relative shrink-0 group"
           >
             {isActive && playing && (
-              <div className="absolute -inset-4 sm:-inset-6 rounded-3xl bg-gradient-to-br from-[var(--primary)]/30 via-purple-500/20 to-pink-500/10 blur-2xl sm:blur-3xl animate-pulse pointer-events-none" />
+              <div className="absolute -inset-3 sm:-inset-4 lg:-inset-6 rounded-3xl bg-gradient-to-br from-[var(--primary)]/30 via-purple-500/20 to-pink-500/10 blur-xl sm:blur-2xl lg:blur-3xl animate-pulse pointer-events-none" />
             )}
-            <div className="relative w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 rounded-3xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.5)] ring-1 ring-white/10 backdrop-blur-sm">
+            <div className="relative w-56 h-56 sm:w-72 sm:h-72 md:w-80 md:h-80 lg:w-96 lg:h-96 rounded-2xl sm:rounded-3xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.5)] ring-1 ring-white/10 backdrop-blur-sm">
               {track.coverUrl ? (
                 <Image src={track.coverUrl} alt={track.title} fill sizes="(max-width: 640px) 256px, (max-width: 768px) 320px, 384px" className="object-cover transition-transform duration-700 group-hover:scale-110" priority unoptimized />
               ) : (
@@ -132,104 +132,98 @@ export default function TrackPageClient({ track }: { track: TrackWithMeta }) {
               )}
               <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
             </div>
-
-            {/* Audio Quality Badge */}
-            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-black/80 backdrop-blur-xl border border-white/20 shadow-xl">
-              <div className="flex items-center gap-2">
-                <Sparkles size={12} className="text-[var(--primary)]" />
-                <span className="text-[10px] font-black uppercase tracking-wider text-white">HD Audio</span>
-              </div>
-            </div>
           </motion.div>
 
           {/* Enhanced Info */}
-          <div className="flex-1 w-full text-center lg:text-left space-y-4 sm:space-y-5 md:space-y-6">
-            {/* Stats Row */}
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="flex flex-wrap items-center justify-center lg:justify-start gap-2"
-            >
-              <span className="px-3 py-1 rounded-full bg-white/[0.08] backdrop-blur-sm border border-white/10 text-[10px] font-black uppercase tracking-widest text-white/70 shadow-sm">
-                {track.genre || "Music"}
-              </span>
-              {plays != null && (
-                <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--primary)]/10 border border-[var(--primary)]/20 text-[10px] font-bold text-[var(--primary)] backdrop-blur-sm">
-                  <Headphones size={11} />
-                  {plays.toLocaleString()} plays
+          <div className="flex-1 w-full text-center lg:text-left lg:flex lg:flex-col lg:justify-between lg:min-h-[384px]">
+            <div className="space-y-3 sm:space-y-4 md:space-y-5">
+              {/* Stats Row */}
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="flex flex-wrap items-center justify-center lg:justify-start gap-1.5 sm:gap-2"
+              >
+                <span className="px-3 py-1 rounded-full bg-white/[0.08] backdrop-blur-sm border border-white/10 text-[10px] font-black uppercase tracking-widest text-white/70 shadow-sm">
+                  {track.genre || "Music"}
                 </span>
-              )}
-              <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-[10px] font-bold text-purple-400 backdrop-blur-sm">
-                <TrendingUp size={11} />
-                Trending
-              </span>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black tracking-tight leading-[1.05] mb-3 sm:mb-4 bg-gradient-to-br from-white via-white to-white/60 bg-clip-text text-transparent drop-shadow-[0_4px_12px_rgba(0,0,0,0.4)] px-2 lg:px-0">
-                {track.title}
-              </h1>
-
-              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2 text-base sm:text-lg md:text-xl px-2 lg:px-0 mb-4">
-                <Link
-                  href={track.artistSlug ? `/artist/${track.artistSlug}` : `/artist/${track.artistId}`}
-                  className="font-bold text-white/90 hover:text-[var(--primary)] transition-colors underline decoration-white/20 hover:decoration-[var(--primary)] underline-offset-4"
-                >
-                  {track.artist}
-                </Link>
-                {track.featuredArtists && (
-                  <span className="text-white/50 font-medium text-sm sm:text-base">feat. {track.featuredArtists}</span>
+                {plays != null && (
+                  <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--primary)]/10 border border-[var(--primary)]/20 text-[10px] font-bold text-[var(--primary)] backdrop-blur-sm">
+                    <Headphones size={11} />
+                    {plays.toLocaleString()} plays
+                  </span>
                 )}
-              </div>
+                <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-[10px] font-bold text-purple-400 backdrop-blur-sm">
+                  <TrendingUp size={11} />
+                  Trending
+                </span>
+              </motion.div>
 
-              {/* Metadata Pills */}
-              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 text-xs text-white/50">
-                {actualDuration && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+              >
+                <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-black tracking-tight leading-[1.05] mb-2 sm:mb-3 lg:mb-4 bg-gradient-to-br from-white via-white to-white/60 bg-clip-text text-transparent drop-shadow-[0_4px_12px_rgba(0,0,0,0.4)] px-2 lg:px-0">
+                  {track.title}
+                </h1>
+
+                <div className="flex flex-wrap items-center justify-center lg:justify-start gap-1.5 sm:gap-2 text-sm sm:text-base md:text-lg px-2 lg:px-0 mb-3 sm:mb-4">
+                  <Link
+                    href={track.artistSlug ? `/artist/${track.artistSlug}` : `/artist/${track.artistId}`}
+                    className="font-bold text-white/90 hover:text-[var(--primary)] transition-colors underline decoration-white/20 hover:decoration-[var(--primary)] underline-offset-4"
+                  >
+                    {track.artist}
+                  </Link>
+                  {track.featuredArtists && (
+                    <span className="text-white/50 font-medium text-sm sm:text-base">feat. {track.featuredArtists}</span>
+                  )}
+                </div>
+
+                {/* Metadata Pills */}
+                <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 text-xs text-white/50">
+                  {actualDuration && (
+                    <div className="flex items-center gap-1.5">
+                      <Clock size={13} />
+                      <span className="font-semibold tabular-nums">{fmt(actualDuration)}</span>
+                    </div>
+                  )}
                   <div className="flex items-center gap-1.5">
-                    <Clock size={13} />
-                    <span className="font-semibold tabular-nums">{fmt(actualDuration)}</span>
+                    <Calendar size={13} />
+                    <span className="font-semibold">{track.releaseYear || new Date().getFullYear()}</span>
                   </div>
-                )}
-                <div className="flex items-center gap-1.5">
-                  <Calendar size={13} />
-                  <span className="font-semibold">2024</span>
+                  <div className="flex items-center gap-1.5">
+                    <Disc3 size={13} />
+                    <span className="font-semibold">Single</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <Disc3 size={13} />
-                  <span className="font-semibold">Single</span>
-                </div>
-              </div>
-            </motion.div>
+              </motion.div>
+            </div>
 
             {/* Premium Actions */}
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="flex flex-wrap items-center justify-center lg:justify-start gap-3"
+              className="flex flex-wrap items-center justify-center lg:justify-start gap-2 sm:gap-3 mt-4 sm:mt-5 lg:mt-6"
             >
               <button
                 onClick={() => isActive ? toggle() : play(track)}
-                className="flex items-center gap-2.5 px-10 py-4 rounded-full bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-black font-black text-sm uppercase tracking-wide transition-all hover:scale-105 active:scale-95 shadow-[0_8px_32px_rgba(30,215,96,0.4)] hover:shadow-[0_12px_40px_rgba(30,215,96,0.5)]"
+                className="flex items-center gap-2 sm:gap-2.5 px-8 sm:px-10 py-3 sm:py-4 rounded-full bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-black font-black text-xs sm:text-sm uppercase tracking-wide transition-all hover:scale-105 active:scale-95 shadow-[0_8px_32px_rgba(30,215,96,0.4)] hover:shadow-[0_12px_40px_rgba(30,215,96,0.5)]"
               >
                 {isActive && playing
-                  ? <><Pause size={18} fill="currentColor" /> Pause</>
-                  : <><Play size={18} fill="currentColor" className="ml-0.5" /> Play</>
+                  ? <><Pause size={16} className="sm:w-[18px] sm:h-[18px]" fill="currentColor" /> Pause</>
+                  : <><Play size={16} className="sm:w-[18px] sm:h-[18px] ml-0.5" fill="currentColor" /> Play</>
                 }
               </button>
 
-              <button className="flex items-center gap-2 px-6 py-4 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold text-sm transition-all hover:scale-105 active:scale-95">
-                <Radio size={16} />
+              <button className="flex items-center gap-1.5 sm:gap-2 px-5 sm:px-6 py-3 sm:py-4 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold text-xs sm:text-sm transition-all hover:scale-105 active:scale-95">
+                <Radio size={14} className="sm:w-4 sm:h-4" />
                 <span className="hidden sm:inline">Radio</span>
               </button>
 
-              <div className="flex items-center gap-2 p-2 bg-white/[0.05] backdrop-blur-md border border-white/10 rounded-full shadow-lg">
-                <LikeButton trackId={track.id} size={18} />
+              <div className="flex items-center gap-1 sm:gap-2 p-1.5 sm:p-2 bg-white/[0.05] backdrop-blur-md border border-white/10 rounded-full shadow-lg">
+                <LikeButton trackId={track.id} size={16} className="sm:w-[18px] sm:h-[18px]" />
                 <AddToPlaylist trackId={track.id} />
                 <DownloadButton audioUrl={track.audioUrl} title={track.title} artist={track.artist} coverUrl={track.coverUrl} />
                 <ShareButton title={`${track.title} by ${track.artist}`} />
@@ -336,7 +330,7 @@ export default function TrackPageClient({ track }: { track: TrackWithMeta }) {
                 </div>
                 <div className="flex items-start justify-between py-3">
                   <span className="text-sm text-white/50 font-semibold">Release Year</span>
-                  <span className="text-sm text-white font-bold">2024</span>
+                  <span className="text-sm text-white font-bold">{track.releaseYear || new Date().getFullYear()}</span>
                 </div>
               </div>
             </div>
@@ -420,7 +414,7 @@ export default function TrackPageClient({ track }: { track: TrackWithMeta }) {
       {/* ── Up Next (Premium) ──────────────────────────────── */}
       {queue.length > 1 && (
         <section className="px-3 sm:px-4 md:px-8 max-w-7xl mx-auto mb-8 sm:mb-10 md:mb-12">
-          <h2 className="text-xl sm:text-2xl font-black mb-6 flex items-center gap-2">
+          <h2 className="text-xl sm:text-2xl font-black mb-4 flex items-center gap-2">
             <span>Up Next</span>
             <span className="text-sm font-bold text-white/40">({queue.length - currentIndex - 1} tracks)</span>
           </h2>
@@ -431,25 +425,25 @@ export default function TrackPageClient({ track }: { track: TrackWithMeta }) {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.05 }}
-                className="group flex items-center gap-4 px-4 sm:px-6 py-4 hover:bg-white/[0.04] transition-all cursor-pointer"
+                className="group flex items-center gap-3 px-4 py-3 hover:bg-white/[0.04] transition-all cursor-pointer"
               >
-                <span className="text-xs font-black text-white/30 w-5 text-center shrink-0 tabular-nums">{i + 1}</span>
-                <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-xl overflow-hidden bg-[var(--surface-2)] shrink-0 shadow-lg">
+                <span className="text-xs font-black text-white/30 w-4 text-center shrink-0 tabular-nums">{i + 1}</span>
+                <div className="relative w-11 h-11 rounded-lg overflow-hidden bg-[var(--surface-2)] shrink-0 shadow-lg">
                   {t.coverUrl && (
-                    <Image src={t.coverUrl} alt={t.title} width={56} height={56} className="object-cover transition-transform duration-300 group-hover:scale-110" />
+                    <Image src={t.coverUrl} alt={t.title} width={44} height={44} className="object-cover transition-transform duration-300 group-hover:scale-110" />
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm sm:text-base font-bold truncate group-hover:text-[var(--primary)] transition-colors">{t.title}</p>
-                  <p className="text-xs sm:text-sm text-[var(--muted)] truncate">{t.artist}</p>
+                  <p className="text-sm font-bold truncate group-hover:text-[var(--primary)] transition-colors">{t.title}</p>
+                  <p className="text-xs text-[var(--muted)] truncate">{t.artist}</p>
                 </div>
                 {t.duration && (
-                  <span className="text-xs sm:text-sm text-[var(--muted)] tabular-nums shrink-0 font-semibold">{fmt(t.duration)}</span>
+                  <span className="text-xs text-[var(--muted)] tabular-nums shrink-0 font-semibold">{fmt(t.duration)}</span>
                 )}
               </motion.div>
             ))}
             {queue.length - currentIndex - 1 > 5 && (
-              <div className="px-6 py-4 text-center bg-white/[0.02]">
+              <div className="px-4 py-3 text-center bg-white/[0.02]">
                 <span className="text-xs font-bold text-white/30 uppercase tracking-wider">
                   +{queue.length - currentIndex - 6} more tracks
                 </span>
