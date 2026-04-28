@@ -1,62 +1,323 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { usePlayer, type Track } from "@/lib/player-store";
-import { X, Play, Pause, SkipForward, Radio, Music2 } from "lucide-react";
+import { useLikes } from "@/lib/likes-context";
+import { X, Play, Pause, SkipForward, Radio, Music2, RefreshCw, Shuffle, MoreHorizontal, Heart } from "lucide-react";
+import "@/app/styles/collection-page.css";
+import { TrackMenu } from "@/components/track-menu";
 
 type SeedTrack = Track & { genre?: string; artist_id: number };
 
+function formatDuration(seconds?: number) {
+  if (!seconds) return null;
+  const m = Math.floor(seconds / 60);
+  const s = String(Math.floor(seconds % 60)).padStart(2, "0");
+  return `${m}:${s}`;
+}
+
+function EqBars({ active }: { active: boolean }) {
+  return (
+    <span className="eq-container" aria-hidden>
+      {[0.3, 0.7, 0.5, 0.9, 0.4].map((delay, i) => (
+        <span
+          key={i}
+          className={`eq-bar ${active ? "eq-bar--active" : ""}`}
+          style={{ animationDelay: `${delay}s` }}
+        />
+      ))}
+    </span>
+  );
+}
+
+function TrackRow({
+  track,
+  index,
+  isCurrent,
+  isPlaying,
+  onPlay,
+}: {
+  track: Track;
+  index: number;
+  isCurrent: boolean;
+  isPlaying: boolean;
+  onPlay: () => void;
+}) {
+  const { likedIds, toggleLike } = useLikes();
+  const liked = likedIds.has(track.id);
+  const [hovering, setHovering] = React.useState(false);
+
+  const handleLike = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    await toggleLike(track.id);
+  };
+
+  return (
+    <div
+      className={`track-row ${isCurrent ? "track-row--active" : ""}`}
+      onMouseEnter={() => setHovering(true)}
+      onMouseLeave={() => setHovering(false)}
+      onClick={onPlay}
+    >
+      <div className="track-index">
+        <span className={`track-num ${isCurrent ? "track-num--current" : ""} ${hovering && !(isCurrent && isPlaying) ? "track-num--hidden" : ""}`}>
+          {isCurrent && isPlaying ? <EqBars active={true} /> : <>{isCurrent ? "▶" : index + 1}</>}
+        </span>
+        <span className={`track-play-icon ${hovering && !(isCurrent && isPlaying) ? "track-play-icon--visible" : ""} ${isCurrent ? "track-play-icon--current" : ""}`}>
+          {isCurrent && isPlaying ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" />}
+        </span>
+      </div>
+
+      <div className="track-info">
+        <div className="track-thumb">
+          {track.coverUrl ? (
+            <Image src={track.coverUrl} alt={track.title} width={40} height={40} className="track-thumb-img" />
+          ) : (
+            <div className="track-thumb-fallback">
+              <Music2 size={16} />
+            </div>
+          )}
+        </div>
+        <div className="track-meta">
+          <span className={`track-title ${isCurrent ? "track-title--current" : ""}`}>
+            {track.title}
+          </span>
+          <div className="track-sub">
+            <Link
+              href={track.artistSlug ? `/artist/${track.artistSlug}` : track.artistId ? `/artist/${track.artistId}` : "/browse"}
+              className="track-artist"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {track.artist}
+            </Link>
+            {track.featuredArtists && <span className="track-feat">, {track.featuredArtists}</span>}
+          </div>
+        </div>
+      </div>
+
+      <div className="track-artist-col">
+        <Link
+          href={track.artistSlug ? `/artist/${track.artistSlug}` : track.artistId ? `/artist/${track.artistId}` : "/browse"}
+          className="track-artist-link"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {track.featuredArtists ? `${track.artist} feat. ${track.featuredArtists}` : track.artist}
+        </Link>
+      </div>
+
+      <div className="track-actions">
+        <button
+          className={`track-like ${liked ? "track-like--active" : ""} track-like--visible`}
+          onClick={handleLike}
+          aria-label={liked ? "Unlike" : "Like"}
+        >
+          <Heart size={15} fill={liked ? "currentColor" : "none"} />
+        </button>
+        {formatDuration(track.duration) && (
+          <span className="track-duration">{formatDuration(track.duration)}</span>
+        )}
+        <div className={hovering ? "track-more--visible" : ""} onClick={(e) => e.stopPropagation()}>
+          <TrackMenu track={track} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function RadioClient({ seedTrack }: { seedTrack: SeedTrack }) {
   const router = useRouter();
-  const { queue, currentIndex, playing, toggle, next, setQueue } = usePlayer();
+  const { queue, currentIndex, playing, shuffle, toggle, next, setQueue, toggleShuffle } = usePlayer();
   const [loading, setLoading] = useState(true);
-  const [radioStarted, setRadioStarted] = useState(false);
+  const [radioTracks, setRadioTracks] = useState<Track[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [fetchingMore, setFetchingMore] = useState(false);
+  const startAbortRef = useRef<AbortController | null>(null);
+  const moreAbortRef = useRef<AbortController | null>(null);
+  const requestKeyRef = useRef(0);
   
-  const currentTrack = queue[currentIndex];
-  const upcomingTracks = queue.slice(currentIndex + 1, currentIndex + 6);
+  const isRadioQueue = radioTracks.length > 0 && queue.length === radioTracks.length && queue[0]?.id === seedTrack.id;
+  const currentTrack = isRadioQueue ? queue[currentIndex] : null;
+  const upcomingTracks = isRadioQueue ? queue.slice(currentIndex + 1, currentIndex + 6) : [];
+  const stationSubtitle = useMemo(() => {
+    const parts: string[] = [];
+    if (seedTrack.genre) parts.push(seedTrack.genre);
+    parts.push(`more like ${seedTrack.artist}`);
+    return parts.join(" • ");
+  }, [seedTrack.artist, seedTrack.genre]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (e.code === "Space" && isRadioQueue) {
+        e.preventDefault();
+        toggle();
+      }
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [isRadioQueue, toggle]);
+
+  function appendToQueue(tracks: Track[]) {
+    if (!tracks.length) return;
+    usePlayer.setState((s) => {
+      const existing = new Set(s.queue.map((t) => t.id));
+      const deduped = tracks.filter((t) => !existing.has(t.id));
+      if (!deduped.length) return s;
+      return { ...s, queue: [...s.queue, ...deduped] };
+    });
+  }
 
   useEffect(() => {
-    if (radioStarted) return;
+    if (radioTracks.length > 0) return;
     
     const startRadio = async () => {
+      const key = ++requestKeyRef.current;
+      setLoading(true);
+      setError(null);
+      startAbortRef.current?.abort();
+      const ac = new AbortController();
+      startAbortRef.current = ac;
       try {
-        const res = await fetch(`/api/radio?trackId=${seedTrack.id}`);
+        const res = await fetch(`/api/radio?trackId=${seedTrack.id}&take=25`, { signal: ac.signal });
+        if (!res.ok) throw new Error(`radio_fetch_failed_${res.status}`);
         const data = await res.json();
         
         if (data.tracks && data.tracks.length > 0) {
-          const radioQueue = [seedTrack, ...data.tracks];
-          setQueue(radioQueue, 0);
-          setRadioStarted(true);
+          setRadioTracks([seedTrack, ...data.tracks]);
+        } else {
+          setRadioTracks([seedTrack]);
         }
       } catch (error) {
-        console.error('Failed to start radio:', error);
+        if ((error as any)?.name === "AbortError") return;
+        if (key !== requestKeyRef.current) return;
+        console.error("Failed to start radio:", error);
+        setError("Couldn’t start this station. Please try again.");
       } finally {
+        if (key !== requestKeyRef.current) return;
         setLoading(false);
       }
     };
 
     startRadio();
-  }, [seedTrack, setQueue, radioStarted]);
+  }, [seedTrack, setQueue, radioTracks.length]);
+
+  // Prefetch more when we're near the end.
+  useEffect(() => {
+    if (!isRadioQueue) return;
+    if (loading || fetchingMore) return;
+    const remaining = queue.length - (currentIndex + 1);
+    if (remaining > 6) return;
+
+    const fetchMore = async () => {
+      setFetchingMore(true);
+      moreAbortRef.current?.abort();
+      const ac = new AbortController();
+      moreAbortRef.current = ac;
+
+      const exclude = queue.map((t) => t.id).join(",");
+      try {
+        const res = await fetch(
+          `/api/radio?trackId=${seedTrack.id}&take=25&exclude=${encodeURIComponent(exclude)}`,
+          { signal: ac.signal }
+        );
+        if (!res.ok) throw new Error(`radio_more_failed_${res.status}`);
+        const data = await res.json();
+        if (Array.isArray(data.tracks) && data.tracks.length) {
+          appendToQueue(data.tracks);
+        }
+      } catch (e) {
+        if ((e as any)?.name === "AbortError") return;
+      } finally {
+        setFetchingMore(false);
+      }
+    };
+
+    fetchMore();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isRadioQueue, currentIndex, queue.length]);
 
   if (loading) {
     return (
-      <div className="fixed inset-0 bg-gradient-to-b from-purple-900/20 via-black to-black flex items-center justify-center z-50">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-[var(--primary)]/20 border-t-[var(--primary)] rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-white/60 text-lg">Starting {seedTrack.artist} Radio...</p>
+      <div className="relative min-h-screen bg-black overflow-hidden">
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute inset-0 bg-gradient-to-b from-purple-900/25 via-black to-black" />
+        </div>
+
+        <section className="relative px-4 sm:px-6 md:px-8 pt-4 sm:pt-6 pb-4 sm:pb-6 md:pb-8 max-w-6xl mx-auto">
+          <div className="flex items-start gap-3 sm:gap-5 md:gap-6">
+            <div className="relative w-24 h-24 sm:w-36 sm:h-36 md:w-44 md:h-44 shrink-0 rounded-lg sm:rounded-2xl overflow-hidden bg-white/5 animate-pulse" />
+            <div className="min-w-0 flex-1 space-y-3">
+              <div className="h-3 w-16 bg-white/5 rounded animate-pulse" />
+              <div className="h-8 w-48 bg-white/5 rounded animate-pulse" />
+              <div className="h-4 w-32 bg-white/5 rounded animate-pulse" />
+              <div className="flex gap-2 mt-4">
+                <div className="h-10 w-24 bg-white/5 rounded-full animate-pulse" />
+                <div className="h-10 w-24 bg-white/5 rounded-full animate-pulse" />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="relative max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
+          <div className="space-y-1">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="flex items-center gap-3 px-4 py-3 rounded-lg">
+                <div className="w-5 h-4 bg-white/5 rounded animate-pulse" />
+                <div className="w-10 h-10 bg-white/5 rounded animate-pulse" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 w-40 bg-white/5 rounded animate-pulse" />
+                  <div className="h-3 w-24 bg-white/5 rounded animate-pulse" />
+                </div>
+                <div className="h-4 w-12 bg-white/5 rounded animate-pulse" />
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-[70vh] bg-gradient-to-b from-purple-900/20 via-black to-black flex items-center justify-center">
+        <div className="text-center max-w-md px-6">
+          <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mx-auto mb-4">
+            <Radio className="w-7 h-7 text-white/70" />
+          </div>
+          <p className="text-white/80 text-lg font-semibold mb-2">Radio unavailable</p>
+          <p className="text-white/50 text-sm mb-6">{error}</p>
+          <div className="flex items-center justify-center gap-3">
+            <button
+              onClick={() => { setRadioTracks([]); setLoading(true); }}
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-white text-black font-bold hover:scale-105 active:scale-95 transition-all"
+            >
+              <RefreshCw className="w-4 h-4" />
+              Retry
+            </button>
+            <button
+              onClick={() => router.back()}
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold transition-all"
+            >
+              <X className="w-4 h-4" />
+              Close
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
+  const displayTracks = isRadioQueue ? queue : radioTracks;
+
   return (
-    <div className="fixed inset-0 bg-black z-50 overflow-hidden">
-      {/* Animated Background */}
-      <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-gradient-to-b from-purple-900/30 via-black to-black" />
+    <div className="relative min-h-screen bg-black overflow-hidden">
+      {/* Ambient background */}
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute inset-0 bg-gradient-to-b from-purple-900/25 via-black to-black" />
         {currentTrack?.coverUrl && (
           <div
             key={currentTrack.id}
@@ -71,138 +332,112 @@ export default function RadioClient({ seedTrack }: { seedTrack: SeedTrack }) {
         )}
       </div>
 
-      {/* Content */}
-      <div className="relative h-full flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-white/5 backdrop-blur-xl bg-black/20">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-              <Radio className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-lg sm:text-xl font-bold text-white">
-                {seedTrack.artist} Radio
-              </h1>
-              <p className="text-xs sm:text-sm text-white/50">Personalized for you</p>
-            </div>
-          </div>
-          <button
-            onClick={() => router.back()}
-            className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition-all hover:scale-105"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Main Content */}
-        <div className="flex-1 flex flex-col lg:flex-row gap-6 lg:gap-8 p-4 sm:p-6 overflow-hidden">
-          {/* Now Playing */}
-          <div className="flex-1 flex flex-col items-center justify-center min-h-0">
-            {currentTrack ? (
-              <div className="text-center w-full max-w-xl">
-                {/* Album Art */}
-                <div className="relative w-56 h-56 sm:w-72 sm:h-72 lg:w-80 lg:h-80 mx-auto mb-6 sm:mb-8 group">
-                  <div className="relative w-full h-full rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl ring-1 ring-white/10">
-                    {currentTrack.coverUrl ? (
-                      <Image
-                        src={currentTrack.coverUrl}
-                        alt={currentTrack.title}
-                        fill
-                        className="object-cover transition-transform duration-700 group-hover:scale-105"
-                        priority
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-[var(--surface-2)] to-[var(--surface-3)] flex items-center justify-center">
-                        <Music2 className="w-24 h-24 text-white/10" />
-                      </div>
-                    )}
-                  </div>
-                  {playing && (
-                    <div className="absolute -inset-4 bg-gradient-to-b from-purple-500/30 to-pink-500/20 rounded-3xl blur-3xl -z-10 animate-pulse" />
-                  )}
-                </div>
-
-                {/* Track Info */}
-                <Link href={`/track/${currentTrack.slug || currentTrack.id}`}>
-                  <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-2 hover:text-[var(--primary)] transition-colors line-clamp-2">
-                    {currentTrack.title}
-                  </h2>
-                </Link>
-                <p className="text-lg sm:text-xl text-white/60 mb-8">{currentTrack.artist}</p>
-
-                {/* Controls */}
-                <div className="flex items-center justify-center gap-4 sm:gap-6">
-                  <button
-                    onClick={toggle}
-                    className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white hover:bg-[var(--primary)] hover:scale-110 transition-all flex items-center justify-center shadow-2xl"
-                  >
-                    {playing ? (
-                      <Pause className="w-7 h-7 sm:w-8 sm:h-8 text-black" fill="currentColor" />
-                    ) : (
-                      <Play className="w-7 h-7 sm:w-8 sm:h-8 text-black ml-1" fill="currentColor" />
-                    )}
-                  </button>
-                  <button
-                    onClick={next}
-                    className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 transition-all hover:scale-105 flex items-center justify-center"
-                  >
-                    <SkipForward className="w-5 h-5 sm:w-6 sm:h-6" />
-                  </button>
-                </div>
-              </div>
+      {/* Spotify-like playlist header */}
+      <section className="relative px-4 sm:px-6 md:px-8 pt-4 sm:pt-6 pb-4 sm:pb-6 md:pb-8 max-w-6xl mx-auto">
+        <div className="flex items-start gap-3 sm:gap-5 md:gap-6">
+          <div className="relative w-24 h-24 sm:w-36 sm:h-36 md:w-44 md:h-44 shrink-0 rounded-lg sm:rounded-2xl overflow-hidden bg-white/5 ring-1 ring-white/10 shadow-2xl">
+            {seedTrack.coverUrl ? (
+              <Image src={seedTrack.coverUrl} alt={seedTrack.title} fill className="object-cover" priority />
             ) : (
-              <div className="text-center text-white/40">
-                <Music2 className="w-24 h-24 mx-auto mb-4 opacity-20" />
-                <p>No track playing</p>
+              <div className="w-full h-full flex items-center justify-center">
+                <Music2 className="w-8 h-8 sm:w-10 sm:h-10 text-white/15" />
               </div>
             )}
           </div>
 
-          {/* Upcoming Tracks */}
-          {upcomingTracks.length > 0 && (
-            <div className="lg:w-96 bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-4 sm:p-6 overflow-y-auto custom-scrollbar max-h-[40vh] lg:max-h-none">
-              <h3 className="text-base sm:text-lg font-bold text-white mb-4 flex items-center gap-2">
-                <span>Coming Up</span>
-                <span className="text-xs text-white/40 font-normal">({upcomingTracks.length} tracks)</span>
-              </h3>
-              <div className="space-y-2">
-                {upcomingTracks.map((track, idx) => (
-                  <Link
-                    key={`${track.id}-${idx}`}
-                    href={`/track/${track.slug || track.id}`}
-                    className="flex items-center gap-3 p-2.5 sm:p-3 rounded-lg bg-white/0 hover:bg-white/10 transition-all group"
-                  >
-                    <span className="text-white/30 text-xs sm:text-sm w-5 text-center shrink-0 font-bold tabular-nums">
-                      {idx + 1}
-                    </span>
-                    <div className="relative w-12 h-12 rounded overflow-hidden shrink-0 ring-1 ring-white/10">
-                      {track.coverUrl ? (
-                        <Image
-                          src={track.coverUrl}
-                          alt={track.title}
-                          width={48}
-                          height={48}
-                          className="object-cover transition-transform group-hover:scale-110"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-[var(--surface-2)] flex items-center justify-center">
-                          <Music2 className="w-5 h-5 text-white/20" />
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-white text-sm font-medium truncate group-hover:text-[var(--primary)] transition-colors">
-                        {track.title}
-                      </p>
-                      <p className="text-white/50 text-xs truncate">{track.artist}</p>
-                    </div>
-                  </Link>
-                ))}
-              </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-[9px] sm:text-xs font-black uppercase tracking-widest text-white/50 mb-1 sm:mb-2">
+              Playlist
+            </p>
+            <h1 className="text-xl sm:text-3xl md:text-4xl font-black tracking-tight text-white leading-tight">
+              {seedTrack.artist} Radio
+            </h1>
+            <p className="text-xs sm:text-sm md:text-base text-white/50 mt-1 sm:mt-2">
+              {stationSubtitle}
+            </p>
+            <div className="flex items-center gap-2 sm:gap-3 mt-3 sm:mt-5">
+              <button
+                onClick={() => {
+                  if (isRadioQueue) {
+                    toggle();
+                  } else {
+                    setQueue(radioTracks, 0);
+                  }
+                }}
+                className="collection-play-btn"
+              >
+                {isRadioQueue && playing ? (
+                  <Pause className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="currentColor" />
+                ) : (
+                  <Play className="w-3.5 h-3.5 sm:w-4 sm:h-4 ml-0.5" fill="currentColor" />
+                )}
+                {isRadioQueue && playing ? "Pause" : "Play"}
+              </button>
+              <button
+                onClick={toggleShuffle}
+                className={`collection-shuffle-btn ${shuffle ? "collection-shuffle-btn--active" : ""}`}
+                aria-pressed={shuffle}
+              >
+                <Shuffle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Shuffle</span>
+              </button>
+              <button
+                onClick={next}
+                className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 sm:py-3 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs sm:text-sm font-black transition-all"
+              >
+                <SkipForward className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Next</span>
+              </button>
+              <button
+                onClick={() => router.back()}
+                className="ml-auto inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-3 rounded-full bg-white/0 hover:bg-white/5 text-white/70 hover:text-white text-xs sm:text-sm transition-all"
+              >
+                <X className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Close</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Track list */}
+      <section className="collection-tracklist">
+        <div className="collection-tracklist-inner">
+          <div className="collection-col-header">
+            <span className="col-num">#</span>
+            <span>Title</span>
+            <span className="col-artist">Artist</span>
+            <span className="col-dur" style={{ textAlign: "right" }}>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ display: "inline-block", verticalAlign: "middle", opacity: 0.5 }}>
+                <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5" />
+                <path d="M8 5v3.5l2 1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+            </span>
+          </div>
+
+          <div>
+            {displayTracks.map((t, i) => {
+              const isCurrent = isRadioQueue && i === currentIndex;
+              return (
+                <TrackRow
+                  key={`${t.id}-${i}`}
+                  track={t}
+                  index={i}
+                  isCurrent={isCurrent}
+                  isPlaying={isRadioQueue && playing}
+                  onPlay={() => setQueue(displayTracks, i)}
+                />
+              );
+            })}
+          </div>
+
+          {fetchingMore && (
+            <div style={{ padding: "12px", fontSize: "12px", color: "rgba(255,255,255,0.4)", fontWeight: 600, borderTop: "1px solid rgba(255,255,255,0.1)" }}>
+              Fetching more tracks…
             </div>
           )}
         </div>
-      </div>
+      </section>
     </div>
   );
 }

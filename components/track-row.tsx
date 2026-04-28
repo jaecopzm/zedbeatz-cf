@@ -7,8 +7,9 @@ import { usePlayer, type Track } from "@/lib/player-store";
 import AddToPlaylist from "@/components/add-to-playlist";
 import LikeButton from "@/components/like-button";
 import { parseFeaturedArtists, getArtistSlugFromName } from "@/lib/featured-artists";
+import { cn } from "@/lib/utils";
 
-export default function TrackRow({ track, queue, index }: { track: Track; queue?: Track[]; index?: number }) {
+export default function TrackRow({ track, queue, index, className }: { track: Track; queue?: Track[]; index?: number; className?: string }) {
   const { queue: pQueue, currentIndex, playing, loading, setQueue, play, toggle } = usePlayer();
   const isActive = pQueue[currentIndex]?.id === track.id;
 
@@ -25,11 +26,11 @@ export default function TrackRow({ track, queue, index }: { track: Track; queue?
   return (
     <div
       onClick={handlePlay}
-      className={`group flex items-center gap-3 cursor-pointer px-3 py-2.5 rounded-xl transition-all duration-200 ${
+      className={cn(`group flex items-center gap-3 cursor-pointer px-3 py-2.5 rounded-xl transition-all duration-200 ${
         isActive
           ? "bg-[var(--surface-2)] ring-1 ring-[var(--primary)]/20"
           : "hover:bg-[var(--surface-2)]"
-      }`}
+      }`, className)}
     >
       {/* Index / equalizer */}
       {index !== undefined && (

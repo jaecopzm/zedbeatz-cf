@@ -20,7 +20,6 @@ import {
   HeroSkeleton, TrendingSkeleton, TrackGridSkeleton,
   ArtistGridSkeleton, PlaylistGridSkeleton, RecentlyPlayedSkeleton,
 } from "@/components/home/home-skeletons";
-import ContinueListening from "@/components/home/continue-listening";
 import ReleaseRadar from "@/components/home/release-radar";
 
 export const metadata: Metadata = {
@@ -94,7 +93,7 @@ async function getTrending(): Promise<Track[]> {
     .from("tracks")
     .select("id, title, audio_key, cover_key, duration, artist_id, slug, featured_artists, artists(name, slug)")
     .order("plays", { ascending: false })
-    .limit(5);
+    .limit(8);
   return (data ?? []).map(mapTrack);
 }
 
@@ -173,13 +172,11 @@ function SectionHeader({
 }) {
   const gradient = ACCENT_COLORS[accent] ?? ACCENT_COLORS.green;
   return (
-    <div className="flex items-center justify-between mb-5 md:mb-7">
-      <div className="flex items-center gap-3">
-        {/* Accent bar */}
-        <div className={`w-1 h-6 rounded-full bg-gradient-to-b ${gradient} shrink-0`} />
-        <h2 className="text-xl md:text-2xl font-bold tracking-tight">{title}</h2>
+    <div className="flex items-center justify-between mb-3 md:mb-4">
+      <div className="flex items-center gap-2">
+        <h2 className="text-2xl md:text-3xl font-black tracking-tight">{title}</h2>
         {count != null && (
-          <span className="px-2 py-0.5 rounded-full bg-[var(--surface-3)] text-[11px] font-semibold text-[var(--muted)]">
+          <span className="px-2 py-0.5 bg-white/10 text-[10px] font-bold text-white/60">
             {count}
           </span>
         )}
@@ -187,10 +184,10 @@ function SectionHeader({
       {href && (
         <Link
           href={href}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/10 text-xs font-semibold text-[var(--muted)] hover:text-white hover:border-white/20 hover:bg-white/5 transition-all group"
+          className="flex items-center gap-1 text-xs font-bold text-white/40 hover:text-white transition-colors uppercase tracking-wider group"
         >
           See all
-          <ChevronRight size={13} className="group-hover:translate-x-0.5 transition-transform" />
+          <ChevronRight size={12} className="group-hover:translate-x-0.5 transition-transform" />
         </Link>
       )}
     </div>
@@ -237,9 +234,6 @@ export default async function HomePage() {
         {/* Greeting */}
         <HomeGreeting hour={hour} />
 
-        {/* Continue Listening */}
-        <ContinueListening />
-
         {/* Hero */}
         <div className="mt-4">
           <Suspense fallback={<HeroSkeleton />}>
@@ -256,7 +250,7 @@ export default async function HomePage() {
         </section>
 
         {/* Recently Played */}
-        <section className="px-4 md:px-8 mb-10 md:mb-14">
+        <section className="px-4 md:px-6 mb-6 md:mb-8">
           <SectionHeader icon={Clock} accent="blue" title="Recently Played" href="/library" />
           <Suspense fallback={<RecentlyPlayedSkeleton />}>
             <RecentlyPlayedSection />
@@ -267,21 +261,21 @@ export default async function HomePage() {
         <ReleaseRadar />
 
         {/* New Releases */}
-        <section className="mb-10 md:mb-14">
-          <div className="px-4 md:px-8">
+        <section className="mb-6 md:mb-8">
+          <div className="px-4 md:px-6">
             <SectionHeader icon={Disc3} accent="green" title="New Releases" href="/tracks" />
           </div>
-          <Suspense fallback={<div className="px-4 md:px-8"><TrackGridSkeleton /></div>}>
+          <Suspense fallback={<div className="px-4 md:px-6"><TrackGridSkeleton /></div>}>
             <NewReleasesContent />
           </Suspense>
         </section>
 
         {/* Featured Artists */}
-        <section className="mb-10 md:mb-14">
-          <div className="px-4 md:px-8">
+        <section className="mb-6 md:mb-8">
+          <div className="px-4 md:px-6">
             <SectionHeader icon={Users} accent="purple" title="Featured Artists" href="/browse" />
           </div>
-          <Suspense fallback={<div className="px-4 md:px-8"><ArtistGridSkeleton /></div>}>
+          <Suspense fallback={<div className="px-4 md:px-6"><ArtistGridSkeleton /></div>}>
             <FeaturedArtistsContent />
           </Suspense>
         </section>
@@ -343,7 +337,7 @@ async function FeaturedArtistsContent() {
   const [artists] = await Promise.all([getFeaturedArtists(), delay(650)]);
   if (artists.length === 0) return null;
   return (
-    <ScrollRow arrowTop={48}>
+    <ScrollRow arrowTop={40}>
       {artists.map((artist) => (
         <Link
           key={artist.id}
@@ -398,7 +392,7 @@ async function PlaylistsContent() {
               href={`/playlist/${playlist.id}`}
               className="group flex-shrink-0 w-[140px] md:w-[176px] snap-start"
             >
-              <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-[var(--surface-3)] mb-2.5 shadow-lg ring-1 ring-white/5 group-hover:ring-[var(--primary)]/40 group-hover:shadow-[0_8px_30px_rgba(30,215,96,0.15)] transition-all duration-400">
+              <div className="relative w-full aspect-square overflow-hidden bg-[var(--surface-3)] mb-2.5 shadow-lg ring-1 ring-white/5 group-hover:ring-[var(--primary)]/40 group-hover:shadow-[0_8px_30px_rgba(30,215,96,0.15)] transition-all duration-400">
                 <div className="absolute inset-0 bg-gradient-to-br from-[var(--surface-3)] to-[var(--surface-2)] flex items-center justify-center -z-10">
                   <ListMusic size={32} className="text-[var(--muted)]/40" />
                 </div>
@@ -434,7 +428,7 @@ async function AlbumsContent() {
     <ScrollRow>
       {albums.map((album) => (
         <Link key={album.id} href={`/album/${album.slug || album.id}`} className="group flex-shrink-0 w-[140px] md:w-[176px] snap-start">
-          <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-[var(--surface-3)] mb-2.5 shadow-lg ring-1 ring-white/5 group-hover:ring-[var(--primary)]/40 group-hover:shadow-[0_8px_30px_rgba(30,215,96,0.15)] transition-all duration-400">
+          <div className="relative w-full aspect-square overflow-hidden bg-[var(--surface-3)] mb-2.5 shadow-lg ring-1 ring-white/5 group-hover:ring-[var(--primary)]/40 group-hover:shadow-[0_8px_30px_rgba(30,215,96,0.15)] transition-all duration-400">
             <div className="absolute inset-0 bg-gradient-to-br from-[var(--surface-3)] to-[var(--surface-2)] flex items-center justify-center -z-10">
               <LayoutGrid size={32} className="text-[var(--muted)]/40" />
             </div>

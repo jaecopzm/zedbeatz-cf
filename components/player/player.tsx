@@ -16,6 +16,8 @@ import WhatsAppBanner from "@/components/whatsapp-banner";
 import LyricsView from "./lyrics-view";
 import AudioVisualizer from "@/components/audio-visualizer";
 import { useAudioAnalyser } from "@/lib/use-audio-analyser";
+import MobileMiniplayer from "./mobile-miniplayer";
+import MobileNowPlaying from "./mobile-now-playing";
 
 function fmt(s: number) {
   const m = Math.floor(s / 60);
@@ -26,7 +28,7 @@ export default function Player() {
   const { queue, currentIndex, playing, loading, shuffle, repeat, toggle, next, prev, toggleShuffle, cycleRepeat, setQueue, setLoading, reorderQueue } = usePlayer();
   const track = queue[currentIndex];
   const audioRef = useRef<HTMLAudioElement>(null);
-  const { gainNode } = useAudioAnalyser(audioRef, playing, 32);
+  const { gainNode, frequencyData } = useAudioAnalyser(audioRef, playing, 32);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
@@ -35,18 +37,19 @@ export default function Player() {
   const haptic = () => {
     if ('vibrate' in navigator) navigator.vibrate(10);
   };
-  const [volume, setVolume] = useState(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("player-volume");
-      return saved ? parseFloat(saved) : 0.8;
-    }
-    return 0.8;
-  });
+  const [volume, setVolume] = useState(0.8);
   const [prevVolume, setPrevVolume] = useState(0.8);
   const [showQueue, setShowQueue]         = useState(false);
   const [showLyrics, setShowLyrics]       = useState(false);
   const [showFullScreen, setShowFullScreen] = useState(false);
   const playedTracksRef = useRef<Set<number>>(new Set());
+
+  useEffect(() => {
+    const saved = localStorage.getItem("player-volume");
+    if (!saved) return;
+    const parsed = Number(saved);
+    if (Number.isFinite(parsed)) setVolume(Math.min(1, Math.max(0, parsed)));
+  }, []);
 
   useEffect(() => {
     const a = audioRef.current;
@@ -62,7 +65,7 @@ export default function Player() {
 
   useEffect(() => {
     const a = audioRef.current;
-    if (!a || !track) return;
+    if (!a || !track?.id) return;
     function handlePlay() {
       if (!playedTracksRef.current.has(track.id)) {
         playedTracksRef.current.add(track.id);
@@ -72,12 +75,16 @@ export default function Player() {
     }
     a.addEventListener("play", handlePlay);
     return () => a.removeEventListener("play", handlePlay);
-  }, [track?.id]);
+  }, [track]);
 
   useEffect(() => {
     const a = audioRef.current;
     if (!a) return;
-    playing ? a.play().catch(() => {}) : a.pause();
+    if (playing) {
+      a.play().catch(() => {});
+    } else {
+      a.pause();
+    }
   }, [playing]);
 
   useEffect(() => {
@@ -104,35 +111,23 @@ export default function Player() {
     return () => { document.body.style.overflow = ""; };
   }, [showFullScreen]);
 
-  // ─── Soft Fade & Gapless Playback Logic ──────────────────
+  // Keep gain stable. The previous single-element "crossfade" logic caused
+  // audible glitches because it continuously manipulated the active stream gain.
   useEffect(() => {
-    if (!playing || !audioRef.current || duration <= 0 || !gainNode) return;
-    
-    let raf: number;
-    const fade = () => {
-      if (audioRef.current && !audioRef.current.paused) {
-        const currentTime = audioRef.current.currentTime;
-        const remaining = duration - currentTime;
-        const targetVol = volume;
-        
-        // FADE OUT at the end (last 3 seconds)
-        if (remaining <= 3 && remaining > 0) {
-          gainNode.gain.value = Math.max(0, targetVol * (remaining / 3));
-        } 
-        // FADE IN at the beginning (first 1.5 seconds)
-        else if (currentTime <= 1.5) {
-          gainNode.gain.value = Math.min(targetVol, targetVol * (currentTime / 1.5));
-        }
-        // NORMAL PLAYBACK
-        else {
-          gainNode.gain.value = targetVol;
-        }
-      }
-      raf = requestAnimationFrame(fade);
+    const audio = audioRef.current;
+    if (!audio || !gainNode) return;
+
+    const audioContext = gainNode.context;
+    const now = audioContext.currentTime;
+    const targetGain = playing && !audio.paused ? volume : 0;
+    gainNode.gain.cancelScheduledValues(now);
+    gainNode.gain.setValueAtTime(gainNode.gain.value, now);
+    gainNode.gain.setTargetAtTime(targetGain, now, 0.02);
+
+    return () => {
+      gainNode.gain.cancelScheduledValues(audioContext.currentTime);
     };
-    raf = requestAnimationFrame(fade);
-    return () => cancelAnimationFrame(raf);
-  }, [playing, duration, volume, track, gainNode]);
+  }, [playing, volume, gainNode]);
 
   function handleEnded() {
     if (repeat === "one" && audioRef.current) {
@@ -157,7 +152,7 @@ export default function Player() {
     }
   }
 
-  // ─── Keyboard Shortcuts ──────────────────────────────────
+  // Keyboard Shortcuts
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       // Don't intercept shortcuts when typing in inputs
@@ -197,11 +192,11 @@ export default function Player() {
 
   if (!track) return null;
 
-  /* ───────────────────────── Shared UI pieces ─────────────────────── */
+  /* ==================== Shared UI pieces ==================== */
 
   return (
     <>
-      {/* ── Audio element ─────────────────────────────── */}
+      {/* Audio element */}
       <audio
         ref={audioRef}
         preload="auto"
@@ -232,9 +227,9 @@ export default function Player() {
         className="hidden"
       />
 
-      {/* ─────────────────── FULL-SCREEN NOW PLAYING ──────────────────── */}
+      {/* ==================== FULL-SCREEN NOW PLAYING ==================== */}
       {showFullScreen && (
-        <div className="fixed inset-0 z-[100] flex flex-col overflow-hidden bg-black">
+        <div className="fixed inset-0 z-[100] flex flex-col overflow-hidden lg:bg-black">
           {/* Dynamic ambient background with color extraction */}
           {track.coverUrl && (
             <div className="absolute inset-0 overflow-hidden z-0">
@@ -243,7 +238,7 @@ export default function Player() {
             </div>
           )}
 
-          {/* ── DESKTOP: Enhanced two-column layout ── */}
+          {/* DESKTOP: Enhanced two-column layout */}
           <div className="hidden lg:flex h-full relative z-10">
 
             {/* Left column: cover + controls */}
@@ -291,8 +286,8 @@ export default function Player() {
                     {/* Enhanced visualizer overlay */}
                     <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black via-black/80 to-transparent flex items-end justify-center px-4 pb-3">
                       <AudioVisualizer
-                        audioRef={audioRef}
                         playing={playing}
+                        frequencyData={frequencyData}
                         height={40}
                         barCount={32}
                       />
@@ -342,12 +337,15 @@ export default function Player() {
                 </button>
                 <button onClick={() => { haptic(); toggle(); }}
                   className="w-14 h-14 rounded-full bg-gradient-to-br from-white to-white/90 flex items-center justify-center text-black shadow-[0_0_30px_rgba(255,255,255,0.3),0_6px_24px_rgba(0,0,0,0.6)] active:scale-95 hover:scale-110 transition-all relative group">
-                  {loading ? (
-                    <div className="w-5 h-5 border-3 border-black/20 border-t-black rounded-full animate-spin" />
-                  ) : playing ? (
+                  {playing ? (
                     <Pause size={22} fill="currentColor" />
                   ) : (
                     <Play size={22} fill="currentColor" className="ml-0.5" />
+                  )}
+                  {loading && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-white/30 rounded-full backdrop-blur-sm">
+                      <div className="w-5 h-5 border-3 border-black/30 border-t-black rounded-full animate-spin" />
+                    </div>
                   )}
                   <div className="absolute inset-0 rounded-full bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </button>
@@ -418,169 +416,40 @@ export default function Player() {
             </div>
           </div>
 
-          {/* ── MOBILE: Enhanced centered layout ── */}
-          <div className="lg:hidden flex flex-col h-full">
-            {/* Enhanced Header */}
-            <div className="relative flex items-center justify-between px-4 py-4 shrink-0 backdrop-blur-xl bg-black/20">
-              <button onClick={() => setShowFullScreen(false)} className="p-3 rounded-full hover:bg-white/10 transition-all active:scale-90">
-                <ChevronDown size={26} className="text-white" strokeWidth={2.5} />
-              </button>
-              <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-xl border border-white/20">
-                <span className="w-2 h-2 rounded-full bg-[var(--primary)] animate-pulse shadow-[0_0_8px_var(--primary)]" />
-                <span className="text-xs font-black text-white uppercase tracking-wider">Now Playing</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => { setShowLyrics(!showLyrics); setShowQueue(false); }}
-                  className={`p-3 rounded-full transition-all active:scale-90 ${showLyrics ? "text-[var(--primary)] bg-[var(--primary)]/20" : "text-white/70 hover:bg-white/10"}`}
-                >
-                  <Mic2 size={22} strokeWidth={2.5} />
-                </button>
-                <button
-                  onClick={() => { setShowQueue(!showQueue); setShowLyrics(false); }}
-                  className={`p-3 rounded-full transition-all active:scale-90 ${showQueue ? "text-[var(--primary)] bg-[var(--primary)]/20" : "text-white/70 hover:bg-white/10"}`}
-                >
-                  <List size={22} strokeWidth={2.5} />
-                </button>
-              </div>
-            </div>
-
-            <div className="relative flex-1 flex flex-col items-center px-5 pb-8 gap-4 overflow-hidden" style={{ paddingBottom: "max(2rem, env(safe-area-inset-bottom))" }}>
-              {/* Enhanced Album art or Lyrics */}
-              {showLyrics ? (
-                <div className="flex-1 w-full relative mt-3 mb-3 min-h-0 rounded-3xl overflow-hidden bg-black/40 backdrop-blur-xl border border-white/10 shadow-2xl">
-                  <LyricsView trackId={track.id} progress={progress} className="absolute inset-0" />
-                </div>
-              ) : (
-                <div className="relative w-full max-w-sm aspect-square shrink-0 mt-4 group">
-                  <div className={`absolute -inset-8 rounded-full blur-[60px] transition-all duration-700 ${playing ? "opacity-50 scale-110" : "opacity-0 scale-100"}`}
-                    style={{ background: "radial-gradient(circle, var(--primary) 0%, rgba(30,215,96,0.4) 40%, transparent 70%)" }} />
-                  <div className="relative w-full h-full rounded-3xl overflow-hidden shadow-[0_30px_80px_rgba(0,0,0,0.8)] ring-1 ring-white/10">
-                    {track.coverUrl ? (
-                      <Image src={track.coverUrl} alt={track.title} fill sizes="(max-width: 640px) 100vw, 448px"
-                        className={`object-cover transition-all duration-700 ${playing ? "scale-100" : "scale-95"}`} priority unoptimized />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-[var(--surface-2)] to-[var(--surface-3)]" />
-                    )}
-                    {/* Enhanced visualizer */}
-                    <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-black via-black/80 to-transparent flex items-end justify-center px-4 pb-3">
-                      <AudioVisualizer
-                        audioRef={audioRef}
-                        playing={playing}
-                        height={48}
-                        barCount={32}
-                      />
-                    </div>
-                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent opacity-0 group-active:opacity-100 transition-opacity duration-300 pointer-events-none" />
-                  </div>
-                </div>
-              )}
-
-              {/* Enhanced Track info */}
-              <div className="w-full max-w-md text-center px-2">
-                <h1 className="text-2xl font-black mb-1.5 leading-tight text-white truncate">{track.title}</h1>
-                <p className="text-sm text-white/60 font-semibold truncate">
-                  <Link href={track.artistSlug ? `/artist/${track.artistSlug}` : `/artist/${track.artistId}`} className="hover:text-[var(--primary)] transition-colors">
-                    {track.artist}
-                  </Link>
-                  {track.featuredArtists && <span className="text-xs"> feat. {track.featuredArtists}</span>}
-                </p>
-              </div>
-
-              {/* Enhanced Progress */}
-              <div className="w-full max-w-md px-2">
-                <WhatsAppBanner className="mb-4" />
-                <Slider value={[progress]} max={duration || 1} step={0.1}
-                  onValueChange={([v]: number[]) => { if (audioRef.current) audioRef.current.currentTime = v; }} className="mb-3" />
-                <div className="flex justify-between text-xs text-white/50 tabular-nums font-bold">
-                  <span>{fmt(progress)}</span><span>{fmt(duration)}</span>
-                </div>
-              </div>
-
-              {/* Enhanced Transport */}
-              <div className="flex items-center justify-center gap-4 w-full max-w-sm">
-                <button onClick={toggleShuffle} className={`p-3 rounded-full transition-all active:scale-90 ${shuffle ? "text-[var(--primary)] bg-[var(--primary)]/20" : "text-white/50 hover:text-white hover:bg-white/10"}`}>
-                  <Shuffle size={22} />
-                </button>
-                <button onClick={handlePrev} className="p-2 text-white/80 hover:text-white active:scale-90 transition-all">
-                  <SkipBack size={32} fill="currentColor" />
-                </button>
-                <button onClick={toggle}
-                  className="w-20 h-20 rounded-full bg-gradient-to-br from-white to-white/90 flex items-center justify-center text-black shadow-[0_0_50px_rgba(255,255,255,0.3),0_10px_40px_rgba(0,0,0,0.5)] active:scale-95 transition-all relative group">
-                  {loading ? (
-                    <div className="w-8 h-8 border-3 border-black/20 border-t-black rounded-full animate-spin" />
-                  ) : playing ? (
-                    <Pause size={32} fill="currentColor" />
-                  ) : (
-                    <Play size={32} fill="currentColor" className="ml-1" />
-                  )}
-                  <div className="absolute inset-0 rounded-full bg-white/20 opacity-0 group-active:opacity-100 transition-opacity" />
-                </button>
-                <button onClick={next} className="p-2 text-white/80 hover:text-white active:scale-90 transition-all">
-                  <SkipForward size={32} fill="currentColor" />
-                </button>
-                <button onClick={cycleRepeat} className={`p-3 rounded-full transition-all active:scale-90 ${repeat !== "off" ? "text-[var(--primary)] bg-[var(--primary)]/20" : "text-white/50 hover:text-white hover:bg-white/10"}`}>
-                  {repeat === "one" ? <Repeat1 size={22} /> : <Repeat size={22} />}
-                </button>
-              </div>
-
-              {/* Enhanced Like + Volume + Share + Download */}
-              <div className="flex items-center justify-between w-full max-w-md px-2">
-                <div onClick={e => e.stopPropagation()}><LikeButton trackId={track.id} size={24} /></div>
-                <div className="flex items-center gap-3">
-                  <button onClick={toggleMute} className="text-white/50 hover:text-white transition-colors active:scale-90">
-                    {volume === 0 ? <VolumeX size={22} /> : <Volume2 size={22} />}
-                  </button>
-                  <Slider value={[volume]} max={1} step={0.01} onValueChange={([v]: number[]) => setVolume(v)} className="w-28" />
-                </div>
-                <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
-                  <DownloadButton audioUrl={track.audioUrl} title={track.title} artist={track.artist} coverUrl={track.coverUrl} />
-                  <ShareButton title={`${track.title} by ${track.artist}`} url={`${typeof window !== "undefined" ? window.location.origin : ""}/track/${track.slug || track.id}`} />
-                </div>
-              </div>
-            </div>
-
-            {/* Enhanced Mobile queue panel */}
-            {showQueue && (
-              <div className="absolute right-0 top-0 bottom-0 w-full bg-black/95 backdrop-blur-2xl border-l border-white/10 flex flex-col z-10 animate-slide-up">
-                <div className="flex items-center justify-between px-5 py-5 border-b border-white/10">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-[var(--primary)]/20 flex items-center justify-center">
-                      <List size={16} className="text-[var(--primary)]" />
-                    </div>
-                    <div>
-                      <h3 className="font-black text-sm text-white">Up Next</h3>
-                      <p className="text-xs text-white/40">{queue.length} tracks</p>
-                    </div>
-                  </div>
-                  <button onClick={() => setShowQueue(false)} className="p-2 rounded-full hover:bg-white/10 transition-all active:scale-90">
-                    <X size={20} className="text-white" />
-                  </button>
-                </div>
-                <div className="flex-1 overflow-y-auto custom-scrollbar">
-                  {queue.map((t, i) => (
-                    <div key={`${t.id}-${i}`} onClick={() => { setQueue(queue, i); setShowQueue(false); }}
-                      className={`flex items-center gap-3 px-4 py-3 cursor-pointer transition-all active:scale-[0.98] ${i === currentIndex ? "bg-white/10" : "hover:bg-white/5 active:bg-white/10"}`}>
-                      <span className={`text-xs w-6 text-center tabular-nums shrink-0 font-bold ${i === currentIndex ? "text-[var(--primary)]" : "text-white/40"}`}>
-                        {i + 1}
-                      </span>
-                      <div className="w-11 h-11 rounded-lg overflow-hidden bg-[var(--surface-2)] shrink-0 shadow-lg">
-                        {t.coverUrl && <Image src={t.coverUrl} alt={t.title} width={44} height={44} className="object-cover" />}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className={`text-sm truncate font-bold ${i === currentIndex ? "text-[var(--primary)]" : "text-white"}`}>{t.title}</p>
-                        <p className="text-xs text-[var(--muted)] truncate">{t.artist}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+          {/* MOBILE: Scrollable Spotify-style layout */}
+          <div className="lg:hidden h-full">
+          <MobileNowPlaying
+            track={track}
+            queue={queue}
+            currentIndex={currentIndex}
+            playing={playing}
+            loading={loading}
+            shuffle={shuffle}
+            repeat={repeat}
+            volume={volume}
+            progress={progress}
+            duration={duration}
+            frequencyData={frequencyData}
+            showLyrics={showLyrics}
+            showQueue={showQueue}
+            onClose={() => setShowFullScreen(false)}
+            onToggle={toggle}
+            onNext={next}
+            onPrev={handlePrev}
+            onToggleShuffle={toggleShuffle}
+            onCycleRepeat={cycleRepeat}
+            onToggleMute={toggleMute}
+            onVolumeChange={setVolume}
+            onProgressChange={(v) => { if (audioRef.current) audioRef.current.currentTime = v; }}
+            onToggleLyrics={() => { setShowLyrics(!showLyrics); setShowQueue(false); }}
+            onToggleQueue={() => { setShowQueue(!showQueue); setShowLyrics(false); }}
+            onSelectTrack={(index) => setQueue(queue, index)}
+          />
           </div>
         </div>
       )}
 
-      {/* ─────────────────── DESKTOP PLAYER BAR ───────────────────────── */}
+      {/* ==================== DESKTOP PLAYER BAR ==================== */}
       <div className="hidden lg:block border-t border-[var(--glass-border)] shrink-0" style={{ height: "var(--player-height)" }}>
         <div className="h-full glass-card flex items-center justify-between gap-6 px-6">
 
@@ -596,7 +465,7 @@ export default function Player() {
                   alt={track.title}
                   width={54}
                   height={54}
-                  className="rounded-lg object-cover shadow-lg group-hover/thumb:opacity-80 transition-opacity"
+                  className="object-cover shadow-lg group-hover/thumb:opacity-80 transition-opacity"
                 />
               ) : (
                 <div className="w-[54px] h-[54px] rounded-lg bg-[var(--surface-2)]" />
@@ -695,87 +564,14 @@ export default function Player() {
         </div>
       </div>
 
-      {/* ─────────────────── MOBILE MINI PLAYER ───────────────────────── */}
-      <div className="lg:hidden fixed left-0 right-0 z-40 px-2 pb-1" style={{ bottom: "calc(68px + env(safe-area-inset-bottom, 0px))" }}>
-        <div
-          onClick={() => setShowFullScreen(true)}
-          onTouchStart={(e) => {
-            const touch = e.touches[0];
-            (e.currentTarget as any)._touchStartX = touch.clientX;
-            (e.currentTarget as any)._touchStartY = touch.clientY;
-          }}
-          onTouchEnd={(e) => {
-            const el = e.currentTarget as any;
-            const startX = el._touchStartX;
-            const startY = el._touchStartY;
-            if (startX == null || startY == null) return;
-            const dx = e.changedTouches[0].clientX - startX;
-            const dy = e.changedTouches[0].clientY - startY;
-            // Swipe up → open fullscreen
-            if (dy < -40 && Math.abs(dy) > Math.abs(dx)) {
-              e.preventDefault();
-              setShowFullScreen(true);
-              return;
-            }
-            // Swipe left/right → skip tracks
-            if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
-              e.preventDefault();
-              if (dx < 0) next(); else handlePrev();
-            }
-          }}
-          className="glass-card rounded-lg shadow-2xl overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
-        >
-          {/* Progress bar */}
-          <div className="h-[1.5px] bg-[var(--surface-3)]">
-            <div
-              className="h-full bg-[var(--primary)] transition-all duration-300"
-              style={{ width: duration ? `${(progress / duration) * 100}%` : "0%" }}
-            />
-          </div>
-          <div className="flex items-center gap-2.5 px-2.5 py-1.5">
-            <div className="relative shrink-0">
-              {track.coverUrl ? (
-                <Image src={track.coverUrl} alt={track.title} width={40} height={40} className="rounded-lg object-cover" />
-              ) : (
-                <div className="w-[40px] h-[40px] rounded-lg bg-[var(--surface-2)]" />
-              )}
-              {playing && (
-                <div className="absolute -bottom-0.5 -right-0.5 flex items-end gap-[2px] bg-[var(--background)] rounded-full p-0.5">
-                  {[1,2,3].map((i) => (
-                    <span key={i} className="eq-bar" style={{ animationDelay: `${i*0.15}s`, height: `${2+i*1.5}px`, width: "1.5px" }} />
-                  ))}
-                </div>
-              )}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold truncate">{track.title}</p>
-              <p className="text-xs text-[var(--muted)] truncate">{track.artist}</p>
-            </div>
-            <div className="flex items-center gap-0.5 shrink-0">
-              <button onClick={(e) => { e.stopPropagation(); handlePrev(); }} className="p-1.5 text-[var(--muted)] active:text-white transition-colors">
-                <SkipBack size={16} fill="currentColor" />
-              </button>
-              <button
-                onClick={(e) => { e.stopPropagation(); toggle(); }}
-                className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-black shadow-md active:scale-95 transition-transform relative"
-              >
-                {loading ? (
-                  <div className="w-3.5 h-3.5 border-2 border-black/20 border-t-black rounded-full animate-spin" />
-                ) : playing ? (
-                  <Pause size={16} fill="currentColor" />
-                ) : (
-                  <Play size={16} fill="currentColor" className="ml-0.5" />
-                )}
-              </button>
-              <button onClick={(e) => { e.stopPropagation(); next(); }} className="p-1.5 text-[var(--muted)] active:text-white transition-colors">
-                <SkipForward size={16} fill="currentColor" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* ==================== MOBILE MINI PLAYER ==================== */}
+      <MobileMiniplayer
+        onOpenFullscreen={() => setShowFullScreen(true)}
+        progress={progress}
+        duration={duration}
+      />
 
-      {/* ─────────────────── DESKTOP QUEUE PANEL ──────────────────────── */}
+      {/* ==================== DESKTOP QUEUE PANEL ==================== */}
       {showQueue && !showFullScreen && (
         <div className="fixed right-4 bottom-28 w-80 h-[440px] glass-card rounded-2xl border border-[var(--glass-border)] shadow-2xl z-50 flex flex-col animate-scale-in overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--glass-border)]">

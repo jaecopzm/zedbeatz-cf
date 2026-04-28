@@ -39,8 +39,8 @@ export default function ReleaseRadar() {
         <div className="flex items-center gap-4 p-4 bg-[var(--surface-2)] rounded-2xl border border-[var(--glass-border)]">
           <UserPlus className="text-[var(--primary)] shrink-0" size={28} />
           <div className="flex-1">
-            <p className="text-sm font-semibold text-white mb-0.5">Follow artists to get your Release Radar</p>
-            <p className="text-xs text-[var(--muted)]">Sign in and follow your favourite artists to see their latest drops here.</p>
+            <p className="text-sm font-semibold text-white mb-0.5">Get Your Release Radar</p>
+            <p className="text-xs text-[var(--muted)]">Sign in and follow artists to see new releases.</p>
           </div>
           <SignInButton mode="modal">
             <button className="shrink-0 px-4 py-2 bg-[var(--primary)] text-black text-xs font-bold rounded-full hover:opacity-90 transition-opacity">

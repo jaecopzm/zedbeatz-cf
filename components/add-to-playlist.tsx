@@ -15,7 +15,14 @@ export default function AddToPlaylist({ trackId }: { trackId: number }) {
   const { isSignedIn } = useUser();
 
   useEffect(() => {
-    if (open) fetch("/api/playlists?type=user").then(r => r.json()).then(d => setPlaylists(Array.isArray(d) ? d : []));
+    if (open) {
+      fetch("/api/playlists?type=user")
+        .then(r => r.json())
+        .then(d => {
+          const next = Array.isArray(d) ? d : [];
+          setPlaylists(next.filter((playlist) => playlist.name !== "Favourites"));
+        });
+    }
   }, [open]);
 
   // close desktop dropdown on outside click

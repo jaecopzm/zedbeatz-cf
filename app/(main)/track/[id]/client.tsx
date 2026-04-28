@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { usePlayer, type Track } from "@/lib/player-store";
-import { Play, Pause, Music2, ChevronLeft, Headphones, Clock, Calendar, Radio, Sparkles, TrendingUp, Users, BarChart3, Disc3 } from "lucide-react";
+import { Play, Pause, Music2, ChevronLeft, Headphones, Clock, Calendar, Radio } from "lucide-react";
 import LikeButton from "@/components/like-button";
 import AddToPlaylist from "@/components/add-to-playlist";
 import ShareButton from "@/components/share-button";
@@ -27,7 +27,6 @@ export default function TrackPageClient({ track }: { track: TrackWithMeta }) {
   const [plays, setPlays] = useState<number | null>(track.plays);
   const [activeTab, setActiveTab] = useState<"about" | "lyrics" | "credits">("about");
   const [actualDuration, setActualDuration] = useState<number | undefined>(track.duration);
-  const heroRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!isActive && queue.length === 0) {
@@ -61,147 +60,52 @@ export default function TrackPageClient({ track }: { track: TrackWithMeta }) {
   }, [isActive, track.id]);
 
   return (
-    <div className="min-h-screen pb-32 bg-gradient-to-b from-[var(--background)] via-[var(--background)] to-black/40">
-      {/* ── Premium Hero with Parallax ─────────────────────── */}
-      <section 
-        ref={heroRef}
-        className="relative px-3 sm:px-4 md:px-8 pt-4 sm:pt-6 md:pt-10 pb-6 sm:pb-8 md:pb-16 max-w-7xl mx-auto overflow-hidden"
-      >
-        {/* Dynamic ambient glow */}
+    <div className="min-h-screen pb-32">
+      {/* ── Hero ── */}
+      <section className="relative px-4 md:px-8 pt-4 pb-6 max-w-5xl mx-auto">
         {track.coverUrl && (
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[400px] sm:w-[600px] h-[400px] sm:h-[600px] opacity-20 sm:opacity-30 blur-[100px] sm:blur-[120px] pointer-events-none animate-pulse">
-            <div className="w-full h-full bg-gradient-radial from-[var(--primary)] via-purple-500/30 to-pink-500/20" />
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute inset-0" style={{ backgroundImage: `url(${track.coverUrl})`, backgroundSize: "cover", filter: "blur(80px) saturate(150%) brightness(0.25)", transform: "scale(1.2)" }} />
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[var(--background)]" />
           </div>
         )}
 
-        {/* Back Link */}
-        <Link
-          href="/"
-          className="relative inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-semibold text-white/50 hover:text-white transition-colors mb-5 sm:mb-8 md:mb-10 group"
-        >
-          <ChevronLeft size={13} className="transition-transform group-hover:-translate-x-0.5" />
-          Back
+        <Link href="/" className="relative inline-flex items-center gap-1 text-xs text-white/50 hover:text-white mb-4 group">
+          <ChevronLeft size={13} className="group-hover:-translate-x-0.5 transition-transform" /> Back
         </Link>
 
-        <div className="relative flex flex-col sm:flex-row items-center sm:items-start gap-5 sm:gap-6 md:gap-8">
-          {/* Enhanced Artwork */}
-          <div className="relative shrink-0 group">
-            {isActive && playing && (
-              <div className="absolute -inset-3 sm:-inset-4 rounded-3xl bg-gradient-to-br from-[var(--primary)]/30 via-purple-500/20 to-pink-500/10 blur-xl sm:blur-2xl animate-pulse pointer-events-none" />
-            )}
-            <div className="relative w-48 h-48 sm:w-64 sm:h-64 md:w-80 md:h-80 rounded-2xl sm:rounded-3xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.5)] ring-1 ring-white/10 backdrop-blur-sm">
-              {track.coverUrl ? (
-                <Image src={track.coverUrl} alt={track.title} fill sizes="(max-width: 640px) 192px, (max-width: 768px) 256px, 320px" className="object-cover transition-transform duration-700 group-hover:scale-110" priority unoptimized />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-[var(--surface-2)] via-[var(--surface-3)] to-[var(--surface-2)] flex items-center justify-center">
-                  <Music2 size={96} className="text-white/10" />
-                </div>
-              )}
-              {/* Premium visualizer overlay */}
-              {isActive && playing && (
-                <div className="absolute inset-0 flex items-end justify-center pb-8 bg-gradient-to-t from-black/80 via-black/30 to-transparent">
-                  <div className="flex items-end gap-1">
-                    {[...Array(16)].map((_, i) => {
-                      const heights = [16, 24, 20, 28, 18, 26, 22, 30, 19, 25, 21, 27, 17, 23, 20, 29];
-                      const durations = [0.6, 0.5, 0.7, 0.4, 0.6, 0.5, 0.7, 0.6, 0.5, 0.6, 0.7, 0.5, 0.6, 0.7, 0.5, 0.6];
-                      return (
-                        <span
-                          key={i}
-                          className="w-1 rounded-full bg-gradient-to-t from-[var(--primary)] to-white shadow-[0_0_12px_rgba(30,215,96,0.8)]"
-                          style={{
-                            height: `${heights[i]}px`,
-                            animationName: 'bar-bounce',
-                            animationDuration: `${durations[i]}s`,
-                            animationTimingFunction: 'ease-in-out',
-                            animationIterationCount: 'infinite',
-                            animationDelay: `${i * 0.05}s`
-                          }}
-                        />
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-            </div>
+        <div className="relative flex flex-col sm:flex-row items-center sm:items-end gap-4 sm:gap-6">
+          {/* Cover */}
+          <div className="relative shrink-0 w-40 h-40 sm:w-52 sm:h-52 md:w-60 md:h-60 shadow-2xl">
+            {track.coverUrl
+              ? <Image src={track.coverUrl} alt={track.title} fill sizes="240px" className="object-cover" priority unoptimized />
+              : <div className="w-full h-full bg-[var(--surface-2)] flex items-center justify-center"><Music2 size={48} className="text-white/10" /></div>
+            }
           </div>
 
-          {/* Enhanced Info */}
-          <div className="flex-1 w-full text-center sm:text-left space-y-3 sm:space-y-4 md:space-y-6">
-            {/* Stats Row */}
+          {/* Info */}
+          <div className="flex-1 text-center sm:text-left">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-white/50 mb-1">{track.genre || "Single"}</p>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black leading-tight mb-2">{track.title}</h1>
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-1.5 text-sm mb-3">
+              <Link href={track.artistSlug ? `/artist/${track.artistSlug}` : `/artist/${track.artistId}`} className="font-bold hover:text-[var(--primary)] transition-colors">{track.artist}</Link>
+              {track.featuredArtists && <span className="text-white/50">feat. {track.featuredArtists}</span>}
+            </div>
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 text-xs text-white/40 mb-4">
+              {plays != null && <span className="flex items-center gap-1"><Headphones size={11} />{plays.toLocaleString()} plays</span>}
+              {actualDuration && <span className="flex items-center gap-1"><Clock size={11} />{fmt(actualDuration)}</span>}
+              <span className="flex items-center gap-1"><Calendar size={11} />{track.releaseYear || new Date().getFullYear()}</span>
+            </div>
+
+            {/* Actions */}
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-              <span className="px-2 sm:px-3 py-0.5 sm:py-1 rounded-full bg-white/[0.07] backdrop-blur-sm border border-white/10 text-[10px] font-black uppercase tracking-widest text-white/70 shadow-sm">
-                {track.genre || "Music"}
-              </span>
-              {plays != null && (
-                <span className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full bg-[var(--primary)]/10 border border-[var(--primary)]/20 text-[10px] font-bold text-[var(--primary)] backdrop-blur-sm">
-                  <Headphones size={11} />
-                  {plays.toLocaleString()} plays
-                </span>
-              )}
-              <span className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-[10px] font-bold text-purple-400 backdrop-blur-sm">
-                <TrendingUp size={11} />
-                Trending
-              </span>
-            </div>
-
-            {/* Title & Artist */}
-            <div>
-              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-black tracking-tight leading-[1.05] mb-2 sm:mb-3 bg-gradient-to-br from-white via-white to-white/60 bg-clip-text text-transparent drop-shadow-[0_4px_12px_rgba(0,0,0,0.4)]">
-                {track.title}
-              </h1>
-
-              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-1.5 sm:gap-2 text-sm sm:text-base md:text-lg mb-3 sm:mb-4">
-                <Link
-                  href={track.artistSlug ? `/artist/${track.artistSlug}` : `/artist/${track.artistId}`}
-                  className="font-bold text-white/90 hover:text-[var(--primary)] transition-colors underline decoration-white/20 hover:decoration-[var(--primary)] underline-offset-4"
-                >
-                  {track.artist}
-                </Link>
-                {track.featuredArtists && (
-                  <span className="text-white/50 font-medium text-sm sm:text-base">feat. {track.featuredArtists}</span>
-                )}
-              </div>
-
-              {/* Metadata Pills */}
-              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 text-xs text-white/50">
-                {actualDuration && (
-                  <div className="flex items-center gap-1.5">
-                    <Clock size={13} />
-                    <span className="font-semibold tabular-nums">{fmt(actualDuration)}</span>
-                  </div>
-                )}
-                <div className="flex items-center gap-1.5">
-                  <Calendar size={13} />
-                  <span className="font-semibold">{track.releaseYear || new Date().getFullYear()}</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <Disc3 size={13} />
-                  <span className="font-semibold">Single</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Premium Actions */}
-            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 sm:gap-3">
-              <button
-                onClick={() => isActive ? toggle() : play(track)}
-                className="flex items-center gap-2 sm:gap-2.5 px-8 sm:px-10 py-3 sm:py-4 rounded-full bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-black font-black text-xs sm:text-sm uppercase tracking-wide transition-all hover:scale-105 active:scale-95 shadow-[0_8px_32px_rgba(30,215,96,0.4)] hover:shadow-[0_12px_40px_rgba(30,215,96,0.5)]"
-              >
-                {isActive && playing
-                  ? <><Pause size={16} className="sm:w-[18px] sm:h-[18px]" fill="currentColor" /> Pause</>
-                  : <><Play size={16} className="sm:w-[18px] sm:h-[18px] ml-0.5" fill="currentColor" /> Play</>
-                }
+              <button onClick={() => isActive ? toggle() : play(track)} className="flex items-center gap-2 px-7 py-2.5 bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-black font-black text-sm transition-all hover:scale-105 active:scale-95">
+                {isActive && playing ? <><Pause size={15} fill="currentColor" />Pause</> : <><Play size={15} fill="currentColor" className="ml-0.5" />Play</>}
               </button>
-
-              <button 
-                onClick={() => router.push(`/radio/${track.id}`)}
-                className="flex items-center gap-1.5 sm:gap-2 px-5 sm:px-6 py-3 sm:py-4 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold text-xs sm:text-sm transition-all hover:scale-105 active:scale-95">
-                <Radio size={14} className="sm:w-4 sm:h-4" />
-                <span className="hidden sm:inline">Radio</span>
+              <button onClick={() => router.push(`/radio/${track.id}`)} className="flex items-center gap-1.5 px-4 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 text-sm font-bold transition-colors">
+                <Radio size={14} /><span className="hidden sm:inline">Radio</span>
               </button>
-
-              <div className="flex items-center gap-1 sm:gap-2 p-1.5 sm:p-2 bg-white/[0.05] backdrop-blur-md border border-white/10 rounded-full shadow-lg">
+              <div className="flex items-center gap-0.5 p-1 bg-white/5 border border-white/10">
                 <LikeButton trackId={track.id} size={16} />
                 <AddToPlaylist trackId={track.id} />
                 <DownloadButton audioUrl={track.audioUrl} title={track.title} artist={track.artist} coverUrl={track.coverUrl} />
@@ -212,166 +116,84 @@ export default function TrackPageClient({ track }: { track: TrackWithMeta }) {
         </div>
       </section>
 
-      {/* ── Premium Tabs Section ──────────────────────────── */}
-      <section className="px-3 sm:px-4 md:px-8 max-w-7xl mx-auto mb-8 sm:mb-12">
-        {/* Tab Navigation */}
-        <div className="flex items-center gap-2 mb-6 p-1.5 bg-white/[0.03] backdrop-blur-md border border-white/10 rounded-2xl w-fit mx-auto lg:mx-0">
+      {/* ── Tabs ── */}
+      <section className="px-4 md:px-8 max-w-5xl mx-auto mb-8">
+        <div className="flex items-center gap-1 mb-4 border-b border-white/10">
           {(["about", "lyrics", "credits"] as const).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`px-6 py-2.5 rounded-xl font-bold text-sm capitalize transition-all ${
-                activeTab === tab
-                  ? "bg-[var(--primary)] text-black shadow-lg"
-                  : "text-white/50 hover:text-white hover:bg-white/5"
-              }`}
-            >
+            <button key={tab} onClick={() => setActiveTab(tab)}
+              className={`px-4 py-2 text-sm font-bold capitalize transition-colors border-b-2 -mb-px ${
+                activeTab === tab ? "border-[var(--primary)] text-white" : "border-transparent text-white/40 hover:text-white"
+              }`}>
               {tab}
             </button>
           ))}
         </div>
 
-        {/* Tab Content */}
-        <div className="bg-gradient-to-br from-white/[0.05] to-white/[0.02] backdrop-blur-md border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl">
+        <div className="bg-white/[0.03] border border-white/10 p-4 md:p-6">
           {activeTab === "about" && (
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-black text-white mb-3 flex items-center gap-2">
-                  <BarChart3 size={20} className="text-[var(--primary)]" />
-                  Track Stats
-                </h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                    <div className="text-2xl font-black text-white mb-1">{plays?.toLocaleString() || "0"}</div>
-                    <div className="text-xs text-white/50 font-semibold">Total Plays</div>
-                  </div>
-                  <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                    <div className="text-2xl font-black text-white mb-1">{actualDuration ? fmt(actualDuration) : "—"}</div>
-                    <div className="text-xs text-white/50 font-semibold">Duration</div>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-black text-white mb-3">About This Track</h3>
-                <p className="text-sm text-white/70 leading-relaxed">
-                  {track.title} is a {track.genre?.toLowerCase() || "music"} track by {track.artist}
-                  {track.featuredArtists && ` featuring ${track.featuredArtists}`}. 
-                  This song showcases their unique style and has been gaining popularity among listeners worldwide.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {activeTab === "lyrics" && (
             <div className="space-y-4">
-              <h3 className="text-lg font-black text-white mb-4">Lyrics</h3>
-              {track.lyrics ? (
-                <div className="text-sm text-white/80 leading-relaxed whitespace-pre-line max-h-96 overflow-y-auto pr-2 custom-scrollbar">
-                  {track.lyrics}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-white/5 p-3 border border-white/10">
+                  <div className="text-xl font-black mb-0.5">{plays?.toLocaleString() || "0"}</div>
+                  <div className="text-xs text-white/40">Total Plays</div>
                 </div>
-              ) : (
-                <div className="text-center py-12">
-                  <Music2 size={48} className="mx-auto mb-4 text-white/10" />
-                  <p className="text-sm text-white/50">Lyrics not available for this track</p>
-                </div>
-              )}
-            </div>
-          )}
-
-          {activeTab === "credits" && (
-            <div className="space-y-6">
-              <h3 className="text-lg font-black text-white mb-4">Credits</h3>
-              <div className="grid gap-4">
-                <div className="flex items-start justify-between py-3 border-b border-white/10">
-                  <span className="text-sm text-white/50 font-semibold">Artist</span>
-                  <span className="text-sm text-white font-bold">{track.artist}</span>
-                </div>
-                {track.featuredArtists && (
-                  <div className="flex items-start justify-between py-3 border-b border-white/10">
-                    <span className="text-sm text-white/50 font-semibold">Featured Artists</span>
-                    <span className="text-sm text-white font-bold">{track.featuredArtists}</span>
-                  </div>
-                )}
-                <div className="flex items-start justify-between py-3 border-b border-white/10">
-                  <span className="text-sm text-white/50 font-semibold">Genre</span>
-                  <span className="text-sm text-white font-bold">{track.genre || "Unknown"}</span>
-                </div>
-                <div className="flex items-start justify-between py-3 border-b border-white/10">
-                  <span className="text-sm text-white/50 font-semibold">Duration</span>
-                  <span className="text-sm text-white font-bold">{actualDuration ? fmt(actualDuration) : "Unknown"}</span>
-                </div>
-                <div className="flex items-start justify-between py-3">
-                  <span className="text-sm text-white/50 font-semibold">Release Year</span>
-                  <span className="text-sm text-white font-bold">{track.releaseYear || new Date().getFullYear()}</span>
+                <div className="bg-white/5 p-3 border border-white/10">
+                  <div className="text-xl font-black mb-0.5">{actualDuration ? fmt(actualDuration) : "—"}</div>
+                  <div className="text-xs text-white/40">Duration</div>
                 </div>
               </div>
+              <p className="text-sm text-white/60 leading-relaxed">
+                {track.title} is a {track.genre?.toLowerCase() || "music"} track by {track.artist}{track.featuredArtists && ` featuring ${track.featuredArtists}`}.
+              </p>
+            </div>
+          )}
+          {activeTab === "lyrics" && (
+            track.lyrics
+              ? <div className="text-sm text-white/80 leading-relaxed whitespace-pre-line max-h-96 overflow-y-auto custom-scrollbar">{track.lyrics}</div>
+              : <div className="text-center py-10 text-sm text-white/40">Lyrics not available</div>
+          )}
+          {activeTab === "credits" && (
+            <div className="divide-y divide-white/10">
+              {[
+                ["Artist", track.artist],
+                ...(track.featuredArtists ? [["Featured", track.featuredArtists]] : []),
+                ["Genre", track.genre || "Unknown"],
+                ["Duration", actualDuration ? fmt(actualDuration) : "Unknown"],
+                ["Year", String(track.releaseYear || new Date().getFullYear())],
+              ].map(([label, value]) => (
+                <div key={label} className="flex justify-between py-2.5 text-sm">
+                  <span className="text-white/40">{label}</span>
+                  <span className="font-semibold">{value}</span>
+                </div>
+              ))}
             </div>
           )}
         </div>
       </section>
 
-      {/* ── WhatsApp Banner ──────────────────────────────── */}
-      <div className="px-3 sm:px-4 md:px-8 max-w-7xl mx-auto mb-8 sm:mb-10 md:mb-12">
-        <WhatsAppBanner />
-      </div>
+      {/* ── WhatsApp Banner ── */}
+      <div className="px-4 md:px-8 max-w-5xl mx-auto mb-6"><WhatsAppBanner /></div>
 
-      {/* ── More From Artist (Premium) ─────────────────────── */}
-      {(track as any).moreFromArtist?.length === 0 && (
-        <section className="px-3 sm:px-4 md:px-8 max-w-7xl mx-auto mb-8 sm:mb-10 md:mb-12">
-          <h2 className="text-xl sm:text-2xl font-black text-white mb-6">More from {track.artist}</h2>
-          <div className="flex flex-col items-center justify-center py-16 rounded-3xl bg-gradient-to-br from-white/[0.04] to-white/[0.01] border border-white/10 backdrop-blur-sm text-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center">
-              <Music2 size={32} className="text-white/20" />
-            </div>
-            <p className="text-sm font-semibold text-white/50">No other songs from {track.artist} yet</p>
-            <Link href={`/artist/${track.artistSlug || track.artistId}`} className="text-xs font-bold text-[var(--primary)] hover:text-[var(--primary-hover)] transition-colors uppercase tracking-wide">
-              View artist profile
-            </Link>
-          </div>
-        </section>
-      )}
+      {/* ── More From Artist ── */}
       {(track as any).moreFromArtist?.length > 0 && (
-        <section className="px-3 sm:px-4 md:px-8 max-w-7xl mx-auto mb-8 sm:mb-10 md:mb-12">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl sm:text-2xl font-black text-white">More from {track.artist}</h2>
-            <Link href={`/artist/${track.artistSlug || track.artistId}`} className="text-xs font-bold text-[var(--muted)] hover:text-[var(--primary)] transition-colors uppercase tracking-wide">
-              See all
-            </Link>
+        <section className="px-4 md:px-8 max-w-5xl mx-auto mb-6">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-black text-base">More from {track.artist}</h2>
+            <Link href={`/artist/${track.artistSlug || track.artistId}`} className="text-xs text-white/40 hover:text-white">See all</Link>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {(track as any).moreFromArtist.map((t: any, idx: number) => {
+          <div className="divide-y divide-white/5">
+            {(track as any).moreFromArtist.map((t: any) => {
               const isThisActive = currentTrack?.id === t.id;
               return (
-                <div key={t.id}>
-                  <Link
-                    href={`/track/${t.slug || t.id}`}
-                    className="group flex items-center gap-3.5 p-3 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/5 hover:border-white/10 transition-all duration-300 backdrop-blur-sm"
-                  >
-                    <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-[var(--surface-2)] shrink-0 shadow-lg">
-                      {t.coverUrl
-                        ? <Image src={t.coverUrl} alt={t.title} width={56} height={56} className="object-cover transition-transform duration-300 group-hover:scale-110" />
-                        : <div className="w-full h-full flex items-center justify-center text-xl opacity-20">♪</div>
-                      }
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-sm font-bold truncate transition-colors ${isThisActive ? "text-[var(--primary)]" : "group-hover:text-white"}`}>{t.title}</p>
-                      <p className="text-xs text-[var(--muted)] truncate">{t.artist}</p>
-                    </div>
-                    {t.duration && <span className="text-[10px] text-white/30 tabular-nums shrink-0 font-semibold">{fmt(t.duration)}</span>}
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        isThisActive ? toggle() : play(t);
-                      }}
-                      className="shrink-0 w-9 h-9 rounded-full bg-white/5 hover:bg-[var(--primary)] hover:text-black flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95 shadow-md"
-                    >
-                      {isThisActive && playing
-                        ? <Pause size={14} fill="currentColor" />
-                        : <Play size={14} fill="currentColor" className="ml-0.5" />
-                      }
-                    </button>
-                  </Link>
+                <div key={t.id} className="flex items-center gap-3 py-2 hover:bg-white/5 px-2 cursor-pointer group" onClick={() => isThisActive ? toggle() : play(t)}>
+                  <div className="relative w-9 h-9 shrink-0 bg-[var(--surface-2)]">
+                    {t.coverUrl && <Image src={t.coverUrl} alt={t.title} width={36} height={36} className="object-cover" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm font-semibold truncate ${isThisActive ? "text-[var(--primary)]" : ""}`}>{t.title}</p>
+                    <p className="text-xs text-white/40 truncate">{t.artist}</p>
+                  </div>
+                  {t.duration && <span className="text-xs text-white/30 tabular-nums">{fmt(t.duration)}</span>}
                 </div>
               );
             })}
@@ -379,47 +201,30 @@ export default function TrackPageClient({ track }: { track: TrackWithMeta }) {
         </section>
       )}
 
-      {/* ── Up Next (Premium) ──────────────────────────────── */}
+      {/* ── Up Next ── */}
       {queue.length > 1 && (
-        <section className="px-3 sm:px-4 md:px-8 max-w-7xl mx-auto mb-8 sm:mb-10 md:mb-12">
-          <h2 className="text-xl sm:text-2xl font-black mb-4 flex items-center gap-2">
-            <span>Up Next</span>
-            <span className="text-sm font-bold text-white/40">({queue.length - currentIndex - 1} tracks)</span>
-          </h2>
-          <div className="rounded-2xl overflow-hidden bg-gradient-to-br from-white/[0.05] to-white/[0.02] backdrop-blur-md border border-white/10 shadow-2xl divide-y divide-white/5">
+        <section className="px-4 md:px-8 max-w-5xl mx-auto mb-6">
+          <h2 className="font-black text-base mb-3">Up Next <span className="text-white/30 font-normal text-sm">({queue.length - currentIndex - 1})</span></h2>
+          <div className="divide-y divide-white/5">
             {queue.slice(currentIndex + 1, currentIndex + 6).map((t, i) => (
-              <div
-                key={`${t.id}-${i}`}
-                className="group flex items-center gap-3 px-4 py-3 hover:bg-white/[0.04] transition-all cursor-pointer"
-              >
-                <span className="text-xs font-black text-white/30 w-4 text-center shrink-0 tabular-nums">{i + 1}</span>
-                <div className="relative w-11 h-11 rounded-lg overflow-hidden bg-[var(--surface-2)] shrink-0 shadow-lg">
-                  {t.coverUrl && (
-                    <Image src={t.coverUrl} alt={t.title} width={44} height={44} className="object-cover transition-transform duration-300 group-hover:scale-110" />
-                  )}
+              <div key={`${t.id}-${i}`} className="flex items-center gap-3 py-2 px-2">
+                <span className="text-xs text-white/30 w-4 text-center tabular-nums">{i + 1}</span>
+                <div className="relative w-9 h-9 shrink-0 bg-[var(--surface-2)]">
+                  {t.coverUrl && <Image src={t.coverUrl} alt={t.title} width={36} height={36} className="object-cover" />}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold truncate group-hover:text-[var(--primary)] transition-colors">{t.title}</p>
-                  <p className="text-xs text-[var(--muted)] truncate">{t.artist}</p>
+                  <p className="text-sm font-semibold truncate">{t.title}</p>
+                  <p className="text-xs text-white/40 truncate">{t.artist}</p>
                 </div>
-                {t.duration && (
-                  <span className="text-xs text-[var(--muted)] tabular-nums shrink-0 font-semibold">{fmt(t.duration)}</span>
-                )}
+                {t.duration && <span className="text-xs text-white/30 tabular-nums">{fmt(t.duration)}</span>}
               </div>
             ))}
-            {queue.length - currentIndex - 1 > 5 && (
-              <div className="px-4 py-3 text-center bg-white/[0.02]">
-                <span className="text-xs font-bold text-white/30 uppercase tracking-wider">
-                  +{queue.length - currentIndex - 6} more tracks
-                </span>
-              </div>
-            )}
           </div>
         </section>
       )}
 
-      {/* ── Comments ───────────────────────────────────────── */}
-      <section className="px-3 sm:px-4 md:px-8 max-w-7xl mx-auto mb-8 sm:mb-10 md:mb-12">
+      {/* ── Comments ── */}
+      <section className="px-4 md:px-8 max-w-5xl mx-auto mb-8">
         <TrackComments trackId={track.id} />
       </section>
     </div>

@@ -8,22 +8,23 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 async function getFavouritesId(userId: string): Promise<number | null> {
-  // Try to find existing Favourites playlist
-  const { data: existing, error: selectError } = await supabase
+  // If duplicates already exist, always reuse the oldest one instead of creating more.
+  const { data: existing } = await supabase
     .from("playlists")
     .select("id")
     .eq("user_id", userId)
     .eq("name", "Favourites")
-    .maybeSingle();
+    .order("id", { ascending: true })
+    .limit(1);
 
-  if (existing?.id) return existing.id;
+  if (existing && existing.length > 0) return existing[0].id;
 
   // Create new Favourites playlist only if not found
   const { data: created, error } = await supabase
     .from("playlists")
     .insert({ name: "Favourites", user_id: userId })
     .select("id")
-    .maybeSingle();
+    .single();
 
   // If insert failed due to duplicate, try to fetch again
   if (error) {
@@ -32,9 +33,10 @@ async function getFavouritesId(userId: string): Promise<number | null> {
       .select("id")
       .eq("user_id", userId)
       .eq("name", "Favourites")
-      .maybeSingle();
+      .order("id", { ascending: true })
+      .limit(1);
     
-    if (retry?.id) return retry.id;
+    if (retry && retry.length > 0) return retry[0].id;
     return null;
   }
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from "react";
-import { Plus, Play, Music, Heart, Clock, Search, X, Edit2, Trash2, BookmarkX, ChevronLeft, MoreVertical, Shuffle } from "lucide-react";
+import { Plus, Play, Pause, Music, Heart, Clock, Search, X, Edit2, Trash2, BookmarkX, ChevronLeft, MoreVertical, Shuffle } from "lucide-react";
 import { usePlayer, type Track } from "@/lib/player-store";
 import Image from "next/image";
 import Link from "next/link";
@@ -9,6 +9,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useUser, SignInButton } from "@clerk/nextjs";
 import { ListMusic } from "lucide-react";
 import { useRouter } from "next/navigation";
+import "@/app/styles/collection-page.css";
+import { TrackMenu } from "@/components/track-menu";
+import { QuickCard } from "@/components/library/quick-card";
+import { LibraryDetailView } from "@/components/library/detail-view";
 
 type Playlist = {
   id: number;
@@ -361,22 +365,6 @@ function ListView({ isSignedIn, isLoaded, searchQuery, setSearchQuery, showCreat
   );
 }
 
-function QuickCard({ icon, gradient, label, count, onClick }: { icon: React.ReactNode; gradient: string; label: string; count: number; onClick: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`relative overflow-hidden rounded-2xl p-4 text-left active:scale-95 transition-transform bg-gradient-to-br ${gradient}`}
-    >
-      <div className="absolute -bottom-3 -right-3 opacity-20">{icon && <div className="scale-[2.5]">{icon}</div>}</div>
-      <div className="relative z-10">
-        <div className="mb-3">{icon}</div>
-        <p className="font-bold text-sm text-white leading-tight">{label}</p>
-        <p className="text-white/60 text-xs mt-0.5">{count} tracks</p>
-      </div>
-    </button>
-  );
-}
-
 function PlaylistRow({ p, i, selected, selectPlaylist, editingId, editName, setEditName, renamePlaylist, setEditingId, isSignedIn, onDelete, deleteIcon }: any) {
   const [confirmDelete, setConfirmDelete] = useState(false);
 
@@ -453,137 +441,111 @@ function PlaylistRow({ p, i, selected, selectPlaylist, editingId, editName, setE
 // ─── Detail View ──────────────────────────────────────────────────────────────
 
 function DetailView({ selected, selectedName, selectedCount, selectedFull, tracks, currentTrack, isSignedIn, setQueue, removeTrack, goBack }: any) {
-  const coverGradient = selected === "liked" ? "from-rose-500 to-pink-700" : selected === "recent" ? "from-blue-500 to-violet-700" : "from-[var(--surface-3)] to-[var(--surface-2)]";
+  const { playing, toggle, currentIndex, queue } = usePlayer();
+  const isPlaylistQueue = queue.length === tracks.length && tracks.every((t: Track, i: number) => queue[i]?.id === t.id);
 
   return (
-    <div className="pb-32">
-      {/* Hero header */}
-      <div className={`relative bg-gradient-to-b ${coverGradient} to-[var(--background)] pt-12 pb-6 px-4`}>
-        {/* Back button */}
-        <button onClick={goBack} className="absolute top-4 left-4 w-9 h-9 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center active:scale-95 transition-transform">
-          <ChevronLeft size={20} className="text-white" />
-        </button>
-
-        {/* Cover art */}
-        <div className="flex flex-col items-center text-center mt-4">
-          <div className="w-40 h-40 rounded-2xl overflow-hidden shadow-2xl mb-4 relative">
-            {selectedFull?.cover_url ? (
-              <Image src={selectedFull.cover_url} alt={selectedName} fill sizes="160px" className="object-cover" unoptimized />
-            ) : selected === "liked" ? (
-              <div className="w-full h-full bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center">
-                <Heart size={56} className="text-white fill-white" />
-              </div>
-            ) : selected === "recent" ? (
-              <div className="w-full h-full bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center">
-                <Clock size={56} className="text-white" />
-              </div>
-            ) : (
-              <div className="w-full h-full bg-[var(--surface-3)] flex items-center justify-center">
-                <Music size={56} className="text-[var(--muted)]" />
-              </div>
-            )}
-          </div>
-
-          <h2 className="text-2xl font-black tracking-tight mb-1">{selectedName}</h2>
-          <p className="text-[var(--muted)] text-sm">{selectedCount} tracks</p>
-
-          {/* Play / Shuffle buttons */}
-          {tracks.length > 0 && (
-            <div className="flex gap-3 mt-5">
-              <button
-                onClick={() => setQueue(tracks, 0)}
-                className="flex items-center gap-2 px-8 py-3 bg-[var(--primary)] text-black font-bold text-sm rounded-full shadow-[var(--glow-primary)] active:scale-95 transition-transform"
-              >
-                <Play size={16} fill="currentColor" className="ml-0.5" />
-                Play
-              </button>
-              <button
-                onClick={() => setQueue([...tracks].sort(() => Math.random() - 0.5), 0)}
-                className="flex items-center gap-2 px-6 py-3 bg-white/10 text-white font-bold text-sm rounded-full active:scale-95 transition-transform"
-              >
-                <Shuffle size={16} />
-                Shuffle
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Track list */}
-      <div className="px-4 mt-2">
-        {tracks.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="w-16 h-16 rounded-2xl bg-[var(--surface-2)] flex items-center justify-center mb-4">
-              <Music size={28} className="text-[var(--muted)]" />
-            </div>
-            <p className="font-bold text-base mb-1">Empty playlist</p>
-            <p className="text-[var(--muted)] text-sm mb-6">Browse music to add tracks</p>
-            <Link href="/browse" className="px-6 py-2.5 bg-white text-black text-sm font-bold rounded-full">Browse</Link>
-          </div>
-        ) : (
-          <div className="space-y-1">
-            {tracks.map((t: Track, i: number) => (
-              <TrackRow
-                key={t.id} track={t} index={i} tracks={tracks}
-                currentTrack={currentTrack} setQueue={setQueue}
-                isSignedIn={isSignedIn} selected={selected}
-                onRemove={isSignedIn && selected !== "recent" ? () => removeTrack(selected as number, t.id) : undefined}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
+    <LibraryDetailView
+      selected={selected}
+      selectedName={selectedName}
+      selectedCount={selectedCount}
+      selectedFull={selectedFull}
+      tracks={tracks}
+      isSignedIn={isSignedIn}
+      setQueue={setQueue}
+      removeTrack={removeTrack}
+      goBack={goBack}
+    >
+      {tracks.map((t: Track, i: number) => (
+        <LibraryTrackRow
+          key={t.id}
+          track={t}
+          index={i}
+          tracks={tracks}
+          isCurrent={isPlaylistQueue && i === currentIndex}
+          isPlaying={playing}
+          onPlay={() => isPlaylistQueue && i === currentIndex ? toggle() : setQueue(tracks, i)}
+          onRemove={isSignedIn && selected !== "recent" ? () => removeTrack(selected as number, t.id) : undefined}
+        />
+      ))}
+    </LibraryDetailView>
   );
 }
 
-function TrackRow({ track, index, tracks, currentTrack, setQueue, isSignedIn, selected, onRemove }: { track: Track; index: number; tracks: Track[]; currentTrack: Track | null; setQueue: any; isSignedIn: boolean; selected: any; onRemove?: () => void }) {
-  const isActive = currentTrack?.id === track.id;
+function LibraryTrackRow({ track, index, tracks, isCurrent, isPlaying, onPlay, onRemove }: { track: Track; index: number; tracks: Track[]; isCurrent: boolean; isPlaying: boolean; onPlay: () => void; onRemove?: () => void }) {
+  const [hovering, setHovering] = useState(false);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 6 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.02 }}
-      onClick={() => setQueue(tracks, index)}
-      className={`flex items-center gap-3 px-3 py-2.5 rounded-2xl cursor-pointer active:scale-[0.98] transition-all ${isActive ? "bg-[var(--primary)]/10 ring-1 ring-[var(--primary)]/20" : "hover:bg-[var(--surface-2)]"}`}
+    <div
+      className={`track-row ${isCurrent ? "track-row--active" : ""}`}
+      onMouseEnter={() => setHovering(true)}
+      onMouseLeave={() => setHovering(false)}
     >
-      {/* Cover */}
-      <div className="relative w-12 h-12 rounded-xl overflow-hidden shrink-0 bg-[var(--surface-3)]">
-        {track.coverUrl
-          ? <Image src={track.coverUrl} alt={track.title} fill sizes="48px" className="object-cover" unoptimized />
-          : <div className="w-full h-full flex items-center justify-center text-lg">♪</div>
-        }
-        {isActive && (
-          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-            <div className="flex items-end gap-[2px] h-4">
-              {[1, 2, 3].map(i => (
-                <span key={i} className="eq-bar" style={{ animationDelay: `${i * 0.15}s`, height: `${4 + i * 2}px` }} />
+      <div className="track-index" onClick={onPlay}>
+        <span className={`track-num ${isCurrent ? "track-num--current" : ""} ${hovering ? "track-num--hidden" : ""}`}>
+          {isCurrent && isPlaying ? (
+            <span className="eq-container">
+              {[0.3, 0.7, 0.5, 0.9, 0.4].map((delay, i) => (
+                <span key={i} className="eq-bar eq-bar--active" style={{ animationDelay: `${delay}s` }} />
               ))}
+            </span>
+          ) : (
+            <>{isCurrent ? "▶" : index + 1}</>
+          )}
+        </span>
+        <span className={`track-play-icon ${hovering ? "track-play-icon--visible" : ""} ${isCurrent ? "track-play-icon--current" : ""}`}>
+          {isCurrent && isPlaying ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" />}
+        </span>
+      </div>
+
+      <div className="track-info">
+        <div className="track-thumb">
+          {track.coverUrl ? (
+            <Image src={track.coverUrl} alt={track.title} width={40} height={40} className="track-thumb-img" />
+          ) : (
+            <div className="track-thumb-fallback">
+              <Music size={16} />
             </div>
+          )}
+        </div>
+        <div className="track-meta">
+          <button className={`track-title ${isCurrent ? "track-title--current" : ""}`} onClick={onPlay}>
+            {track.title}
+          </button>
+          <div className="track-sub">
+            <Link href={track.artistSlug ? `/artist/${track.artistSlug}` : track.artistId ? `/artist/${track.artistId}` : "/browse"} className="track-artist">
+              {track.artist}
+            </Link>
+            {track.featuredArtists && <span className="track-feat">, {track.featuredArtists}</span>}
           </div>
-        )}
+        </div>
       </div>
 
-      {/* Info */}
-      <div className="flex-1 min-w-0">
-        <p className={`text-sm font-semibold truncate ${isActive ? "text-[var(--primary)]" : "text-white"}`}>{track.title}</p>
-        <p className="text-xs text-[var(--muted)] truncate">{track.artist}{track.featuredArtists ? ` feat. ${track.featuredArtists}` : ""}</p>
+      <div className="track-artist-col">
+        <Link href={track.artistSlug ? `/artist/${track.artistSlug}` : track.artistId ? `/artist/${track.artistId}` : "/browse"} className="track-artist-link">
+          {track.featuredArtists ? `${track.artist} feat. ${track.featuredArtists}` : track.artist}
+        </Link>
       </div>
 
-      {/* Duration + remove */}
-      <div className="flex items-center gap-2 shrink-0" onClick={e => e.stopPropagation()}>
+      <div className="track-actions">
         {track.duration && (
-          <span className="text-xs text-[var(--muted)] tabular-nums">
+          <span className="track-duration">
             {Math.floor(track.duration / 60)}:{String(Math.floor(track.duration % 60)).padStart(2, "0")}
           </span>
         )}
         {onRemove && (
-          <button onClick={onRemove} className="p-1.5 rounded-lg text-[var(--muted)] hover:text-rose-400 hover:bg-rose-500/10 transition-all">
-            <X size={14} />
+          <button 
+            className={`track-more ${hovering ? "track-more--visible" : ""}`}
+            onClick={(e) => { e.stopPropagation(); onRemove(); }}
+            aria-label="Remove from playlist"
+          >
+            <X size={16} />
           </button>
         )}
+        <div className={hovering ? "track-more--visible" : ""}>
+          <TrackMenu track={track} />
+        </div>
       </div>
-    </motion.div>
+    </div>
   );
 }

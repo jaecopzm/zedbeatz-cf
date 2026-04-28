@@ -41,7 +41,14 @@ export default function ToastContainer() {
   }
 
   return (
-    <div className="fixed bottom-36 right-4 z-[200] flex flex-col gap-2.5 pointer-events-none">
+    <div
+      className={[
+        // Mobile: top-centered so we never cover the mini player controls
+        "fixed top-16 left-1/2 -translate-x-1/2 z-[200] flex flex-col gap-2.5 pointer-events-none w-[calc(100%-1rem)] max-w-[380px]",
+        // Desktop: bottom-right above the player bar
+        "lg:top-auto lg:left-auto lg:translate-x-0 lg:right-4 lg:bottom-[calc(var(--player-height)+1.5rem)] lg:w-auto lg:max-w-[340px]",
+      ].join(" ")}
+    >
       {toasts.map((toast) => {
         const { Icon, color } = iconMap[toast.type];
         return (

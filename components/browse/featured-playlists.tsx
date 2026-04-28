@@ -79,9 +79,9 @@ export default function FeaturedPlaylists() {
           <motion.div key={playlist.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: i * 0.08 }} className="flex-shrink-0 w-[140px] md:w-[176px] snap-start">
             <Link
               href={`/playlist/${playlist.id}`}
-              className="group flex flex-col gap-1.5 md:gap-2 p-1.5 md:p-2 rounded-lg md:rounded-xl glass-card hover:bg-[var(--surface-hover)] border-white/5 hover:border-[var(--primary)]/30 hover:shadow-[0_8px_30px_rgba(30,215,96,0.12)] hover:-translate-y-1 transition-all duration-300"
+              className="group flex flex-col gap-1.5 md:gap-2 p-1.5 md:p-2 glass-card hover:bg-[var(--surface-hover)] border-white/5 hover:border-[var(--primary)]/30 hover:shadow-[0_8px_30px_rgba(30,215,96,0.12)] hover:-translate-y-1 transition-all duration-300"
             >
-              <div className="relative aspect-square rounded-md md:rounded-lg bg-[var(--surface-3)] flex items-center justify-center overflow-hidden shadow-lg">
+              <div className="relative aspect-square bg-[var(--surface-3)] flex items-center justify-center overflow-hidden shadow-lg">
                 {playlist.cover_url ? (
                   <Image src={playlist.cover_url} alt={playlist.name} fill sizes="(max-width: 768px) 140px, 176px" className="object-cover transition-transform duration-700 group-hover:scale-110" unoptimized />
                 ) : (

@@ -34,7 +34,7 @@ export default function ArtistAlbums({ albums }: { albums: Album[] }) {
             >
               <Link href={`/album/${album.slug || album.id}`} className="group block">
                 {/* Cover */}
-                <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-[var(--surface-3)] mb-2.5 shadow-lg ring-1 ring-white/5 group-hover:ring-[var(--primary)]/40 group-hover:shadow-[0_8px_30px_rgba(30,215,96,0.15)] transition-all duration-400">
+                <div className="relative w-full aspect-square overflow-hidden bg-[var(--surface-3)] mb-2.5 shadow-lg ring-1 ring-white/5 group-hover:ring-[var(--primary)]/40 group-hover:shadow-[0_8px_30px_rgba(30,215,96,0.15)] transition-all duration-400">
                   {album.coverUrl ? (
                     <Image
                       src={album.coverUrl}

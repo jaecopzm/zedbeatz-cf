@@ -1,12 +1,10 @@
 "use client";
 
-import { useAudioAnalyser } from "@/lib/use-audio-analyser";
-
 const BAR_COUNT = 32;
 
 interface Props {
-  audioRef: React.RefObject<HTMLAudioElement | null>;
   playing: boolean;
+  frequencyData: Uint8Array;
   /** Visual height of the container in px */
   height?: number;
   /** Number of bars to render */
@@ -15,14 +13,12 @@ interface Props {
 }
 
 export default function AudioVisualizer({
-  audioRef,
   playing,
+  frequencyData,
   height = 48,
   barCount = BAR_COUNT,
   className = "",
 }: Props) {
-  const { frequencyData } = useAudioAnalyser(audioRef, playing, barCount);
-
   if (!playing) return null;
 
   const hasData = frequencyData.some((v) => v > 0);

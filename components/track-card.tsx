@@ -58,26 +58,25 @@ export default function TrackCard({ track, queue, bare }: { track: Track; queue?
     <div
       {...longPress}
       onClick={handlePlay}
-      className={`group cursor-pointer transition-all duration-300 relative overflow-hidden ${
+      className={`group cursor-pointer transition-all duration-200 relative overflow-hidden ${
         bare
-          ? "rounded-none bg-transparent p-0"
-          : `rounded-lg md:rounded-xl p-1.5 md:p-3 ${
+          ? "bg-transparent p-0"
+          : `p-1.5 md:p-3 ${
               isActive
-                ? "bg-[var(--surface-2)] ring-1 ring-[var(--primary)]/30"
+                ? "bg-[var(--surface-2)]"
                 : "bg-[var(--surface)] hover:bg-[var(--surface-2)]"
             }`
       }`}
-      style={!bare ? { boxShadow: isActive ? "var(--shadow-card), 0 0 20px rgba(30,215,96,0.08)" : "var(--shadow-card)" } : undefined}
     >
       {/* Subtle top gradient on hover */}
-      <div className="absolute inset-0 bg-gradient-to-b from-white/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-b from-white/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
 
       {/* Cover art */}
-      <div className={`relative aspect-square overflow-hidden mb-1.5 md:mb-2.5 bg-[var(--surface-2)] shadow-lg ${
+      <div className={`relative aspect-square overflow-hidden mb-1.5 md:mb-2.5 bg-[var(--surface-2)] ${
         bare
-          ? "rounded-xl ring-1 ring-white/5 group-hover:ring-[var(--primary)]/40 group-hover:shadow-[0_8px_30px_rgba(30,215,96,0.15)]"
-          : "rounded-md md:rounded-lg shadow-md"
-      } transition-all duration-400`}>
+          ? "group-hover:shadow-lg"
+          : ""
+      } transition-all duration-200`}>
         {/* Fallback background with Music icon */}
         <div className="absolute inset-0 bg-gradient-to-br from-[var(--surface-3)] to-[var(--surface-2)] flex items-center justify-center -z-10">
           <Music size={24} className="opacity-20 text-white md:w-8 md:h-8" />
@@ -114,14 +113,14 @@ export default function TrackCard({ track, queue, bare }: { track: Track; queue?
 
         {/* Duration badge */}
         {track.duration && !isActive && (
-          <div className="absolute bottom-1.5 right-1.5 md:bottom-2 md:right-2 px-1.5 py-0.5 rounded bg-black/70 backdrop-blur-sm text-[9px] md:text-[10px] font-medium text-white/90 tabular-nums">
+          <div className="absolute bottom-1.5 right-1.5 md:bottom-2 md:right-2 px-1.5 py-0.5 bg-black/70 backdrop-blur-sm text-[9px] md:text-[10px] font-medium text-white/90 tabular-nums">
             {Math.floor(track.duration / 60)}:{String(Math.floor(track.duration % 60)).padStart(2, '0')}
           </div>
         )}
 
         {/* Loading indicator */}
         {isActive && loading && (
-          <div className="absolute inset-0 rounded-md md:rounded-lg ring-2 ring-[var(--primary)] animate-pulse pointer-events-none" />
+          <div className="absolute inset-0 ring-2 ring-[var(--primary)] animate-pulse pointer-events-none" />
         )}
 
         {/* Hover overlay with play button */}

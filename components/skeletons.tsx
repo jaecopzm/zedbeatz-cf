@@ -1,7 +1,7 @@
 export function TrackCardSkeleton() {
   return (
     <div className="rounded-lg p-4 bg-[var(--surface)] animate-pulse">
-      <div className="aspect-square rounded-md bg-[var(--surface-2)] mb-4" />
+      <div className="aspect-square bg-[var(--surface-2)] mb-4" />
       <div className="h-4 bg-[var(--surface-2)] rounded w-3/4 mb-2" />
       <div className="h-3 bg-[var(--surface-2)] rounded w-1/2" />
     </div>

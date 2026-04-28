@@ -1,14 +1,11 @@
 import { unstable_cache } from "next/cache";
 import { notFound } from "next/navigation";
-import Image from "next/image";
-import Link from "next/link";
 import { supabase } from "@/lib/db";
 import { getPublicUrl } from "@/lib/r2";
 import { sanitizeFeaturedArtists } from "@/lib/featured-artists";
-import TrackCard from "@/components/track-card";
 import type { Track } from "@/lib/player-store";
 import type { Metadata } from "next";
-import { Disc3, Music2 } from "lucide-react";
+import AlbumClient from "./client";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
@@ -136,74 +133,23 @@ export default async function AlbumPage({ params }: { params: Promise<{ id: stri
   };
 
   return (
-    <div className="pb-28">
+    <div>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      {/* Hero header */}
-      <div className="relative overflow-hidden mb-8">
-        {/* Blurred background */}
-        {coverUrl && (
-          <div className="absolute inset-0 -z-10">
-            <Image src={coverUrl} alt="" fill className="object-cover scale-110 blur-2xl opacity-20" unoptimized />
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[var(--background)]/60 to-[var(--background)]" />
-          </div>
-        )}
 
-        <div className="px-4 md:px-8 pt-8 pb-6 flex flex-col sm:flex-row items-start sm:items-end gap-5">
-          {/* Cover */}
-          <div className="w-36 h-36 md:w-48 md:h-48 rounded-2xl overflow-hidden bg-[var(--surface-2)] shrink-0 shadow-[0_20px_60px_rgba(0,0,0,0.5)] ring-1 ring-white/10">
-            {coverUrl
-              ? <Image src={coverUrl} alt={album.title} width={192} height={192} className="object-cover w-full h-full" unoptimized />
-              : <div className="w-full h-full flex items-center justify-center"><Disc3 size={40} className="text-[var(--muted)]/30" /></div>
-            }
-          </div>
-
-          {/* Info */}
-          <div className="min-w-0">
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-[var(--muted)] mb-1.5">
-              Album{album.release_year ? ` · ${album.release_year}` : ""}
-            </p>
-            <h1 className="text-2xl md:text-4xl font-black tracking-tight leading-tight mb-2">{album.title}</h1>
-            <div className="flex items-center gap-2 text-sm text-[var(--muted)]">
-              {artistSlug
-                ? <Link href={`/artist/${artistSlug}`} className="hover:text-white transition-colors font-semibold">{artistName}</Link>
-                : <span className="font-semibold">{artistName}</span>
-              }
-              <span>·</span>
-              <span>{tracks.length} track{tracks.length !== 1 ? "s" : ""}</span>
-              {totalPlays > 0 && (
-                <>
-                  <span>·</span>
-                  <span>{totalPlays.toLocaleString()} plays</span>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Tracks */}
-      <div className="px-4 md:px-8">
-        {tracks.length > 0 ? (
-          <>
-            <div className="flex items-center gap-3 mb-5">
-              <div className="w-1 h-6 rounded-full bg-gradient-to-b from-[var(--primary)] to-emerald-400 shrink-0" />
-              <h2 className="text-lg font-bold">Tracks</h2>
-              <span className="px-2 py-0.5 rounded-full bg-[var(--surface-3)] text-[11px] font-semibold text-[var(--muted)]">{tracks.length}</span>
-            </div>
-            <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 xl:grid-cols-8 gap-2 md:gap-3">
-              {tracks.map((t) => <TrackCard key={t.id} track={t} queue={tracks} bare />)}
-            </div>
-          </>
-        ) : (
-          <div className="flex flex-col items-center justify-center py-20 text-[var(--muted)]">
-            <Music2 size={40} className="mb-3 opacity-30" />
-            <p>No tracks in this album yet</p>
-          </div>
-        )}
-      </div>
+      <AlbumClient
+        album={{
+          title: album.title,
+          artistName,
+          artistSlug: artistSlug ?? null,
+          coverUrl,
+          releaseYear: album.release_year ?? null,
+        }}
+        tracks={tracks}
+        totalPlays={totalPlays}
+      />
     </div>
   );
 }

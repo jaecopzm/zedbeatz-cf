@@ -9,8 +9,23 @@ export const revalidate = 0;
 // Fetches playlists with track count + first track cover for fallback
 const PLAYLIST_SELECT = "id, name, cover_key, is_featured, category, created_at, playlist_tracks(position, tracks(cover_key))";
 
-function enrichPlaylist(p: any) {
-  const tracks: any[] = p.playlist_tracks ?? [];
+type PlaylistTrackCover = {
+  position: number;
+  tracks: { cover_key: string | null } | null;
+};
+
+type PlaylistRecord = {
+  id: number;
+  name: string;
+  cover_key: string | null;
+  is_featured?: boolean | null;
+  category?: string | null;
+  created_at?: string | null;
+  playlist_tracks?: PlaylistTrackCover[];
+};
+
+function enrichPlaylist(p: PlaylistRecord) {
+  const tracks = p.playlist_tracks ?? [];
   const sorted = [...tracks].sort((a, b) => a.position - b.position);
   const firstCoverKey = sorted[0]?.tracks?.cover_key ?? null;
   const cover_url = p.cover_key
@@ -50,6 +65,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json((data ?? []).map(enrichPlaylist));
   }
 
+  if (type === "user") {
+    return NextResponse.json([]);
+  }
+
   if (type === "saved" && userId) {
     const { data, error } = await supabase
       .from("saved_playlists")
@@ -57,7 +76,13 @@ export async function GET(req: NextRequest) {
       .eq("user_id", userId)
       .range(offset, offset + limit - 1);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    return NextResponse.json((data ?? []).map((r: any) => enrichPlaylist(r.playlists)));
+    return NextResponse.json(
+      (data ?? []).flatMap((r) => (r.playlists ? [enrichPlaylist(r.playlists as unknown as PlaylistRecord)] : []))
+    );
+  }
+
+  if (type === "saved") {
+    return NextResponse.json([]);
   }
 
   // Fallback: all playlists (used by admin)
@@ -158,4 +183,3 @@ export async function DELETE(req: NextRequest) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }
-

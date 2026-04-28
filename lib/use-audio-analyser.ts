@@ -16,6 +16,7 @@ export function useAudioAnalyser(
   const gainNodeRef = useRef<GainNode | null>(null);
   const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
   const rafRef = useRef<number | null>(null);
+  const [gainNode, setGainNode] = useState<GainNode | null>(null);
   const [frequencyData, setFrequencyData] = useState<Uint8Array>(
     () => new Uint8Array(barCount)
   );
@@ -48,6 +49,7 @@ export function useAudioAnalyser(
         sourceRef.current.connect(gainNodeRef.current);
         gainNodeRef.current.connect(analyserRef.current);
         analyserRef.current.connect(ctx.destination);
+        setGainNode(gainNodeRef.current);
       } catch {
         return;
       }
@@ -78,5 +80,5 @@ export function useAudioAnalyser(
     };
   }, [playing, audioRef, barCount]);
 
-  return { frequencyData, gainNode: gainNodeRef.current };
+  return { frequencyData, gainNode };
 }

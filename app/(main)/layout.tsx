@@ -5,6 +5,7 @@ import ToastContainer from "@/components/toast";
 import MobileMenu from "@/components/mobile-menu";
 import Footer from "@/components/footer";
 import ScrollToTop from "@/components/scroll-to-top";
+import ScrollRestoration from "@/components/scroll-restoration";
 import { LikesProvider } from "@/lib/likes-context";
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
@@ -41,6 +42,9 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
         {/* Scroll to top button */}
         <ScrollToTop />
+        
+        {/* Scroll restoration */}
+        <ScrollRestoration />
 
         {/* Toast notifications */}
         <ToastContainer />

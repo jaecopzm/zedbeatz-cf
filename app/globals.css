@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+@theme {
+  --animate-shimmer: shimmer 2s ease-in-out infinite;
+}
+
 /* iOS safe area support */
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
   .pb-safe {

@@ -1,22 +1,23 @@
 import { notFound } from "next/navigation";
 import { supabase } from "@/lib/db";
 import RadioClient from "./client";
+import { getPublicUrl } from "@/lib/r2";
+import { sanitizeFeaturedArtists } from "@/lib/featured-artists";
 
 export default async function RadioPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const isNumeric = !isNaN(Number(id));
   
   const { data: track } = await supabase
     .from("tracks")
     .select("id, title, audio_key, cover_key, duration, artist_id, genre, slug, featured_artists, artists(name, slug)")
-    .eq("id", parseInt(id))
+    .eq(isNumeric ? "id" : "slug", isNumeric ? parseInt(id) : id)
     .single();
 
   if (!track || !track.artists) return notFound();
 
-  const audioUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/audio/${track.audio_key}`;
-  const coverUrl = track.cover_key
-    ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/covers/${track.cover_key}`
-    : "/placeholder.png";
+  const audioUrl = getPublicUrl(track.audio_key);
+  const coverUrl = track.cover_key ? getPublicUrl(track.cover_key) : "/placeholder.png";
 
   return (
     <RadioClient
@@ -29,7 +30,7 @@ export default async function RadioPage({ params }: { params: Promise<{ id: stri
         coverUrl,
         duration: track.duration ?? undefined,
         slug: track.slug ?? undefined,
-        featuredArtists: track.featured_artists ?? undefined,
+        featuredArtists: sanitizeFeaturedArtists(track.featured_artists) ?? undefined,
         genre: track.genre ?? undefined,
         artist_id: track.artist_id!,
       }}

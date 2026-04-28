@@ -6,6 +6,7 @@ import PlaylistPageClient from "./client";
 
 export default async function PlaylistPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const isNumeric = !isNaN(Number(id));
 
   const [{ data: playlist }, { data: trackData }] = await Promise.all([
     supabase.from("playlists").select("id, name, cover_key, is_featured, category, playlist_tracks(count)").eq("id", Number(id)).single(),
