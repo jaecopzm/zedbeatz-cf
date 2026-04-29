@@ -12,7 +12,10 @@ export function HeroSkeleton() {
           <div className="h-3 w-20 bg-white/20 mx-auto md:mx-0" />
           <div className="h-8 md:h-12 bg-white/20 w-3/4 mx-auto md:mx-0" />
           <div className="h-5 bg-white/20 w-1/2 mx-auto md:mx-0" />
-          <div className="h-12 w-32 bg-white/30 rounded-full mx-auto md:mx-0" />
+          <div className="flex items-center gap-2 justify-center md:justify-start">
+            <div className="h-12 w-32 bg-white/30 rounded-full" />
+            <div className="h-12 w-28 bg-white/10 rounded-full" />
+          </div>
         </div>
       </div>
     </div>

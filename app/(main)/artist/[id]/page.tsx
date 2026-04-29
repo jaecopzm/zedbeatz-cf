@@ -132,7 +132,7 @@ export default async function ArtistPage({ params }: { params: Promise<{ id: str
   };
 
   return (
-    <div className="min-h-screen pb-36">
+    <div className="pb-6">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

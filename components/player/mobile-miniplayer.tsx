@@ -1,10 +1,38 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useEffect, useState } from "react";
 import Image from "next/image";
 import { Play, Pause } from "lucide-react";
 import { usePlayer } from "@/lib/player-store";
 import LikeButton from "@/components/like-button";
+
+function useDominantColor(src: string | undefined) {
+  const [color, setColor] = useState("30,30,30");
+  useEffect(() => {
+    if (!src) return;
+    const img = document.createElement("img");
+    img.crossOrigin = "anonymous";
+    img.src = src;
+    img.onload = () => {
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = canvas.height = 32;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+        ctx.drawImage(img, 0, 0, 32, 32);
+        const { data } = ctx.getImageData(0, 0, 32, 32);
+        let r = 0, g = 0, b = 0, count = 0;
+        for (let i = 0; i < data.length; i += 16) {
+          const br = (data[i] + data[i+1] + data[i+2]) / 3;
+          if (br < 20 || br > 235) continue;
+          r += data[i]; g += data[i+1]; b += data[i+2]; count++;
+        }
+        if (count > 0) setColor(`${Math.round(r/count)},${Math.round(g/count)},${Math.round(b/count)}`);
+      } catch {}
+    };
+  }, [src]);
+  return color;
+}
 
 export default function MobileMiniplayer({
   onOpenFullscreen,
@@ -18,6 +46,7 @@ export default function MobileMiniplayer({
   const { queue, currentIndex, playing, toggle, next, prev } = usePlayer();
   const track = queue[currentIndex];
   const touchRef = useRef<{ x: number; y: number } | null>(null);
+  const color = useDominantColor(track?.coverUrl);
 
   if (!track) return null;
 
@@ -35,7 +64,7 @@ export default function MobileMiniplayer({
   };
 
   return (
-    <div className="lg:hidden fixed left-0 right-0 z-40 px-2 pb-2 mt-1" style={{ bottom: "calc(68px + env(safe-area-inset-bottom, 0px))" }}>
+    <div className="lg:hidden fixed left-0 right-0 z-40 px-1" style={{ bottom: "calc(64px + env(safe-area-inset-bottom, 0px))" }}>
       <div
         onClick={onOpenFullscreen}
         onTouchStart={(e) => {
@@ -61,7 +90,8 @@ export default function MobileMiniplayer({
             if (dx < 0) next(); else handlePrev();
           }
         }}
-        className="relative bg-[#282828] rounded-lg shadow-2xl overflow-hidden cursor-pointer active:scale-[0.98] transition-transform backdrop-blur-xl"
+        className="relative rounded-lg shadow-2xl overflow-hidden cursor-pointer active:scale-[0.98]"
+        style={{ background: `linear-gradient(135deg, rgb(${color}) 0%, rgba(${color},0.4) 100%)`, transition: "background 0.8s ease" }}
       >
         <div className="absolute top-0 left-0 right-0 h-[2px] bg-white/10">
           <div
@@ -72,7 +102,7 @@ export default function MobileMiniplayer({
           />
         </div>
         
-        <div className="flex items-center gap-2 px-2 py-1.5 pt-2">
+        <div className="flex items-center gap-2 px-2 py-2.5 pt-3">
           {/* Album art */}
           <div className="relative shrink-0">
             <div className="w-10 h-10 rounded-md overflow-hidden bg-[#181818] shadow-lg">

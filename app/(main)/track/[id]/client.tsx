@@ -5,15 +5,22 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { usePlayer, type Track } from "@/lib/player-store";
-import { Play, Pause, Music2, ChevronLeft, Headphones, Clock, Calendar, Radio } from "lucide-react";
+import { Play, Pause, Music2, ChevronLeft, Radio } from "lucide-react";
 import LikeButton from "@/components/like-button";
 import AddToPlaylist from "@/components/add-to-playlist";
 import ShareButton from "@/components/share-button";
 import DownloadButton from "@/components/download-button";
 import WhatsAppBanner from "@/components/whatsapp-banner";
 import TrackComments from "@/components/track-comments";
+import LyricsView from "@/components/player/lyrics-view";
 
-type TrackWithMeta = Track & { genre: string | null; plays: number | null; lyrics?: string | null; releaseYear?: number };
+type TrackWithMeta = Track & {
+  genre: string | null;
+  plays: number | null;
+  lyrics?: string | null;
+  syncedLyrics?: string | null;
+  releaseYear?: number;
+};
 
 function fmt(s: number) {
   return `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
@@ -25,135 +32,228 @@ export default function TrackPageClient({ track }: { track: TrackWithMeta }) {
   const currentTrack = queue[currentIndex];
   const isActive = currentTrack?.id === track.id;
   const [plays, setPlays] = useState<number | null>(track.plays);
-  const [activeTab, setActiveTab] = useState<"about" | "lyrics" | "credits">("about");
+  const [activeTab, setActiveTab] = useState<"lyrics" | "related" | "credits">("lyrics");
   const [actualDuration, setActualDuration] = useState<number | undefined>(track.duration);
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     if (!isActive && queue.length === 0) {
       usePlayer.setState({ queue: [track], currentIndex: 0, playing: false });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Get actual duration from audio element
   useEffect(() => {
-    const audio = document.querySelector('audio');
+    const audio = document.querySelector("audio");
     if (isActive && audio) {
-      const updateDuration = () => {
-        if (audio.duration && !isNaN(audio.duration)) {
+      const update = () => {
+        if (audio.duration && !isNaN(audio.duration))
           setActualDuration(Math.floor(audio.duration));
-        }
       };
-      audio.addEventListener('loadedmetadata', updateDuration);
-      if (audio.duration) updateDuration();
-      return () => audio.removeEventListener('loadedmetadata', updateDuration);
+      const onTime = () => setProgress(audio.currentTime);
+      audio.addEventListener("loadedmetadata", update);
+      audio.addEventListener("timeupdate", onTime);
+      if (audio.duration) update();
+      return () => {
+        audio.removeEventListener("loadedmetadata", update);
+        audio.removeEventListener("timeupdate", onTime);
+      };
     }
   }, [isActive]);
 
-  // Refresh play count when this track becomes active (just played)
   useEffect(() => {
     if (!isActive) return;
     fetch(`/api/tracks/${track.id}`)
-      .then(r => r.json())
-      .then(data => { if (data?.plays != null) setPlays(data.plays); })
+      .then((r) => r.json())
+      .then((data) => { if (data?.plays != null) setPlays(data.plays); })
       .catch(() => {});
   }, [isActive, track.id]);
 
   return (
     <div className="min-h-screen pb-32">
-      {/* ── Hero ── */}
-      <section className="relative px-4 md:px-8 pt-4 pb-6 max-w-5xl mx-auto">
-        {track.coverUrl && (
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute inset-0" style={{ backgroundImage: `url(${track.coverUrl})`, backgroundSize: "cover", filter: "blur(80px) saturate(150%) brightness(0.25)", transform: "scale(1.2)" }} />
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[var(--background)]" />
-          </div>
+      {/* Ambient background */}
+      <div className="fixed inset-0 -z-10 pointer-events-none">
+        {track.coverUrl ? (
+          <>
+            <div
+              className="absolute inset-0"
+              style={{
+                backgroundImage: `url(${track.coverUrl})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                filter: "blur(120px) saturate(180%) brightness(0.18)",
+                transform: "scale(1.4)",
+              }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/60 to-black/95" />
+          </>
+        ) : (
+          <div className="absolute inset-0 bg-[#0a0a0a]" />
         )}
+      </div>
 
-        <Link href="/" className="relative inline-flex items-center gap-1 text-xs text-white/50 hover:text-white mb-4 group">
-          <ChevronLeft size={13} className="group-hover:-translate-x-0.5 transition-transform" /> Back
-        </Link>
+      {/* Nav */}
+      <header className="sticky top-0 z-40 flex items-center justify-between px-4 py-3 backdrop-blur-2xl bg-black/20 border-b border-white/[0.06]">
+        <button
+          onClick={() => router.back()}
+          className="flex items-center gap-1 text-xs font-semibold text-white/60 hover:text-white transition-colors"
+        >
+          <ChevronLeft size={16} /> Back
+        </button>
+        <p className="text-xs font-semibold text-white/40 uppercase tracking-widest">Track</p>
+        <div className="w-10" />
+      </header>
 
-        <div className="relative flex flex-col sm:flex-row items-center sm:items-end gap-4 sm:gap-6">
-          {/* Cover */}
-          <div className="relative shrink-0 w-40 h-40 sm:w-52 sm:h-52 md:w-60 md:h-60 shadow-2xl">
-            {track.coverUrl
-              ? <Image src={track.coverUrl} alt={track.title} fill sizes="240px" className="object-cover" priority unoptimized />
-              : <div className="w-full h-full bg-[var(--surface-2)] flex items-center justify-center"><Music2 size={48} className="text-white/10" /></div>
-            }
-          </div>
-
-          {/* Info */}
-          <div className="flex-1 text-center sm:text-left">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-white/50 mb-1">{track.genre || "Single"}</p>
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black leading-tight mb-2">{track.title}</h1>
-            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-1.5 text-sm mb-3">
-              <Link href={track.artistSlug ? `/artist/${track.artistSlug}` : `/artist/${track.artistId}`} className="font-bold hover:text-[var(--primary)] transition-colors">{track.artist}</Link>
-              {track.featuredArtists && <span className="text-white/50">feat. {track.featuredArtists}</span>}
-            </div>
-            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 text-xs text-white/40 mb-4">
-              {plays != null && <span className="flex items-center gap-1"><Headphones size={11} />{plays.toLocaleString()} plays</span>}
-              {actualDuration && <span className="flex items-center gap-1"><Clock size={11} />{fmt(actualDuration)}</span>}
-              <span className="flex items-center gap-1"><Calendar size={11} />{track.releaseYear || new Date().getFullYear()}</span>
-            </div>
-
-            {/* Actions */}
-            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-              <button onClick={() => isActive ? toggle() : play(track)} className="flex items-center gap-2 px-7 py-2.5 bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-black font-black text-sm transition-all hover:scale-105 active:scale-95">
-                {isActive && playing ? <><Pause size={15} fill="currentColor" />Pause</> : <><Play size={15} fill="currentColor" className="ml-0.5" />Play</>}
-              </button>
-              <button onClick={() => router.push(`/radio/${track.id}`)} className="flex items-center gap-1.5 px-4 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 text-sm font-bold transition-colors">
-                <Radio size={14} /><span className="hidden sm:inline">Radio</span>
-              </button>
-              <div className="flex items-center gap-0.5 p-1 bg-white/5 border border-white/10">
-                <LikeButton trackId={track.id} size={16} />
-                <AddToPlaylist trackId={track.id} />
-                <DownloadButton audioUrl={track.audioUrl} title={track.title} artist={track.artist} coverUrl={track.coverUrl} />
-                <ShareButton title={`${track.title} by ${track.artist}`} />
+      {/* Hero — horizontal on mobile too */}
+      <section className="px-4 pt-5 pb-4 w-full md:max-w-none mx-auto">
+        <div className="flex gap-4 items-center mb-4">
+          {/* Art */}
+          <div className="relative w-24 h-24 shrink-0 rounded-xl overflow-hidden shadow-2xl">
+            {track.coverUrl ? (
+              <Image src={track.coverUrl} alt={track.title} fill sizes="96px" className="object-cover" priority unoptimized />
+            ) : (
+              <div className="w-full h-full bg-white/5 flex items-center justify-center">
+                <Music2 size={28} className="text-white/20" />
               </div>
+            )}
+          </div>
+
+          {/* Identity */}
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-white/30 mb-0.5">
+              {track.genre || "Single"}
+            </p>
+            <h1 className="text-lg font-black leading-tight truncate mb-0.5">{track.title}</h1>
+            <Link
+              href={track.artistSlug ? `/artist/${track.artistSlug}` : `/artist/${track.artistId}`}
+              className="text-sm font-semibold text-white/70 hover:text-white transition-colors"
+            >
+              {track.artist}
+            </Link>
+            {track.featuredArtists && (
+              <span className="text-xs text-white/40"> feat. {track.featuredArtists}</span>
+            )}
+            <div className="flex items-center gap-3 mt-1.5 text-[10px] text-white/30">
+              {plays != null && <span>{plays.toLocaleString()} plays</span>}
+              {actualDuration && <span>{fmt(actualDuration)}</span>}
+              <span>{track.releaseYear || new Date().getFullYear()}</span>
             </div>
           </div>
+        </div>
+
+        {/* Actions */}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => (isActive ? toggle() : play(track))}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-full font-bold text-sm text-black transition-all hover:scale-105 active:scale-95"
+            style={{ background: "linear-gradient(135deg, #1db954, #17a348)" }}
+          >
+            {isActive && playing ? <Pause size={16} fill="black" /> : <Play size={16} fill="black" className="ml-0.5" />}
+            {isActive && playing ? "Pause" : "Play"}
+          </button>
+
+          <LikeButton trackId={track.id} size={20} />
+          <AddToPlaylist trackId={track.id} />
+          <DownloadButton audioUrl={track.audioUrl} title={track.title} artist={track.artist} featuredArtists={track.featuredArtists} coverUrl={track.coverUrl} />
+          <ShareButton title={`${track.title} by ${track.artist}`} />
+
+          <button
+            onClick={() => router.push(`/radio/${track.id}`)}
+            className="ml-auto flex items-center gap-1.5 px-3 py-2 rounded-full bg-white/8 hover:bg-white/12 border border-white/10 text-xs font-semibold text-white/60 hover:text-white transition-all"
+          >
+            <Radio size={12} /> Radio
+          </button>
         </div>
       </section>
 
-      {/* ── Tabs ── */}
-      <section className="px-4 md:px-8 max-w-5xl mx-auto mb-8">
-        <div className="flex items-center gap-1 mb-4 border-b border-white/10">
-          {(["about", "lyrics", "credits"] as const).map((tab) => (
-            <button key={tab} onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2 text-sm font-bold capitalize transition-colors border-b-2 -mb-px ${
-                activeTab === tab ? "border-[var(--primary)] text-white" : "border-transparent text-white/40 hover:text-white"
-              }`}>
+      {/* Tabs */}
+      <section className="px-4 w-full md:max-w-none mx-auto mb-2">
+        <div className="flex items-center border-b border-white/[0.08]">
+          {(["lyrics", "related", "credits"] as const).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`relative px-4 py-2.5 text-xs font-bold uppercase tracking-widest transition-colors ${
+                activeTab === tab ? "text-white" : "text-white/30 hover:text-white/60"
+              }`}
+            >
               {tab}
+              {activeTab === tab && (
+                <span className="absolute bottom-0 left-0 right-0 h-[2px] rounded-t-full bg-[#1db954]" />
+              )}
             </button>
           ))}
         </div>
+      </section>
 
-        <div className="bg-white/[0.03] border border-white/10 p-4 md:p-6">
-          {activeTab === "about" && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-white/5 p-3 border border-white/10">
-                  <div className="text-xl font-black mb-0.5">{plays?.toLocaleString() || "0"}</div>
-                  <div className="text-xs text-white/40">Total Plays</div>
-                </div>
-                <div className="bg-white/5 p-3 border border-white/10">
-                  <div className="text-xl font-black mb-0.5">{actualDuration ? fmt(actualDuration) : "—"}</div>
-                  <div className="text-xs text-white/40">Duration</div>
-                </div>
-              </div>
-              <p className="text-sm text-white/60 leading-relaxed">
-                {track.title} is a {track.genre?.toLowerCase() || "music"} track by {track.artist}{track.featuredArtists && ` featuring ${track.featuredArtists}`}.
-              </p>
-            </div>
-          )}
+      {/* Tab content */}
+      <section className="px-4 w-full md:max-w-none mx-auto mb-6">
+        <div className="rounded-xl bg-white/[0.03] border border-white/[0.07] overflow-hidden">
           {activeTab === "lyrics" && (
-            track.lyrics
-              ? <div className="text-sm text-white/80 leading-relaxed whitespace-pre-line max-h-96 overflow-y-auto custom-scrollbar">{track.lyrics}</div>
-              : <div className="text-center py-10 text-sm text-white/40">Lyrics not available</div>
+            track.syncedLyrics ? (
+              <div className="h-[60vh] relative overflow-hidden">
+                <LyricsView trackId={track.id} progress={progress} className="h-full" />
+              </div>
+            ) : track.lyrics ? (
+              <div className="p-5 max-h-72 overflow-y-auto custom-scrollbar">
+                <p className="text-sm text-white/70 leading-[1.9] whitespace-pre-line">{track.lyrics}</p>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-10 gap-2 text-white/20">
+                <Music2 size={28} />
+                <p className="text-sm font-semibold">Lyrics not available</p>
+              </div>
+            )
           )}
+
+          {activeTab === "related" && (
+            (track as any).moreFromArtist?.length > 0 ? (
+              <div className="divide-y divide-white/[0.05]">
+                {(track as any).moreFromArtist.map((t: any, idx: number) => {
+                  const isThisActive = currentTrack?.id === t.id;
+                  return (
+                    <div
+                      key={t.id}
+                      className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 cursor-pointer group transition-colors"
+                      onClick={() => (isThisActive ? toggle() : play(t))}
+                    >
+                      <span className="w-4 flex items-center justify-center shrink-0">
+                        {isThisActive && playing ? (
+                          <span className="eq-container" aria-hidden>
+                            {[0.3, 0.7, 0.5, 0.9, 0.4].map((delay, i) => (
+                              <span key={i} className="eq-bar eq-bar--active" style={{ animationDelay: `${delay}s` }} />
+                            ))}
+                          </span>
+                        ) : isThisActive ? (
+                          <Play size={12} fill="#1db954" className="text-[#1db954]" />
+                        ) : (
+                          <>
+                            <span className="text-xs text-white/20 tabular-nums font-mono group-hover:hidden">{idx + 1}</span>
+                            <Play size={12} className="text-white/60 hidden group-hover:block" />
+                          </>
+                        )}
+                      </span>
+                      <div className="relative w-9 h-9 shrink-0 rounded-md bg-white/5 overflow-hidden">
+                        {t.coverUrl && <Image src={t.coverUrl} alt={t.title} width={36} height={36} className="object-cover" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-sm font-semibold truncate ${isThisActive ? "text-[#1db954]" : "text-white"}`}>{t.title}</p>
+                        <p className="text-xs text-white/40 truncate">{t.artist}</p>
+                      </div>
+                      {t.duration && <span className="text-xs text-white/30 tabular-nums font-mono shrink-0">{fmt(t.duration)}</span>}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-10 gap-2 text-white/20">
+                <Music2 size={28} />
+                <p className="text-sm font-semibold">No related tracks</p>
+              </div>
+            )
+          )}
+
           {activeTab === "credits" && (
-            <div className="divide-y divide-white/10">
+            <div className="divide-y divide-white/[0.05]">
               {[
                 ["Artist", track.artist],
                 ...(track.featuredArtists ? [["Featured", track.featuredArtists]] : []),
@@ -161,9 +261,9 @@ export default function TrackPageClient({ track }: { track: TrackWithMeta }) {
                 ["Duration", actualDuration ? fmt(actualDuration) : "Unknown"],
                 ["Year", String(track.releaseYear || new Date().getFullYear())],
               ].map(([label, value]) => (
-                <div key={label} className="flex justify-between py-2.5 text-sm">
-                  <span className="text-white/40">{label}</span>
-                  <span className="font-semibold">{value}</span>
+                <div key={label} className="flex justify-between items-center px-5 py-3">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-white/30">{label}</span>
+                  <span className="text-sm font-semibold text-white">{value}</span>
                 </div>
               ))}
             </div>
@@ -171,62 +271,47 @@ export default function TrackPageClient({ track }: { track: TrackWithMeta }) {
         </div>
       </section>
 
-      {/* ── WhatsApp Banner ── */}
-      <div className="px-4 md:px-8 max-w-5xl mx-auto mb-6"><WhatsAppBanner /></div>
+      {/* WhatsApp Banner */}
+      <div className="px-4 w-full md:max-w-none mx-auto mb-6">
+        <WhatsAppBanner />
+      </div>
 
-      {/* ── More From Artist ── */}
-      {(track as any).moreFromArtist?.length > 0 && (
-        <section className="px-4 md:px-8 max-w-5xl mx-auto mb-6">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="font-black text-base">More from {track.artist}</h2>
-            <Link href={`/artist/${track.artistSlug || track.artistId}`} className="text-xs text-white/40 hover:text-white">See all</Link>
-          </div>
-          <div className="divide-y divide-white/5">
-            {(track as any).moreFromArtist.map((t: any) => {
-              const isThisActive = currentTrack?.id === t.id;
-              return (
-                <div key={t.id} className="flex items-center gap-3 py-2 hover:bg-white/5 px-2 cursor-pointer group" onClick={() => isThisActive ? toggle() : play(t)}>
-                  <div className="relative w-9 h-9 shrink-0 bg-[var(--surface-2)]">
-                    {t.coverUrl && <Image src={t.coverUrl} alt={t.title} width={36} height={36} className="object-cover" />}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className={`text-sm font-semibold truncate ${isThisActive ? "text-[var(--primary)]" : ""}`}>{t.title}</p>
-                    <p className="text-xs text-white/40 truncate">{t.artist}</p>
-                  </div>
-                  {t.duration && <span className="text-xs text-white/30 tabular-nums">{fmt(t.duration)}</span>}
-                </div>
-              );
-            })}
-          </div>
-        </section>
-      )}
-
-      {/* ── Up Next ── */}
+      {/* Up Next */}
       {queue.length > 1 && (
-        <section className="px-4 md:px-8 max-w-5xl mx-auto mb-6">
-          <h2 className="font-black text-base mb-3">Up Next <span className="text-white/30 font-normal text-sm">({queue.length - currentIndex - 1})</span></h2>
-          <div className="divide-y divide-white/5">
+        <section className="px-4 w-full md:max-w-none mx-auto mb-6">
+          <h2 className="text-xs font-black uppercase tracking-wider text-white/50 mb-3">
+            Up Next <span className="text-white/20 font-normal">({queue.length - currentIndex - 1})</span>
+          </h2>
+          <div className="rounded-xl overflow-hidden bg-white/[0.03] border border-white/[0.07] divide-y divide-white/[0.05]">
             {queue.slice(currentIndex + 1, currentIndex + 6).map((t, i) => (
-              <div key={`${t.id}-${i}`} className="flex items-center gap-3 py-2 px-2">
-                <span className="text-xs text-white/30 w-4 text-center tabular-nums">{i + 1}</span>
-                <div className="relative w-9 h-9 shrink-0 bg-[var(--surface-2)]">
+              <div key={`${t.id}-${i}`} className="flex items-center gap-3 px-4 py-2.5">
+                <span className="text-xs text-white/20 w-4 text-center tabular-nums font-mono shrink-0">{i + 1}</span>
+                <div className="relative w-9 h-9 shrink-0 rounded-md bg-white/5 overflow-hidden">
                   {t.coverUrl && <Image src={t.coverUrl} alt={t.title} width={36} height={36} className="object-cover" />}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold truncate">{t.title}</p>
+                  <p className="text-sm font-semibold truncate text-white/80">{t.title}</p>
                   <p className="text-xs text-white/40 truncate">{t.artist}</p>
                 </div>
-                {t.duration && <span className="text-xs text-white/30 tabular-nums">{fmt(t.duration)}</span>}
+                {t.duration && (
+                  <span className="text-xs text-white/30 tabular-nums font-mono shrink-0">{fmt(t.duration)}</span>
+                )}
               </div>
             ))}
           </div>
         </section>
       )}
 
-      {/* ── Comments ── */}
-      <section className="px-4 md:px-8 max-w-5xl mx-auto mb-8">
+      {/* Comments */}
+      <section className="px-4 w-full md:max-w-none mx-auto mb-8">
         <TrackComments trackId={track.id} />
       </section>
+
+      <style jsx global>{`
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 4px; }
+      `}</style>
     </div>
   );
 }

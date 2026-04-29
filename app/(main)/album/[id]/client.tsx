@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePlayer, type Track } from "@/lib/player-store";
@@ -145,6 +145,20 @@ export default function AlbumClient({
   const { queue, currentIndex, playing, shuffle, toggle, setQueue, toggleShuffle } = usePlayer();
   
   const currentTrack = queue[currentIndex] ?? null;
+  const heroRef = useRef<HTMLDivElement>(null);
+  const [headerVisible, setHeaderVisible] = useState(false);
+
+  // Sticky header logic
+  useEffect(() => {
+    const hero = heroRef.current;
+    if (!hero) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => setHeaderVisible(!entry.isIntersecting),
+      { threshold: 0 }
+    );
+    obs.observe(hero);
+    return () => obs.disconnect();
+  }, []);
 
   const isAlbumQueue = useMemo(() => {
     if (!tracks.length) return false;
@@ -189,8 +203,7 @@ export default function AlbumClient({
       toggle();
     } else {
       // Otherwise, set the queue and start playing from that track
-      setQueue(tracks, startIndex);
-    }
+      setQueue(tracks, startIndex, { label: album.title });    }
   }
 
   function handlePlayButton() {
@@ -200,7 +213,7 @@ export default function AlbumClient({
       toggle();
     } else {
       // Otherwise start from the beginning
-      setQueue(tracks, 0);
+      setQueue(tracks, 0, { label: album.title });
     }
   }
 
@@ -209,7 +222,7 @@ export default function AlbumClient({
       {/* Ambient background */}
       <div className="pointer-events-none absolute inset-0 z-0">
         <div className="absolute inset-0 bg-gradient-to-b from-purple-900/25 via-black to-black" />
-        {currentTrack?.coverUrl && isAlbumQueue && (
+        {currentTrack?.coverUrl && (
           <div
             key={currentTrack.id}
             className="absolute inset-0 opacity-20 transition-opacity duration-1000"
@@ -223,7 +236,18 @@ export default function AlbumClient({
         )}
       </div>
 
-      <div className="collection-hero relative">
+      <header className={`collection-sticky-header ${headerVisible ? "collection-sticky-header--visible" : ""}`}>
+        <div className="collection-sticky-thumb">
+          {album.coverUrl && <img src={album.coverUrl} alt={album.title} />}
+        </div>
+        <span className="collection-sticky-title">{album.title}</span>
+        <button className="collection-play-btn" onClick={handlePlayButton} disabled={!tracks.length}>
+          {isPlayingFromAlbum && playing ? <Pause size={14} fill="currentColor" /> : <Play size={14} fill="currentColor" />}
+          {isPlayingFromAlbum && playing ? "Pause" : "Play"}
+        </button>
+      </header>
+
+      <div className="collection-hero relative" ref={heroRef}>
         <div className="collection-hero-bg" style={{ background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)" }} />
         <div className="collection-hero-content">
           <div className="collection-cover">

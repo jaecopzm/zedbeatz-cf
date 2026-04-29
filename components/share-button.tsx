@@ -10,6 +10,16 @@ export default function ShareButton({ title, url }: { title: string; url?: strin
   const [copied, setCopied] = useState(false);
   const shareUrl = url || (typeof window !== 'undefined' ? window.location.href : '');
 
+  async function handleShare() {
+    if (navigator.share) {
+      try {
+        await navigator.share({ title, url: shareUrl });
+        return;
+      } catch {}
+    }
+    setOpen(true);
+  }
+
   function copyLink() {
     navigator.clipboard.writeText(shareUrl);
     setCopied(true);
@@ -51,7 +61,7 @@ export default function ShareButton({ title, url }: { title: string; url?: strin
 
   return (
     <>
-      <button onClick={() => setOpen(true)} className="w-9 h-9 flex items-center justify-center transition-colors hover:opacity-70">
+      <button onClick={handleShare} className="w-9 h-9 flex items-center justify-center transition-colors hover:opacity-70">
         <Share2 size={17} />
       </button>
       {modal}

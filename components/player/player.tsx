@@ -25,7 +25,7 @@ function fmt(s: number) {
 }
 
 export default function Player() {
-  const { queue, currentIndex, playing, loading, shuffle, repeat, toggle, next, prev, toggleShuffle, cycleRepeat, setQueue, setLoading, reorderQueue } = usePlayer();
+  const { queue, currentIndex, playing, loading, shuffle, repeat, toggle, next, prev, toggleShuffle, cycleRepeat, setQueue, setLoading, reorderQueue, context } = usePlayer();
   const track = queue[currentIndex];
   const audioRef = useRef<HTMLAudioElement>(null);
   const { gainNode, frequencyData } = useAudioAnalyser(audioRef, playing, 32);
@@ -258,7 +258,7 @@ export default function Player() {
                   >
                     <Mic2 size={16} />
                   </button>
-                  <DownloadButton audioUrl={track.audioUrl} title={track.title} artist={track.artist} coverUrl={track.coverUrl} />
+                  <DownloadButton audioUrl={track.audioUrl} title={track.title} artist={track.artist} featuredArtists={track.featuredArtists} coverUrl={track.coverUrl} />
                   <ShareButton title={`${track.title} by ${track.artist}`} url={`${typeof window !== "undefined" ? window.location.origin : ""}/track/${track.slug || track.id}`} />
                 </div>
               </div>
@@ -432,6 +432,7 @@ export default function Player() {
             frequencyData={frequencyData}
             showLyrics={showLyrics}
             showQueue={showQueue}
+            context={context}
             onClose={() => setShowFullScreen(false)}
             onToggle={toggle}
             onNext={next}
@@ -473,7 +474,7 @@ export default function Player() {
               {playing && (
                 <div className="absolute -bottom-1 -right-1 flex items-end gap-[2px] bg-[var(--background)] rounded-full p-1">
                   {[1,2,3].map((i) => (
-                    <span key={i} className="eq-bar" style={{ animationDelay: `${i * 0.15}s`, height: `${4+i*2}px` }} />
+                    <span key={i} className="eq-bar eq-bar--active" style={{ animationDelay: `${i * 0.15}s`, height: `${4+i*2}px` }} />
                   ))}
                 </div>
               )}
@@ -483,6 +484,17 @@ export default function Player() {
                 <p className="text-sm font-semibold truncate group-hover/link:text-[var(--primary)] transition-colors">{track.title}</p>
                 <p className="text-xs text-[var(--muted)] truncate">{track.artist}</p>
               </Link>
+              {context && (
+                <p className="text-[10px] text-white/30 truncate mt-0.5">
+                  {context.href ? (
+                    <Link href={context.href} className="hover:text-white/60 transition-colors">
+                      Playing from {context.label}
+                    </Link>
+                  ) : (
+                    <>Playing from {context.label}</>
+                  )}
+                </p>
+              )}
             </div>
             <LikeButton trackId={track.id} size={16} />
           </div>

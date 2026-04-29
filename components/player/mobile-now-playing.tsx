@@ -26,8 +26,8 @@ import ShareButton from "@/components/share-button";
 import DownloadButton from "@/components/download-button";
 import LyricsView from "./lyrics-view";
 import type { Track } from "@/lib/player-store";
+import type { PlayContext } from "@/lib/player-store";
 import { useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 
 interface MobileNowPlayingProps {
   track: Track;
@@ -43,6 +43,7 @@ interface MobileNowPlayingProps {
   frequencyData: Uint8Array;
   showLyrics: boolean;
   showQueue: boolean;
+  context: PlayContext | null;
   onClose: () => void;
   onToggle: () => void;
   onNext: () => void;
@@ -76,6 +77,7 @@ export default function MobileNowPlaying({
   frequencyData,
   showLyrics,
   showQueue,
+  context,
   onClose,
   onToggle,
   onNext,
@@ -92,40 +94,48 @@ export default function MobileNowPlaying({
   const progressPercent = duration ? (progress / duration) * 100 : 0;
   const [isDragging, setIsDragging] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const touchRef = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
-    // Trigger entrance animation
     const t = setTimeout(() => setIsMounted(true), 10);
     return () => clearTimeout(t);
   }, []);
 
   return (
-    <motion.div
-      drag="y"
-      dragConstraints={{ top: 0 }}
-      dragElastic={0.2}
-      onDragEnd={(_, info) => {
-        if (info.offset.y > 150) onClose();
-      }}
+    <div
       className="lg:hidden flex flex-col h-full relative overflow-hidden"
       style={{ background: "#000" }}
+      onTouchStart={(e) => {
+        const t = e.touches[0];
+        touchRef.current = { x: t.clientX, y: t.clientY };
+      }}
+      onTouchEnd={(e) => {
+        if (!touchRef.current) return;
+        const dx = e.changedTouches[0].clientX - touchRef.current.x;
+        const dy = e.changedTouches[0].clientY - touchRef.current.y;
+        touchRef.current = null;
+        if (dy > 80 && Math.abs(dy) > Math.abs(dx)) { onClose(); return; }
+        if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy)) {
+          if (dx < 0) onNext(); else onPrev();
+        }
+      }}
     >
       {/* Dynamic blurred cover background */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
         {track.coverUrl && (
           <>
             <div
+              key={track.coverUrl}
               className="absolute inset-0"
               style={{
                 backgroundImage: `url(${track.coverUrl})`,
                 backgroundSize: "cover",
-                backgroundPosition: "center top",
-                filter: "blur(40px) saturate(300%) brightness(0.6)",
-                transform: "scale(1.3)",
-                transition: "opacity 0.8s ease",
+                backgroundPosition: "center",
+                filter: "blur(60px) saturate(250%) brightness(0.5)",
+                transform: "scale(1.4)",
               }}
             />
-            <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0.85) 100%)" }} />
+            <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0.9) 100%)" }} />
           </>
         )}
       </div>
@@ -150,10 +160,18 @@ export default function MobileNowPlaying({
           onClick={onToggleLyrics}
         >
           <span
-            className="text-[11px] font-semibold uppercase tracking-[0.18em]"
+            className={`text-[11px] font-semibold truncate max-w-[180px] ${!context ? "uppercase tracking-[0.18em]" : ""}`}
             style={{ color: "rgba(255,255,255,0.55)" }}
           >
-            {showLyrics ? "Lyrics" : "Now Playing"}
+            {showLyrics ? "Lyrics" : context ? (
+              context.href ? (
+                <Link href={context.href} onClick={onClose} className="hover:text-white/80 transition-colors">
+                  Playing from {context.label}
+                </Link>
+              ) : (
+                <>Playing from {context.label}</>
+              )
+            ) : "Now Playing"}
           </span>
           {/* Tiny drag indicator */}
           <div
@@ -192,14 +210,9 @@ export default function MobileNowPlaying({
         <div className="flex flex-col items-center px-6 pt-3 pb-4 gap-5">
           {/* ── CONTENT AREA (ARTWORK / LYRICS / QUEUE) ── */}
           <div className="w-full relative" style={{ aspectRatio: "1/1" }}>
-            <AnimatePresence mode="wait">
-              {showLyrics ? (
-                <motion.div
+            {showLyrics ? (
+                <div
                   key="lyrics"
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.15 }}
                   className="absolute inset-0 rounded-2xl overflow-hidden"
                   style={{
                     background: "rgba(255,255,255,0.04)",
@@ -211,14 +224,10 @@ export default function MobileNowPlaying({
                     progress={progress}
                     className="w-full h-full"
                   />
-                </motion.div>
+                </div>
               ) : showQueue ? (
-                <motion.div
+                <div
                   key="queue"
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.15 }}
                   className="absolute inset-0 overflow-hidden flex flex-col"
                   style={{ background: "#111" }}
                 >
@@ -250,55 +259,23 @@ export default function MobileNowPlaying({
                           <p className="text-xs text-white/50 truncate">{t.artist}</p>
                         </div>
                         {i === currentIndex && playing && (
-                          <div className="flex items-end gap-0.5 h-3 shrink-0">
-                            <motion.div animate={{ height: ["20%", "100%", "20%"] }} transition={{ repeat: Infinity, duration: 0.6, ease: "easeInOut" }} className="w-0.5 bg-[#1ed760]" />
-                            <motion.div animate={{ height: ["20%", "100%", "20%"] }} transition={{ repeat: Infinity, duration: 0.6, ease: "easeInOut", delay: 0.1 }} className="w-0.5 bg-[#1ed760]"
-                            />
-                            <motion.div
-                              animate={{ height: ["20%", "100%", "20%"] }}
-                              transition={{
-                                repeat: Infinity,
-                                duration: 0.6,
-                                ease: "easeInOut",
-                                delay: 0.2,
-                              }}
-                              className="w-0.5 bg-[#1ed760]"
-                            />
-                          </div>
+                          <span className="eq-container shrink-0" aria-hidden>
+                            {[0.3, 0.7, 0.5].map((delay, i) => (
+                              <span key={i} className="eq-bar eq-bar--active" style={{ animationDelay: `${delay}s` }} />
+                            ))}
+                          </span>
                         )}
                       </button>
                     ))}
                   </div>
-                </motion.div>
+                </div>
               ) : (
-                <motion.div
-                  key="artwork"
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ duration: 0.4 }}
-                  className="relative w-full h-full"
-                >
-                  {/* Glow ring */}
-                  <motion.div
-                    animate={{
-                      opacity: playing ? 1 : 0,
-                      scale: playing ? 1 : 0.9,
-                    }}
-                    className="absolute -inset-3 rounded-[28px]"
+                <div key="artwork" className="relative w-full h-full">
+                  {/* Cover art */}
+                  <div
+                    className="relative w-full h-full overflow-hidden transition-transform duration-300"
                     style={{
-                      background:
-                        "radial-gradient(ellipse at center, rgba(30,215,96,0.25) 0%, transparent 70%)",
-                      filter: "blur(24px)",
-                    }}
-                  />
-
-                  {/* Cover art card */}
-                  <motion.div
-                    animate={{ scale: playing ? 1 : 0.92 }}
-                    transition={{ type: "spring", damping: 20 }}
-                    className="relative w-full h-full overflow-hidden"
-                    style={{
+                      transform: playing ? "scale(1)" : "scale(0.93)",
                       boxShadow: playing
                         ? "0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.06)"
                         : "0 12px 40px rgba(0,0,0,0.5)",
@@ -317,16 +294,12 @@ export default function MobileNowPlaying({
                     ) : (
                       <div
                         className="w-full h-full"
-                        style={{
-                          background:
-                            "linear-gradient(135deg, #2a2a2a 0%, #111 100%)",
-                        }}
+                        style={{ background: "linear-gradient(135deg, #2a2a2a 0%, #111 100%)" }}
                       />
                     )}
-                  </motion.div>
-                </motion.div>
+                  </div>
+                </div>
               )}
-            </AnimatePresence>
           </div>
 
           {/* ── TRACK INFO + LIKE ── */}
@@ -528,6 +501,7 @@ export default function MobileNowPlaying({
                   audioUrl={track.audioUrl}
                   title={track.title}
                   artist={track.artist}
+                  featuredArtists={track.featuredArtists}
                   coverUrl={track.coverUrl}
                 />
               </ActionPill>
@@ -543,7 +517,7 @@ export default function MobileNowPlaying({
           </div>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
 

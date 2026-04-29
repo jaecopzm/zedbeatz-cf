@@ -43,27 +43,21 @@ export default async function BrowsePage() {
   const topTracks = [...tracks].sort((a, b) => (plays[b.id] ?? 0) - (plays[a.id] ?? 0));
 
   return (
-    <div className="min-h-screen pb-32">
+    <div className="pb-6">
       <div className="px-4 md:px-8 pt-4 md:pt-8 pb-4 md:pb-8">
-        <h1 className="text-2xl md:text-5xl font-bold mb-1 md:mb-3 tracking-tight">Browse</h1>
+        <h1 className="text-2xl md:text-5xl font-black mb-1 md:mb-3 tracking-tight">Browse</h1>
         <p className="text-xs md:text-base text-[var(--muted)]">Discover the best of Zambian music by genre, mood, and charts.</p>
       </div>
 
       <section className="px-4 md:px-8 mb-8 md:mb-14 mt-2 md:mt-6">
-        <h2 className="text-sm md:text-xl font-bold mb-3 md:mb-6 flex items-center gap-2">
-          <span className="w-1 h-4 md:w-1.5 md:h-6 bg-purple-500 rounded-full" />
-          Browse by Genre
-        </h2>
+        <h2 className="text-2xl md:text-3xl font-black tracking-tight mb-3 md:mb-6">Browse by Genre</h2>
         <GenreGrid genres={genres} />
       </section>
 
       <section className="mb-8 md:mb-14">
         <div className="px-4 md:px-8">
           <div className="flex items-center justify-between mb-3 md:mb-6">
-            <h2 className="text-sm md:text-xl font-bold flex items-center gap-2">
-              <span className="w-1 h-4 md:w-1.5 md:h-6 bg-[var(--primary)] rounded-full" />
-              Curated Playlists
-            </h2>
+            <h2 className="text-2xl md:text-3xl font-black tracking-tight">Curated Playlists</h2>
             <Link href="/library" className="group flex items-center gap-1 text-[10px] md:text-xs font-semibold text-[var(--muted)] hover:text-[var(--primary)] transition-all">
               See all <ChevronRight size={10} className="group-hover:translate-x-0.5 transition-transform md:w-3.5 md:h-3.5" />
             </Link>
@@ -73,20 +67,14 @@ export default async function BrowsePage() {
       </section>
 
       <section className="px-4 md:px-8 mb-8 md:mb-14">
-        <h2 className="text-sm md:text-xl font-bold mb-3 md:mb-6 flex items-center gap-2">
-          <span className="w-1 h-4 md:w-1.5 md:h-6 bg-yellow-500 rounded-full" />
-          Top Charts
-        </h2>
+        <h2 className="text-2xl md:text-3xl font-black tracking-tight mb-3 md:mb-6">Top Charts</h2>
         <TopCharts tracks={topTracks} />
       </section>
 
       <section className="mb-8 md:mb-14">
         <div className="px-4 md:px-8">
           <div className="flex items-center justify-between mb-3 md:mb-6">
-            <h2 className="text-sm md:text-xl font-bold flex items-center gap-2">
-              <span className="w-1 h-4 md:w-1.5 md:h-6 bg-cyan-500 rounded-full" />
-              New Releases
-            </h2>
+            <h2 className="text-2xl md:text-3xl font-black tracking-tight">New Releases</h2>
             <Link href="/tracks" className="group flex items-center gap-1 text-[10px] md:text-xs font-semibold text-[var(--muted)] hover:text-[var(--primary)] transition-all">
               Show all <ChevronRight size={10} className="group-hover:translate-x-0.5 transition-transform md:w-3.5 md:h-3.5" />
             </Link>

@@ -220,6 +220,9 @@ body {
   border-radius: 2px;
   background: var(--primary);
   transform-origin: bottom;
+}
+
+.eq-bar--active {
   animation: bar-bounce 0.8s ease-in-out infinite;
 }
 

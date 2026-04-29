@@ -8,11 +8,13 @@ export default function DownloadButton({
   audioUrl,
   title,
   artist,
+  featuredArtists,
   coverUrl,
 }: {
   audioUrl: string;
   title: string;
   artist?: string;
+  featuredArtists?: string;
   coverUrl?: string;
 }) {
   const { isSignedIn } = useUser();
@@ -34,8 +36,24 @@ export default function DownloadButton({
       if (coverBuffer) {
         const { ID3Writer } = await import("browser-id3-writer");
         const writer = new ID3Writer(audioBuffer);
+
+        // Title
         writer.setFrame("TIT2", title);
-        if (artist) writer.setFrame("TPE1", [artist]);
+
+        // Artist display: "Artist feat. Featured" or just "Artist"
+        const fullArtist = featuredArtists ? `${artist} feat. ${featuredArtists}` : artist;
+        if (fullArtist) writer.setFrame("TPE1", [fullArtist]);
+
+        // Album = "ZedBeatz"
+        writer.setFrame("TALB", "ZedBeatz");
+
+        // Publisher
+        writer.setFrame("TPUB", "ZedBeatz");
+
+        // Comment
+        writer.setFrame("COMM", { description: "", text: "Downloaded from ZedBeatz.com", language: "eng" });
+
+        // Cover art
         writer.setFrame("APIC", {
           type: 3,
           data: coverBuffer,
@@ -45,11 +63,13 @@ export default function DownloadButton({
         finalBuffer = writer.addTag();
       }
 
+      const fullArtistName = featuredArtists ? `${artist} ft. ${featuredArtists}` : artist;
+      const filename = fullArtistName ? `${fullArtistName} - ${title}` : title;
       const blob = new Blob([finalBuffer], { type: "audio/mpeg" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `${title}.mp3`;
+      a.download = `${filename}.mp3`;
       a.click();
       URL.revokeObjectURL(url);
       showToast("Download started", "success");

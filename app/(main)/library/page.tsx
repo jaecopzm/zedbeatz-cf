@@ -220,22 +220,22 @@ export default function LibraryPage() {
 
 function ListView({ isSignedIn, isLoaded, searchQuery, setSearchQuery, showCreate, setShowCreate, newName, setNewName, createPlaylist, likedPlaylist, recentlyPlayed, filteredUser, filteredSaved, selected, selectPlaylist, editingId, editName, setEditName, renamePlaylist, setEditingId, deletePlaylist, unsavePlaylist }: any) {
   return (
-    <div className="pb-32">
+    <div className="pb-6">
       {/* Header */}
-      <div className="sticky top-0 z-20 bg-[var(--background)]/90 backdrop-blur-xl border-b border-[var(--border)] px-4 pt-4 pb-3">
-        <div className="flex items-center justify-between mb-3">
-          <h1 className="text-2xl font-black tracking-tight">Library</h1>
+      <div className="sticky top-0 z-20 bg-[var(--background)]/90 backdrop-blur-xl border-b border-[var(--border)] px-4 pt-3 pb-2.5">
+        <div className="flex items-center justify-between mb-2.5">
+          <h1 className="text-xl font-black tracking-tight">Library</h1>
           {isSignedIn ? (
             <button
               onClick={() => setShowCreate(!showCreate)}
-              className="w-9 h-9 rounded-full bg-[var(--primary)] flex items-center justify-center shadow-[var(--glow-primary)] active:scale-95 transition-transform"
+              className="w-8 h-8 rounded-full bg-[var(--primary)] flex items-center justify-center active:scale-95 transition-transform"
             >
-              <Plus size={18} className="text-black" strokeWidth={2.5} />
+              <Plus size={16} className="text-black" strokeWidth={2.5} />
             </button>
           ) : (
             <SignInButton mode="modal">
-              <button className="w-9 h-9 rounded-full bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center">
-                <Plus size={18} className="text-[var(--primary)]" />
+              <button className="w-8 h-8 rounded-full bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center">
+                <Plus size={16} className="text-[var(--primary)]" />
               </button>
             </SignInButton>
           )}
@@ -243,12 +243,12 @@ function ListView({ isSignedIn, isLoaded, searchQuery, setSearchQuery, showCreat
 
         {/* Search */}
         <div className="relative">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--muted)]" />
+          <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--muted)]" />
           <input
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             placeholder="Search playlists..."
-            className="w-full bg-[var(--surface-2)] rounded-xl pl-9 pr-3 py-2.5 text-sm outline-none focus:ring-1 focus:ring-[var(--primary)]/40 transition-all placeholder:text-[var(--muted)]"
+            className="w-full bg-[var(--surface-2)] rounded-xl pl-8 pr-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[var(--primary)]/40 transition-all placeholder:text-[var(--muted)]"
           />
         </div>
       </div>
@@ -287,11 +287,11 @@ function ListView({ isSignedIn, isLoaded, searchQuery, setSearchQuery, showCreat
 
       {/* Quick Access */}
       {isSignedIn && (
-        <div className="px-4 mt-4">
+        <div className="px-4 mt-3">
           <p className="text-[10px] font-black uppercase tracking-widest text-[var(--muted)] mb-2">Quick Access</p>
           <div className="grid grid-cols-2 gap-2">
             <QuickCard
-              icon={<Heart size={22} className="text-white fill-white" />}
+              icon={<Heart size={18} className="text-white fill-white" />}
               gradient="from-rose-500 to-pink-600"
               label="Liked Songs"
               count={likedPlaylist?.playlist_tracks?.[0]?.count ?? 0}
@@ -299,7 +299,7 @@ function ListView({ isSignedIn, isLoaded, searchQuery, setSearchQuery, showCreat
             />
             {recentlyPlayed.length > 0 && (
               <QuickCard
-                icon={<Clock size={22} className="text-white" />}
+                icon={<Clock size={18} className="text-white" />}
                 gradient="from-blue-500 to-violet-600"
                 label="Recently Played"
                 count={recentlyPlayed.length}
@@ -311,7 +311,7 @@ function ListView({ isSignedIn, isLoaded, searchQuery, setSearchQuery, showCreat
       )}
 
       {/* Playlists */}
-      <div className="px-4 mt-5">
+      <div className="px-4 mt-4">
         {filteredUser.length > 0 && (
           <>
             {isSignedIn && <p className="text-[10px] font-black uppercase tracking-widest text-[var(--muted)] mb-2">My Playlists</p>}
@@ -369,22 +369,19 @@ function PlaylistRow({ p, i, selected, selectPlaylist, editingId, editName, setE
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: i * 0.03 }}
+    <div
       onClick={() => selectPlaylist(p.id)}
-      className={`flex items-center gap-3 px-3 py-3 rounded-2xl cursor-pointer transition-all active:scale-[0.98] ${
+      className={`flex items-center gap-3 px-3 py-2 rounded-xl cursor-pointer transition-all active:scale-[0.98] ${
         selected === p.id ? "bg-[var(--surface-2)] ring-1 ring-[var(--primary)]/20" : "hover:bg-[var(--surface-2)]"
       }`}
     >
       {/* Cover */}
-      <div className="w-14 h-14 rounded-xl bg-[var(--surface-3)] overflow-hidden shrink-0 relative">
+      <div className="w-11 h-11 rounded-lg bg-[var(--surface-3)] overflow-hidden shrink-0 relative">
         {p.cover_url ? (
-          <Image src={p.cover_url} alt={p.name} fill sizes="56px" className="object-cover" unoptimized />
+          <Image src={p.cover_url} alt={p.name} fill sizes="44px" className="object-cover" unoptimized />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <Music size={20} className="text-[var(--muted)]" />
+            <Music size={16} className="text-[var(--muted)]" />
           </div>
         )}
       </div>
@@ -397,7 +394,7 @@ function PlaylistRow({ p, i, selected, selectPlaylist, editingId, editName, setE
             onChange={e => setEditName(e.target.value)}
             onKeyDown={e => e.key === "Enter" && renamePlaylist(p.id)}
             onBlur={() => renamePlaylist(p.id)}
-            className="w-full bg-[var(--surface-3)] rounded-lg px-2.5 py-1.5 text-sm outline-none focus:ring-1 focus:ring-[var(--primary)]"
+            className="w-full bg-[var(--surface-3)] rounded-lg px-2.5 py-1 text-sm outline-none focus:ring-1 focus:ring-[var(--primary)]"
             onClick={e => e.stopPropagation()}
           />
         ) : (
@@ -416,25 +413,25 @@ function PlaylistRow({ p, i, selected, selectPlaylist, editingId, editName, setE
         {isSignedIn && !p.isAdmin && (
           <button
             onClick={() => { setEditingId(p.id); setEditName(p.name); }}
-            className="p-2 rounded-xl text-[var(--muted)] hover:text-white hover:bg-white/10 transition-all"
+            className="p-1.5 rounded-lg text-[var(--muted)] hover:text-white hover:bg-white/10 transition-all"
           >
-            <Edit2 size={14} />
+            <Edit2 size={13} />
           </button>
         )}
         {onDelete && (
           confirmDelete ? (
             <div className="flex items-center gap-1">
-              <button onClick={() => { onDelete(); setConfirmDelete(false); }} className="px-2.5 py-1.5 text-xs font-bold bg-rose-500/20 text-rose-400 rounded-lg">Yes</button>
-              <button onClick={() => setConfirmDelete(false)} className="px-2.5 py-1.5 text-xs font-bold bg-white/10 text-white/60 rounded-lg">No</button>
+              <button onClick={() => { onDelete(); setConfirmDelete(false); }} className="px-2 py-1 text-xs font-bold bg-rose-500/20 text-rose-400 rounded-lg">Yes</button>
+              <button onClick={() => setConfirmDelete(false)} className="px-2 py-1 text-xs font-bold bg-white/10 text-white/60 rounded-lg">No</button>
             </div>
           ) : (
-            <button onClick={() => setConfirmDelete(true)} className="p-2 rounded-xl text-[var(--muted)] hover:text-rose-400 hover:bg-rose-500/10 transition-all">
-              {deleteIcon === "unsave" ? <BookmarkX size={14} /> : <Trash2 size={14} />}
+            <button onClick={() => setConfirmDelete(true)} className="p-1.5 rounded-lg text-[var(--muted)] hover:text-rose-400 hover:bg-rose-500/10 transition-all">
+              {deleteIcon === "unsave" ? <BookmarkX size={13} /> : <Trash2 size={13} />}
             </button>
           )
         )}
       </div>
-    </motion.div>
+    </div>
   );
 }
 

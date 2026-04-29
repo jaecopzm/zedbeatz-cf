@@ -112,7 +112,8 @@ function useMenuItems(track: Track, onClose: () => void, copied: boolean, setCop
           <DownloadButton 
             audioUrl={track.audioUrl} 
             title={track.title} 
-            artist={track.artist} 
+            artist={track.artist}
+            featuredArtists={track.featuredArtists}
             coverUrl={track.coverUrl} 
           />
         )

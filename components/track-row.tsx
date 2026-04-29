@@ -40,7 +40,7 @@ export default function TrackRow({ track, queue, index, className }: { track: Tr
               {[1, 2, 3].map((i) => (
                 <span
                   key={i}
-                  className="eq-bar"
+                  className="eq-bar eq-bar--active"
                   style={{ animationDelay: `${i * 0.15}s`, height: `${5 + i * 2}px` }}
                 />
               ))}

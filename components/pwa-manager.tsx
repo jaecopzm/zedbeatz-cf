@@ -11,7 +11,8 @@ export default function PwaManager() {
   const [isIOS, setIsIOS] = useState(false);
 
   useEffect(() => {
-    // Register Service Worker
+    // Service worker disabled temporarily for development
+    /*
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", function () {
         navigator.serviceWorker.register("/sw.js").then(
@@ -25,6 +26,8 @@ export default function PwaManager() {
       });
       setIsSupported(true);
     }
+    */
+    return;
 
     // Detect if already installed / standalone
     const isStandalone = window.matchMedia("(display-mode: standalone)").matches;

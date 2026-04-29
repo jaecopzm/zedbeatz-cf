@@ -87,6 +87,7 @@ export default function TrackCard({ track, queue, bare }: { track: Track; queue?
             src={track.coverUrl}
             alt={track.title}
             fill
+            loading="lazy"
             className="object-cover transition-transform duration-500 group-hover:scale-105"
           />
         )}
@@ -104,7 +105,7 @@ export default function TrackCard({ track, queue, bare }: { track: Track; queue?
             {[1, 2, 3].map((i) => (
               <span
                 key={i}
-                className="eq-bar"
+                className="eq-bar eq-bar--active"
                 style={{ animationDelay: `${i * 0.15}s`, height: `${4 + i * 2}px` }}
               />
             ))}

@@ -14,6 +14,11 @@ export type Track = {
   createdAt?: string;
 };
 
+export type PlayContext = {
+  label: string;   // e.g. "Liked Songs", "Yo Maps Radio", "New Releases"
+  href?: string;   // optional link back to the source
+};
+
 type PlayerState = {
   queue: Track[];
   currentIndex: number;
@@ -22,8 +27,9 @@ type PlayerState = {
   shuffle: boolean;
   repeat: "off" | "one" | "all";
   currentTrack: Track | null;
-  setQueue: (tracks: Track[], startIndex?: number) => void;
-  play: (track: Track) => void;
+  context: PlayContext | null;
+  setQueue: (tracks: Track[], startIndex?: number, context?: PlayContext | null) => void;
+  play: (track: Track, context?: PlayContext | null) => void;
   toggle: () => void;
   next: () => void;
   prev: () => void;
@@ -40,13 +46,14 @@ export const usePlayer = create<PlayerState>((set, get) => ({
   loading: false,
   shuffle: false,
   repeat: "off",
+  context: null,
   get currentTrack() { const s = get(); return s.queue[s.currentIndex] ?? null; },
 
-  setQueue: (tracks, startIndex = 0) => {
-    set({ queue: tracks, currentIndex: startIndex, playing: true, loading: true });
+  setQueue: (tracks, startIndex = 0, context = null) => {
+    set({ queue: tracks, currentIndex: startIndex, playing: true, loading: true, context: context ?? null });
   },
-  play: (track) => {
-    set({ queue: [track], currentIndex: 0, playing: true, loading: true });
+  play: (track, context = null) => {
+    set({ queue: [track], currentIndex: 0, playing: true, loading: true, context: context ?? null });
   },
   toggle: () => set((s) => ({ playing: !s.playing })),
   toggleShuffle: () => set((s) => ({ shuffle: !s.shuffle })),

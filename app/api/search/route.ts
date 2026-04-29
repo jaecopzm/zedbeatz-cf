@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
   const words = q.toLowerCase().split(/\s+/).filter(w => w.length > 0);
   const searchPattern = words.join('%');
 
-  const [{ data: tracksByTitle }, { data: artists }, { data: albums }, { data: genreTracks }] = await Promise.all([
+  const [{ data: tracksByTitle }, { data: artists }, { data: albums }, { data: genreTracks }, { data: tracksByGenre }] = await Promise.all([
     supabase
       .from("tracks")
       .select("id, title, audio_key, cover_key, duration, artist_id, slug, featured_artists, artists(name, slug)")
@@ -38,6 +38,12 @@ export async function GET(req: NextRequest) {
       .ilike("genre", `%${searchPattern}%`)
       .not("genre", "is", null)
       .limit(10),
+    supabase
+      .from("tracks")
+      .select("id, title, audio_key, cover_key, duration, artist_id, slug, featured_artists, artists(name, slug)")
+      .ilike("genre", `%${q}%`)
+      .order("plays", { ascending: false })
+      .limit(30),
   ]);
 
   // Find tracks by matched artist IDs
@@ -50,13 +56,13 @@ export async function GET(req: NextRequest) {
         .limit(15)
     : { data: [] };
 
-  // Merge and deduplicate tracks
+  // Merge and deduplicate tracks (genre tracks take priority when genre matches)
   const seen = new Set<number>();
-  const allTracks = [...(tracksByTitle ?? []), ...(tracksByArtist ?? [])].filter(t => {
+  const allTracks = [...(tracksByGenre ?? []), ...(tracksByTitle ?? []), ...(tracksByArtist ?? [])].filter(t => {
     if (seen.has(t.id)) return false;
     seen.add(t.id);
     return true;
-  }).slice(0, 20);
+  }).slice(0, 30);
 
   // Get unique genres
   const genres = Array.from(new Set((genreTracks ?? []).map(t => t.genre).filter(Boolean))) as string[];

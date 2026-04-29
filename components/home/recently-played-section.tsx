@@ -88,7 +88,7 @@ export default function RecentlyPlayedSection() {
         return (
           <div
             key={track.id}
-            onClick={() => isActive ? toggle() : setQueue(tracks, i)}
+            onClick={() => isActive ? toggle() : setQueue(tracks, i, { label: "Recently Played" })}
             className={`group flex items-center gap-2.5 px-2 py-1.5 cursor-pointer transition-colors ${
               isActive ? "bg-[var(--surface-2)]" : "hover:bg-[var(--surface-2)]"
             }`}
@@ -101,7 +101,7 @@ export default function RecentlyPlayedSection() {
                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
                   {playing ? (
                     <div className="flex items-end gap-[2px] h-3">
-                      {[1,2,3].map(n => <span key={n} className="eq-bar" style={{ animationDelay: `${n * 0.15}s` }} />)}
+                      {[1,2,3].map(n => <span key={n} className="eq-bar eq-bar--active" style={{ animationDelay: `${n * 0.15}s` }} />)}
                     </div>
                   ) : <Play size={14} className="text-white ml-0.5" fill="currentColor" />}
                 </div>

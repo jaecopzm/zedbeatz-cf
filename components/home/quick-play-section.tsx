@@ -19,7 +19,7 @@ export default function QuickPlaySection({ tracks }: { tracks: Track[] }) {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: i * 0.07 }}
-            onClick={() => isActive ? toggle() : setQueue(tracks, i)}
+            onClick={() => isActive ? toggle() : setQueue(tracks, i, { label: "Quick Play" })}
             className={`group relative overflow-hidden border transition-all duration-300 cursor-pointer hover:-translate-y-0.5 hover:shadow-[var(--shadow-card)] ${
               isActive
                 ? "border-[var(--primary)]/40 bg-[var(--surface-2)] shadow-[0_0_15px_rgba(30,215,96,0.1)]"

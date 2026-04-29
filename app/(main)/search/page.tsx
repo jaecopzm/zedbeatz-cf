@@ -16,6 +16,11 @@ type Results = { tracks: Track[]; artists: Artist[]; albums: Album[]; genres: st
 function SearchContent() {
   const searchParams = useSearchParams();
   const [query, setQuery] = useState(searchParams.get("q") ?? "");
+
+  useEffect(() => {
+    const q = searchParams.get("q") ?? "";
+    setQuery(q);
+  }, [searchParams]);
   const [results, setResults] = useState<Results>({ tracks: [], artists: [], albums: [], genres: [] });
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState<"all" | "tracks" | "artists" | "albums">("all");
@@ -67,67 +72,35 @@ function SearchContent() {
   const hasResults = filteredTracks.length > 0 || filteredArtists.length > 0 || filteredAlbums.length > 0;
 
   return (
-    <div className="min-h-screen pb-32">
+    <div className="min-h-screen pb-6">
       {/* Header with Search */}
-      <div className="sticky top-0 z-20 bg-gradient-to-b from-[var(--background)] via-[var(--background)] to-transparent pb-4 md:pb-6 pt-4 md:pt-8 px-4 md:px-8 border-b border-transparent transition-all duration-300 backdrop-blur-md">
-        <motion.h1
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="text-2xl md:text-5xl font-bold mb-4 md:mb-6 tracking-tight"
-        >
-          Search
-        </motion.h1>
+      <div className="sticky top-0 z-20 bg-[var(--background)]/90 backdrop-blur-md pb-2 pt-2 md:pt-6 px-4 md:px-8 border-b border-white/[0.06]">
+        <h1 className="text-xl md:text-5xl font-black mb-2 md:mb-4 tracking-tight">Search</h1>
 
         {/* Search Bar */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1, duration: 0.4 }}
-          className="relative max-w-4xl"
-        >
-          <div className="relative group">
-            <div className="relative">
-              <Search size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-[var(--muted)] group-focus-within:text-[var(--primary)] transition-colors" />
-              <input
-                autoFocus
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSearch(query)}
-                placeholder="Search for artists, songs, albums..."
-                className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-2xl pl-14 pr-14 py-4 text-base outline-none focus:border-[var(--primary)]/60 focus:bg-[var(--surface-3)] focus:shadow-[0_0_0_3px_rgba(30,215,96,0.1)] placeholder:text-[var(--muted)] transition-all duration-300 shadow-lg hover:shadow-xl"
-              />
-              <AnimatePresence>
-                {loading ? (
-                  <motion.div 
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    className="absolute right-5 top-1/2 -translate-y-1/2"
-                  >
-                    <Loader2 size={18} className="text-[var(--primary)] animate-spin" />
-                  </motion.div>
-                ) : query ? (
-                  <motion.button
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    onClick={() => setQuery("")}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-[var(--surface-3)] hover:bg-[var(--surface-4)] flex items-center justify-center text-[var(--muted)] hover:text-white transition-all border border-[var(--border)]"
-                  >
-                    <X size={14} />
-                  </motion.button>
-                ) : null}
-              </AnimatePresence>
-            </div>
+        <div className="relative max-w-4xl">
+          <div className="relative">
+            <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--muted)]" />
+            <input
+              autoFocus
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSearch(query)}
+              placeholder="Artists, songs, albums..."
+              className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-xl pl-10 pr-10 py-2.5 text-sm outline-none focus:border-[var(--primary)]/60 placeholder:text-[var(--muted)] transition-all"
+            />
+            {loading ? (
+              <Loader2 size={15} className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--primary)] animate-spin" />
+            ) : query ? (
+              <button onClick={() => setQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-[var(--surface-3)] flex items-center justify-center text-[var(--muted)] hover:text-white transition-all">
+                <X size={12} />
+              </button>
+            ) : null}
           </div>
 
           {/* Filter Tabs */}
           {query && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex gap-2 mt-3"
-            >
+            <div className="flex gap-1.5 mt-2">
               {[
                 { key: "all", label: "All" },
                 { key: "tracks", label: "Songs" },
@@ -137,70 +110,49 @@ function SearchContent() {
                 <button
                   key={tab.key}
                   onClick={() => setFilter(tab.key as typeof filter)}
-                  className={`px-3 md:px-5 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-semibold transition-all border ${
+                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-all border ${
                     filter === tab.key
-                      ? "bg-[var(--primary)] text-black border-transparent shadow-[var(--glow-primary)]"
+                      ? "bg-[var(--primary)] text-black border-transparent"
                       : "bg-white/5 text-white border-white/10 hover:bg-white/10"
                   }`}
                 >
                   {tab.label}
                 </button>
               ))}
-            </motion.div>
+            </div>
           )}
-        </motion.div>
+        </div>
       </div>
 
       <div className="px-4 md:px-8 mt-6 md:mt-8">
         {/* Empty State - Trending & History */}
         {!query && (
-          <div className="space-y-6 md:space-y-8">
+          <div className="space-y-5">
             {/* Search History */}
             {history.length > 0 && (
-              <motion.section
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-              >
-                <div className="flex items-center justify-between mb-3 md:mb-4">
-                  <div className="flex items-center gap-2">
-                    <Clock size={16} className="text-[var(--primary)] md:w-[18px] md:h-[18px]" />
-                    <h2 className="text-base md:text-xl font-bold">Recent Searches</h2>
-                  </div>
-                  <button
-                    onClick={clearHistory}
-                    className="text-xs text-[var(--muted)] hover:text-white transition-colors"
-                  >
-                    Clear all
-                  </button>
+              <section>
+                <div className="flex items-center justify-between mb-2">
+                  <h2 className="text-sm font-bold text-white/60 uppercase tracking-wider">Recent</h2>
+                  <button onClick={clearHistory} className="text-xs text-[var(--muted)] hover:text-white transition-colors">Clear</button>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1.5">
                   {history.map((term, i) => (
-                    <motion.button
+                    <button
                       key={i}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: i * 0.05 }}
                       onClick={() => setQuery(term)}
-                      className="px-3 md:px-4 py-1.5 md:py-2 rounded-full glass-card hover:bg-[var(--primary-dim)] hover:border-[var(--primary)]/30 border-white/5 text-xs md:text-sm font-medium transition-all"
+                      className="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 text-xs font-medium transition-all"
                     >
                       {term}
-                    </motion.button>
+                    </button>
                   ))}
                 </div>
-              </motion.section>
+              </section>
             )}
 
             {/* Trending Searches */}
-            <motion.section
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-            >
-              <div className="flex items-center gap-2 mb-3 md:mb-4">
-                <TrendingUp size={16} className="text-orange-500 md:w-[18px] md:h-[18px]" />
-                <h2 className="text-base md:text-xl font-bold">Trending Searches</h2>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 md:gap-3">
+            <section>
+              <h2 className="text-sm font-bold text-white/60 uppercase tracking-wider mb-2">Trending</h2>
+              <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2">
                 {[
                   { term: "Yo Maps", color: "from-orange-600 to-amber-400" },
                   { term: "Chile One", color: "from-blue-600 to-cyan-400" },
@@ -208,29 +160,20 @@ function SearchContent() {
                   { term: "Afrobeat", color: "from-green-600 to-emerald-400" },
                   { term: "Gospel", color: "from-indigo-600 to-violet-400" },
                   { term: "Hip Hop", color: "from-rose-600 to-red-400" },
-                ].map(({ term, color }, i) => (
-                  <motion.button
+                ].map(({ term, color }) => (
+                  <button
                     key={term}
-                    initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    transition={{ delay: i * 0.05 + 0.2 }}
                     onClick={() => handleSearch(term)}
-                    className={`group relative aspect-square rounded-xl bg-gradient-to-br ${color} p-3 md:p-4 flex flex-col justify-between transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 shadow-lg hover:shadow-xl overflow-hidden`}
+                    className={`group relative aspect-square rounded-xl bg-gradient-to-br ${color} p-3 flex flex-col justify-between transition-all hover:scale-[1.02] overflow-hidden`}
                   >
-                    {/* Background dynamic pattern */}
-                    <div className="absolute -top-4 -right-4 w-12 md:w-16 h-12 md:h-16 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
-                    
-                    <div className="relative w-5 h-5 md:w-8 md:h-8 rounded-lg bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/20 shadow-lg group-hover:rotate-12 transition-transform duration-500">
-                      <Flame size={10} className="text-white fill-white md:w-4 md:h-4" />
+                    <div className="relative w-6 h-6 rounded-lg bg-white/20 flex items-center justify-center border border-white/20">
+                      <Flame size={10} className="text-white fill-white" />
                     </div>
-                    
-                    <div className="relative">
-                      <p className="text-[10px] md:text-sm font-bold text-left text-white leading-tight drop-shadow-md">{term}</p>
-                    </div>
-                  </motion.button>
+                    <p className="text-[11px] font-bold text-left text-white leading-tight">{term}</p>
+                  </button>
                 ))}
               </div>
-            </motion.section>
+            </section>
           </div>
         )}
 

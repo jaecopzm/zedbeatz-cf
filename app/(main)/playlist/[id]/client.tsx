@@ -244,8 +244,8 @@ export default function PlaylistPageClient({
   const handlePlayAll = useCallback(() => {
     if (!tracks.length) return;
     if (isPlaylistQueue) toggle();
-    else setQueue(tracks, 0);
-  }, [tracks, isPlaylistQueue, toggle, setQueue]);
+    else setQueue(tracks, 0, { label: playlist.name, href: `/playlist/${playlist.id}` });
+  }, [tracks, isPlaylistQueue, toggle, setQueue, playlist]);
 
   const currentTrack = queue[currentIndex] ?? null;
 
@@ -254,7 +254,7 @@ export default function PlaylistPageClient({
       {/* Ambient background */}
       <div className="pointer-events-none absolute inset-0 z-0">
         <div className="absolute inset-0 bg-gradient-to-b from-purple-900/25 via-black to-black" />
-        {currentTrack?.coverUrl && isPlaylistQueue && (
+        {currentTrack?.coverUrl && (
           <div
             key={currentTrack.id}
             className="absolute inset-0 opacity-20 transition-opacity duration-1000"
@@ -405,7 +405,7 @@ export default function PlaylistPageClient({
                   isPlaylistQueue={isPlaylistQueue}
                   onPlay={() => {
                     if (isCurrent) toggle();
-                    else setQueue(tracks, i);
+                    else setQueue(tracks, i, { label: playlist.name, href: `/playlist/${playlist.id}` });
                   }}
                   style={{ animationDelay: `${i * 0.035}s` }}
                 />

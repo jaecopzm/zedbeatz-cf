@@ -7,16 +7,17 @@ import Footer from "@/components/footer";
 import ScrollToTop from "@/components/scroll-to-top";
 import ScrollRestoration from "@/components/scroll-restoration";
 import { LikesProvider } from "@/lib/likes-context";
+import Link from "next/link";
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   return (
     <LikesProvider>
       <div className="flex flex-col h-full bg-[var(--background)] relative">
         {/* Mobile Header */}
-        <header className="lg:hidden fixed top-0 left-0 right-0 h-14 z-40 flex items-center justify-between px-4 border-b border-white/[0.07] bg-[rgba(10,10,15,0.55)] backdrop-blur-xl [-webkit-backdrop-filter:blur(24px)] supports-[backdrop-filter]:bg-[rgba(10,10,15,0.45)]">
+        <header className="lg:hidden fixed top-0 left-0 right-0 h-14 z-40 flex items-center px-4 border-b border-white/[0.07] bg-[rgba(10,10,15,0.55)] backdrop-blur-xl [-webkit-backdrop-filter:blur(24px)] supports-[backdrop-filter]:bg-[rgba(10,10,15,0.45)]">
           <MobileMenu />
-          <img src="/Logo.png" alt="ZedBeatz" className="h-6 w-auto absolute left-1/2 -translate-x-1/2" />
-          <div className="w-9" />{/* spacer to balance the hamburger */}
+          <Link href="/" className="flex-1 flex items-center justify-center"><img src="/Logo.png" alt="ZedBeatz" className="h-6 w-auto" /></Link>
+          <div className="w-9" />
         </header>
 
         <div className="flex flex-1 overflow-hidden pt-14 lg:pt-0">
@@ -26,10 +27,8 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           </div>
 
           {/* Main scrollable area */}
-          <main className="flex-1 overflow-y-auto scrollbar-hide flex flex-col">
-            <div className="flex-1">
-              {children}
-            </div>
+          <main className="flex-1 overflow-y-auto scrollbar-hide">
+            {children}
             <Footer />
           </main>
         </div>

@@ -138,9 +138,22 @@ export default function RadioClient({ seedTrack }: { seedTrack: SeedTrack }) {
   const moreAbortRef = useRef<AbortController | null>(null);
   const requestKeyRef = useRef(0);
   
-  const isRadioQueue = radioTracks.length > 0 && queue.length === radioTracks.length && queue[0]?.id === seedTrack.id;
+  const isRadioQueue = radioTracks.length > 0 && queue.some(t => t.id === seedTrack.id) && queue.length >= radioTracks.length - 5;
   const currentTrack = isRadioQueue ? queue[currentIndex] : null;
   const upcomingTracks = isRadioQueue ? queue.slice(currentIndex + 1, currentIndex + 6) : [];
+  const heroRef = useRef<HTMLElement>(null);
+  const [headerVisible, setHeaderVisible] = useState(false);
+
+  useEffect(() => {
+    const hero = heroRef.current;
+    if (!hero) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => setHeaderVisible(!entry.isIntersecting),
+      { threshold: 0 }
+    );
+    obs.observe(hero);
+    return () => obs.disconnect();
+  }, []);
   const stationSubtitle = useMemo(() => {
     const parts: string[] = [];
     if (seedTrack.genre) parts.push(seedTrack.genre);
@@ -332,8 +345,23 @@ export default function RadioClient({ seedTrack }: { seedTrack: SeedTrack }) {
         )}
       </div>
 
+      {/* Sticky header */}
+      <header className={`collection-sticky-header ${headerVisible ? "collection-sticky-header--visible" : ""}`}>
+        <div className="collection-sticky-thumb">
+          {seedTrack.coverUrl && <img src={seedTrack.coverUrl} alt={seedTrack.title} />}
+        </div>
+        <span className="collection-sticky-title">{seedTrack.artist} Radio</span>
+        <button
+          className="collection-play-btn"
+          onClick={() => isRadioQueue ? toggle() : setQueue(radioTracks, 0, { label: `${seedTrack.artist} Radio`, href: `/radio/${seedTrack.id}` })}
+        >
+          {isRadioQueue && playing ? <Pause size={14} fill="currentColor" /> : <Play size={14} fill="currentColor" />}
+          {isRadioQueue && playing ? "Pause" : "Play"}
+        </button>
+      </header>
+
       {/* Spotify-like playlist header */}
-      <section className="relative px-4 sm:px-6 md:px-8 pt-4 sm:pt-6 pb-4 sm:pb-6 md:pb-8 max-w-6xl mx-auto">
+      <section ref={heroRef} className="relative px-4 sm:px-6 md:px-8 pt-4 sm:pt-6 pb-4 sm:pb-6 md:pb-8 max-w-6xl mx-auto">
         <div className="flex items-start gap-3 sm:gap-5 md:gap-6">
           <div className="relative w-24 h-24 sm:w-36 sm:h-36 md:w-44 md:h-44 shrink-0 rounded-lg sm:rounded-2xl overflow-hidden bg-white/5 ring-1 ring-white/10 shadow-2xl">
             {seedTrack.coverUrl ? (
@@ -361,7 +389,7 @@ export default function RadioClient({ seedTrack }: { seedTrack: SeedTrack }) {
                   if (isRadioQueue) {
                     toggle();
                   } else {
-                    setQueue(radioTracks, 0);
+                    setQueue(radioTracks, 0, { label: `${seedTrack.artist} Radio`, href: `/radio/${seedTrack.id}` });
                   }
                 }}
                 className="collection-play-btn"
@@ -425,7 +453,7 @@ export default function RadioClient({ seedTrack }: { seedTrack: SeedTrack }) {
                   index={i}
                   isCurrent={isCurrent}
                   isPlaying={isRadioQueue && playing}
-                  onPlay={() => setQueue(displayTracks, i)}
+                  onPlay={() => setQueue(displayTracks, i, { label: `${seedTrack.artist} Radio`, href: `/radio/${seedTrack.id}` })}
                 />
               );
             })}
