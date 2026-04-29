@@ -131,7 +131,6 @@ function SectionHeader({
 /* ─── Page ───────────────────────────────────────────────── */
 export default async function HomePage() {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zedbeatz.vercel.app";
-  const hour = new Date().getHours();
   const data = await getHomeData();
 
   const jsonLd = {
@@ -168,7 +167,7 @@ export default async function HomePage() {
             style={{ background: "radial-gradient(circle, #a855f7 0%, transparent 70%)", animationDelay: "7s" }} />
         </div>
 
-        <HomeGreeting hour={hour} />
+        <HomeGreeting />
 
         {/* Hero */}
         <div className="mt-4">

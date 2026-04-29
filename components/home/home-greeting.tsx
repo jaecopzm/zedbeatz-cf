@@ -2,6 +2,7 @@
 
 import { useUser } from "@clerk/nextjs";
 import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
 
 function getGreeting(hour: number): string {
   if (hour < 5)  return "Still up?";
@@ -11,8 +12,14 @@ function getGreeting(hour: number): string {
   return "Good night";
 }
 
-export default function HomeGreeting({ hour }: { hour: number }) {
+export default function HomeGreeting() {
   const { user, isLoaded } = useUser();
+  const [hour, setHour] = useState(new Date().getHours());
+  
+  useEffect(() => {
+    setHour(new Date().getHours());
+  }, []);
+  
   const text = getGreeting(hour);
   const name = isLoaded && user ? (user.firstName ?? user.username ?? null) : null;
 
