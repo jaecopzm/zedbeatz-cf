@@ -64,7 +64,7 @@ export default function MobileMiniplayer({
   };
 
   return (
-    <div className="lg:hidden fixed left-0 right-0 z-40 px-1" style={{ bottom: "calc(64px + env(safe-area-inset-bottom, 0px) - 4px)" }}>
+    <div className="lg:hidden fixed left-0 right-0 z-50 px-1 bottom-16" style={{ marginBottom: "env(safe-area-inset-bottom, 0px)" }}>
       <div
         onClick={onOpenFullscreen}
         onTouchStart={(e) => {
@@ -91,7 +91,7 @@ export default function MobileMiniplayer({
           }
         }}
         className="relative rounded-lg shadow-2xl overflow-hidden cursor-pointer active:scale-[0.98]"
-        style={{ background: `linear-gradient(135deg, rgb(${color}) 0%, rgba(${color},0.7) 100%)`, transition: "background 0.8s ease" }}
+        style={{ background: `linear-gradient(135deg, rgb(${color}) 0%, rgba(${color},0.85) 100%)`, transition: "background 0.8s ease" }}
       >
         <div className="absolute top-0 left-0 right-0 h-[2px] bg-white/10">
           <div
