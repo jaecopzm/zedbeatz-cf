@@ -64,7 +64,7 @@ export default function MobileMiniplayer({
   };
 
   return (
-    <div className="lg:hidden fixed left-0 right-0 z-50 px-1 bottom-16" style={{ marginBottom: "env(safe-area-inset-bottom, 0px)" }}>
+    <div className="lg:hidden fixed left-0 right-0 z-50 px-1 bottom-20" style={{ marginBottom: "env(safe-area-inset-bottom, 0px)" }}>
       <div
         onClick={onOpenFullscreen}
         onTouchStart={(e) => {
