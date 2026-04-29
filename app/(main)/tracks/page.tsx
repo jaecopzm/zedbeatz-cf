@@ -22,7 +22,7 @@ export default async function AllTracksPage({ searchParams }: { searchParams: Pr
       .order("created_at", { ascending: false })
       .range(offset, offset + TRACKS_PER_PAGE - 1),
     [`tracks-page-${page}`],
-    { revalidate: 120 }
+    { revalidate: 30 }
   )();
 
   const trackList: Track[] = (rawTracks ?? []).map((r): Track => ({

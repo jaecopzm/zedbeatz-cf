@@ -36,7 +36,7 @@ const getBrowseData = unstable_cache(async () => {
   const plays: Record<number, number> = Object.fromEntries((rawTracks ?? []).map((t) => [t.id, t.plays ?? 0]));
 
   return { tracks, genres, plays };
-}, ["browse-data"], { revalidate: 300 });
+}, ["browse-data"], { revalidate: 30 });
 
 export default async function BrowsePage() {
   const { tracks, genres, plays } = await getBrowseData();

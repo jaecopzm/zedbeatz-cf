@@ -27,7 +27,7 @@ async function getTrackData(id: string) {
       .limit(5);
 
     return { data, artistTracks: artistTracks ?? [] };
-  }, [`track-${id}`], { revalidate: 300 })();
+  }, [`track-${id}`], { revalidate: 30 })();
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {

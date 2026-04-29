@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       return isNaN(Number(id)) ? query.eq("slug", id).single() : query.eq("id", Number(id)).single();
     },
     [`album-meta-${id}`],
-    { revalidate: 600 }
+    { revalidate: 30 }
   )();
 
   if (!album) return {};
@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const { data: rawTracks } = await unstable_cache(
     async () => supabase.from("tracks").select("title").eq("album_id", album.id).order("created_at"),
     [`album-tracks-meta-${album.id}`],
-    { revalidate: 600 }
+    { revalidate: 30 }
   )();
 
   const artistName = (album.artists as { name: string; slug?: string } | null)?.name ?? "Unknown";
@@ -75,7 +75,7 @@ export default async function AlbumPage({ params }: { params: Promise<{ id: stri
       return isNaN(Number(id)) ? query.eq("slug", id).single() : query.eq("id", Number(id)).single();
     },
     [`album-${id}`],
-    { revalidate: 600 }
+    { revalidate: 30 }
   )();
 
   if (!album) notFound();
@@ -83,7 +83,7 @@ export default async function AlbumPage({ params }: { params: Promise<{ id: stri
   const { data: rawTracks } = await unstable_cache(
     async () => supabase.from("tracks").select("id, title, audio_key, cover_key, duration, artist_id, slug, featured_artists, plays, artists(name, slug)").eq("album_id", album.id).order("created_at"),
     [`album-tracks-${album.id}`],
-    { revalidate: 600 }
+    { revalidate: 30 }
   )();
 
   const artistName = (album.artists as { name: string; slug?: string } | null)?.name ?? "Unknown";

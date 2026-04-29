@@ -23,7 +23,7 @@ async function getArtistData(id: string) {
     ]);
 
     return { artist, rawTracks: rawTracks ?? [], rawAlbums: rawAlbums ?? [] };
-  }, [`artist-${id}`], { revalidate: 300 })();
+  }, [`artist-${id}`], { revalidate: 30 })();
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {

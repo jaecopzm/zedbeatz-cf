@@ -73,7 +73,7 @@ const getHomeData = unstable_cache(async () => {
   } : null;
 
   return { heroTracks, trending, latest, artists, albums, playlists, featuredAlbum };
-}, ["home-data"], { revalidate: 60 });
+}, ["home-data"], { revalidate: 10 });
 
 export async function GET() {
   const data = await getHomeData();
