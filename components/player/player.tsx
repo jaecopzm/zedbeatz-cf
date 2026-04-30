@@ -18,6 +18,7 @@ import AudioVisualizer from "@/components/audio-visualizer";
 import { useAudioAnalyser } from "@/lib/use-audio-analyser";
 import MobileMiniplayer from "./mobile-miniplayer";
 import MobileNowPlaying from "./mobile-now-playing";
+import { TrackMenu } from "@/components/track-menu";
 
 function fmt(s: number) {
   const m = Math.floor(s / 60);
@@ -238,105 +239,92 @@ export default function Player() {
             </div>
           )}
 
-          {/* DESKTOP: Enhanced two-column layout */}
+          {/* DESKTOP: Enhanced layout matching mobile */}
           <div className="hidden lg:flex h-full relative z-10">
 
-            {/* Left column: cover + controls */}
-            <div className="flex-1 flex flex-col items-center justify-center px-8 py-6 min-w-0">
+            {/* Main content area */}
+            <div className="flex-1 flex flex-col items-center justify-center px-6 py-4 min-w-0 max-w-2xl mx-auto">
 
               {/* Top bar */}
-              <div className="w-full max-w-sm flex items-center justify-between mb-4">
+              <div className="w-full max-w-lg flex items-center justify-between mb-4">
                 <button onClick={() => setShowFullScreen(false)}
-                  className="flex items-center gap-1.5 text-white/60 hover:text-white transition-all group">
-                  <ChevronDown size={18} className="group-hover:-translate-y-1 transition-transform" />
-                  <span className="text-[10px] font-bold uppercase tracking-wider">Now Playing</span>
+                  className="flex items-center justify-center w-9 h-9 rounded-full transition-all active:scale-90 bg-white/8 hover:bg-white/15">
+                  <ChevronDown size={20} className="text-white" />
                 </button>
-                <div className="flex items-center gap-1.5">
-                  <button
-                    onClick={() => setShowLyrics(!showLyrics)}
-                    className={`p-2 rounded-full transition-all hover:scale-110 active:scale-95 ${showLyrics ? "text-[var(--primary)] bg-[var(--primary)]/20" : "text-white/60 hover:text-white hover:bg-white/10"}`}
-                  >
-                    <Mic2 size={16} />
-                  </button>
-                  <DownloadButton audioUrl={track.audioUrl} title={track.title} artist={track.artist} featuredArtists={track.featuredArtists} coverUrl={track.coverUrl} />
-                  <ShareButton title={`${track.title} by ${track.artist}`} url={`${typeof window !== "undefined" ? window.location.origin : ""}/track/${track.slug || track.id}`} />
+                
+                <div className="flex flex-col items-center gap-0.5 cursor-default">
+                  <span className="text-[10px] font-semibold text-white/55 uppercase tracking-[0.15em]">
+                    {context ? `Playing from ${context.label}` : "Now Playing"}
+                  </span>
+                  <div className="w-7 h-0.5 rounded-full bg-white/20" />
+                </div>
+
+                <div className="flex items-center justify-center w-9 h-9">
+                  <TrackMenu track={track} />
                 </div>
               </div>
 
               {/* Cover art or Lyrics */}
-              {showLyrics ? (
-                <div className="flex-1 w-full max-w-lg min-h-0 relative mb-4 rounded-2xl overflow-hidden bg-black/40 backdrop-blur-xl border border-white/10 shadow-2xl">
-                  <LyricsView trackId={track.id} progress={progress} className="absolute inset-0" />
-                </div>
-              ) : (
-                <div className="relative w-full max-w-sm aspect-square mb-4 group">
-                  {/* Enhanced glow effect */}
-                  <div className={`absolute -inset-8 rounded-full blur-[60px] transition-all duration-1000 pointer-events-none ${playing ? "opacity-50 scale-110" : "opacity-0 scale-100"}`}
-                    style={{ background: "radial-gradient(circle, var(--primary) 0%, rgba(30,215,96,0.3) 40%, transparent 70%)" }} />
-                  
-                  {/* Album art with enhanced shadow */}
-                  <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.8)] ring-1 ring-white/10">
-                    {track.coverUrl ? (
-                      <Image src={track.coverUrl} alt={track.title} fill priority unoptimized
-                        className={`object-cover transition-all duration-700 ${playing ? "scale-100" : "scale-95"}`} />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-[var(--surface-2)] to-[var(--surface-3)]" />
-                    )}
-                    
-                    {/* Enhanced visualizer overlay */}
-                    <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black via-black/80 to-transparent flex items-end justify-center px-4 pb-3">
-                      <AudioVisualizer
-                        playing={playing}
-                        frequencyData={frequencyData}
-                        height={40}
-                        barCount={32}
-                      />
-                    </div>
-                    
-                    {/* Shine effect */}
-                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+              <div className="w-full max-w-[340px] aspect-square mb-4">
+                {showLyrics ? (
+                  <div className="w-full h-full rounded-xl overflow-hidden bg-black/40 backdrop-blur-xl border border-white/10 shadow-2xl">
+                    <LyricsView trackId={track.id} progress={progress} className="w-full h-full" />
                   </div>
-                </div>
-              )}
+                ) : (
+                  <div className="relative w-full h-full">
+                    <div className="relative w-full h-full rounded-xl overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.7)] ring-1 ring-white/10"
+                      style={{
+                        transform: playing ? "scale(1)" : "scale(0.93)",
+                        transition: "transform 0.3s ease",
+                      }}>
+                      {track.coverUrl ? (
+                        <Image src={track.coverUrl} alt={track.title} fill priority unoptimized className="object-cover" />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-[#2a2a2a] to-[#111]" />
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
 
-              {/* Track info */}
-              <div className="w-full max-w-sm flex items-start justify-between mb-3">
+              {/* Track info + Like */}
+              <div className="w-full max-w-lg flex items-start justify-between mb-3">
                 <div className="min-w-0 flex-1 mr-3">
-                  <h1 className="text-lg font-black tracking-tight leading-tight text-white mb-0.5 truncate">{track.title}</h1>
-                  <p className="text-xs text-white/60 truncate">
+                  <h1 className="text-xl font-black tracking-tight leading-tight text-white mb-0.5 truncate">{track.title}</h1>
+                  <p className="text-sm text-white/60 truncate">
                     <Link href={track.artistSlug ? `/artist/${track.artistSlug}` : `/artist/${track.artistId}`}
                       className="hover:text-[var(--primary)] transition-colors font-semibold">
                       {track.artist}
                     </Link>
-                    {track.featuredArtists && <span className="text-[11px]"> feat. {track.featuredArtists}</span>}
+                    {track.featuredArtists && <span className="text-xs"> feat. {track.featuredArtists}</span>}
                   </p>
                 </div>
                 <div onClick={e => e.stopPropagation()} className="shrink-0">
-                  <LikeButton trackId={track.id} size={18} />
+                  <LikeButton trackId={track.id} size={22} />
                 </div>
               </div>
 
-              {/* Enhanced Progress */}
-              <div className="w-full max-w-sm mb-4">
+              {/* Progress */}
+              <div className="w-full max-w-lg mb-4">
                 <Slider value={[progress]} max={duration || 1} step={0.1}
                   onValueChange={([v]: number[]) => { if (audioRef.current) audioRef.current.currentTime = v; }}
                   className="mb-1.5" />
-                <div className="flex justify-between text-[10px] text-white/50 tabular-nums font-semibold">
+                <div className="flex justify-between text-[11px] text-white/50 tabular-nums font-semibold">
                   <span>{fmt(progress)}</span><span>{fmt(duration)}</span>
                 </div>
               </div>
 
-              {/* Enhanced Transport */}
-              <div className="w-full max-w-sm flex items-center justify-between mb-3">
+              {/* Transport controls */}
+              <div className="w-full max-w-lg flex items-center justify-center gap-3 mb-4">
                 <button onClick={() => { haptic(); toggleShuffle(); }}
                   className={`p-2 rounded-full transition-all hover:scale-110 active:scale-95 ${shuffle ? "text-[var(--primary)] bg-[var(--primary)]/20" : "text-white/40 hover:text-white hover:bg-white/10"}`}>
-                  <Shuffle size={16} />
+                  <Shuffle size={17} />
                 </button>
                 <button onClick={handlePrev} className="p-1.5 text-white/70 hover:text-white active:scale-90 transition-all hover:scale-110">
-                  <SkipBack size={24} fill="currentColor" />
+                  <SkipBack size={26} fill="currentColor" />
                 </button>
                 <button onClick={() => { haptic(); toggle(); }}
-                  className="w-14 h-14 rounded-full bg-gradient-to-br from-white to-white/90 flex items-center justify-center text-black shadow-[0_0_30px_rgba(255,255,255,0.3),0_6px_24px_rgba(0,0,0,0.6)] active:scale-95 hover:scale-110 transition-all relative group">
+                  className="w-14 h-14 rounded-full bg-white flex items-center justify-center text-black shadow-[0_6px_24px_rgba(0,0,0,0.6)] active:scale-95 hover:scale-105 transition-all relative">
                   {playing ? (
                     <Pause size={22} fill="currentColor" />
                   ) : (
@@ -347,73 +335,84 @@ export default function Player() {
                       <div className="w-5 h-5 border-3 border-black/30 border-t-black rounded-full animate-spin" />
                     </div>
                   )}
-                  <div className="absolute inset-0 rounded-full bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </button>
                 <button onClick={() => { haptic(); next(); }} className="p-1.5 text-white/70 hover:text-white active:scale-90 transition-all hover:scale-110">
-                  <SkipForward size={24} fill="currentColor" />
+                  <SkipForward size={26} fill="currentColor" />
                 </button>
                 <button onClick={cycleRepeat}
                   className={`p-2 rounded-full transition-all hover:scale-110 active:scale-95 ${repeat !== "off" ? "text-[var(--primary)] bg-[var(--primary)]/20" : "text-white/40 hover:text-white hover:bg-white/10"}`}>
-                  {repeat === "one" ? <Repeat1 size={16} /> : <Repeat size={16} />}
+                  {repeat === "one" ? <Repeat1 size={17} /> : <Repeat size={17} />}
                 </button>
               </div>
 
-              {/* Enhanced Volume */}
-              <div className="w-full max-w-sm flex items-center gap-2.5">
-                <button onClick={toggleMute} className="text-white/50 hover:text-white transition-all shrink-0 hover:scale-110 active:scale-95">
-                  {volume === 0 ? <VolumeX size={16} /> : <Volume2 size={16} />}
-                </button>
-                <Slider value={[volume]} max={1} step={0.01} onValueChange={([v]: number[]) => setVolume(v)} className="flex-1" />
-                <span className="text-[10px] text-white/40 font-semibold tabular-nums w-8 text-right">{Math.round(volume * 100)}%</span>
-              </div>
-            </div>
+              {/* Secondary actions bar */}
+              <div className="w-full max-w-lg flex items-center justify-between px-1">
+                {/* Volume */}
+                <div className="flex items-center gap-2 flex-1 max-w-[180px]">
+                  <button onClick={toggleMute} className="text-white/45 hover:text-white transition-all shrink-0 hover:scale-110 active:scale-95">
+                    {volume === 0 ? <VolumeX size={17} /> : <Volume2 size={17} />}
+                  </button>
+                  <Slider value={[volume]} max={1} step={0.01} onValueChange={([v]: number[]) => setVolume(v)} className="flex-1" />
+                </div>
 
-            {/* Right column: Enhanced queue */}
-            <div className="w-96 shrink-0 flex flex-col border-l border-white/10 bg-black/30 backdrop-blur-xl">
-              <div className="flex items-center justify-between px-6 py-6 border-b border-white/10">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-[var(--primary)]/20 flex items-center justify-center">
-                    <List size={16} className="text-[var(--primary)]" />
-                  </div>
-                  <div>
-                    <h3 className="font-black text-sm text-white">Up Next</h3>
-                    <p className="text-xs text-white/40">{queue.length} tracks</p>
-                  </div>
+                {/* Right actions */}
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => setShowQueue(!showQueue)}
+                    className={`p-2 rounded-full transition-all hover:scale-110 active:scale-95 ${showQueue ? "text-[var(--primary)] bg-[var(--primary)]/20" : "text-white/60 hover:text-white hover:bg-white/10"}`}>
+                    <List size={17} />
+                  </button>
+                  <button
+                    onClick={() => setShowLyrics(!showLyrics)}
+                    className={`p-2 rounded-full transition-all hover:scale-110 active:scale-95 ${showLyrics ? "text-[var(--primary)] bg-[var(--primary)]/20" : "text-white/60 hover:text-white hover:bg-white/10"}`}>
+                    <Mic2 size={17} />
+                  </button>
+                  <DownloadButton audioUrl={track.audioUrl} title={track.title} artist={track.artist} featuredArtists={track.featuredArtists} coverUrl={track.coverUrl} />
+                  <ShareButton title={`${track.title} by ${track.artist}`} url={`${typeof window !== "undefined" ? window.location.origin : ""}/track/${track.slug || track.id}`} />
                 </div>
               </div>
-              <div className="flex-1 overflow-y-auto custom-scrollbar">
-                {queue.map((t, i) => (
-                  <div
-                    key={`${t.id}-${i}`}
-                    draggable
-                    onDragStart={() => { dragIndexRef.current = i; }}
-                    onDragOver={(e) => { e.preventDefault(); setDragOverIndex(i); }}
-                    onDragLeave={() => setDragOverIndex(null)}
-                    onDrop={() => {
-                      if (dragIndexRef.current !== null && dragIndexRef.current !== i) {
-                        reorderQueue(dragIndexRef.current, i);
-                      }
-                      setDragOverIndex(null);
-                      dragIndexRef.current = null;
-                    }}
-                    onClick={() => setQueue(queue, i)}
-                    className={`flex items-center gap-3 px-5 py-3 cursor-grab active:cursor-grabbing transition-all border-l-2 ${
-                      dragOverIndex === i ? 'border-[var(--primary)] bg-[var(--primary)]/10' : 'border-transparent'
-                    } ${i === currentIndex ? 'bg-white/10' : 'hover:bg-white/5'}`}>
-                    <span className={`text-xs w-6 text-center tabular-nums shrink-0 font-bold ${i === currentIndex ? 'text-[var(--primary)]' : 'text-white/40'}`}>
-                      {i + 1}
-                    </span>
-                    <div className="w-11 h-11 rounded-lg overflow-hidden bg-[var(--surface-2)] shrink-0 shadow-lg">
-                      {t.coverUrl && <Image src={t.coverUrl} alt={t.title} width={44} height={44} className="object-cover" />}
+            </div>
+
+            {/* Queue sidebar (floating) */}
+            {showQueue && (
+              <div className="fixed right-4 bottom-28 w-80 h-[440px] glass-card rounded-2xl border border-[var(--glass-border)] shadow-2xl z-50 flex flex-col animate-scale-in overflow-hidden">
+                <div className="flex items-center justify-between px-5 py-4 border-b border-white/10 shrink-0">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-[var(--primary)]/20 flex items-center justify-center">
+                      <List size={16} className="text-[var(--primary)]" />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-sm font-bold truncate ${i === currentIndex ? 'text-[var(--primary)]' : 'text-white'}`}>{t.title}</p>
-                      <p className="text-xs text-white/50 truncate">{t.artist}</p>
+                    <div>
+                      <h3 className="font-black text-sm text-white">Up Next</h3>
+                      <p className="text-xs text-white/40">{queue.length} tracks</p>
                     </div>
                   </div>
-                ))}
+                  <button onClick={() => setShowQueue(false)} className="p-1.5 rounded-full hover:bg-white/10 transition-colors">
+                    <X size={18} className="text-white/60" />
+                  </button>
+                </div>
+                <div className="flex-1 overflow-y-auto custom-scrollbar">
+                  {queue.map((t, i) => (
+                    <div
+                      key={`${t.id}-${i}`}
+                      onClick={() => setQueue(queue, i)}
+                      className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer transition-all ${
+                        i === currentIndex ? 'bg-white/10' : 'hover:bg-white/5'
+                      }`}>
+                      <span className={`text-xs w-5 text-center tabular-nums shrink-0 font-bold ${i === currentIndex ? 'text-[var(--primary)]' : 'text-white/40'}`}>
+                        {i + 1}
+                      </span>
+                      <div className="w-10 h-10 rounded overflow-hidden bg-[var(--surface-2)] shrink-0">
+                        {t.coverUrl && <Image src={t.coverUrl} alt={t.title} width={40} height={40} className="object-cover" unoptimized />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-sm font-bold truncate ${i === currentIndex ? 'text-[var(--primary)]' : 'text-white'}`}>{t.title}</p>
+                        <p className="text-xs text-white/50 truncate">{t.artist}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* MOBILE: Scrollable Spotify-style layout */}

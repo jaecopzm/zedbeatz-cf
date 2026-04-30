@@ -133,7 +133,9 @@ export default function AlbumClient({
   totalPlays,
 }: {
   album: {
+    id: number;
     title: string;
+    slug?: string | null;
     artistName: string;
     artistSlug?: string | null;
     coverUrl?: string | null;
@@ -241,10 +243,28 @@ export default function AlbumClient({
           {album.coverUrl && <img src={album.coverUrl} alt={album.title} />}
         </div>
         <span className="collection-sticky-title">{album.title}</span>
-        <button className="collection-play-btn" onClick={handlePlayButton} disabled={!tracks.length}>
-          {isPlayingFromAlbum && playing ? <Pause size={14} fill="currentColor" /> : <Play size={14} fill="currentColor" />}
-          {isPlayingFromAlbum && playing ? "Pause" : "Play"}
-        </button>
+        <div className="flex items-center gap-2">
+          <button className="collection-play-btn" onClick={handlePlayButton} disabled={!tracks.length}>
+            {isPlayingFromAlbum && playing ? <Pause size={14} fill="currentColor" /> : <Play size={14} fill="currentColor" />}
+            {isPlayingFromAlbum && playing ? "Pause" : "Play"}
+          </button>
+          <button 
+            onClick={() => {
+              const url = `${window.location.origin}/album/${album.slug || album.id}`;
+              if (navigator.share) {
+                navigator.share({ title: album.title, text: `Check out ${album.title} by ${album.artistName}`, url });
+              } else {
+                navigator.clipboard.writeText(url);
+              }
+            }}
+            className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+            title="Share album"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+            </svg>
+          </button>
+        </div>
       </header>
 
       <div className="collection-hero relative" ref={heroRef}>
@@ -289,17 +309,35 @@ export default function AlbumClient({
       </div>
 
       <section className="collection-actions relative z-10">
-        <button className="collection-play-btn" onClick={handlePlayButton} disabled={!tracks.length}>
-          {isPlayingFromAlbum && playing ? <Pause size={15} fill="currentColor" /> : <Play size={15} fill="currentColor" />}
-          {isPlayingFromAlbum && playing ? "Pause" : "Play"}
-        </button>
-        <button
-          className={`collection-shuffle-btn ${shuffle ? "collection-shuffle-btn--active" : ""}`}
-          onClick={toggleShuffle}
-          aria-pressed={shuffle}
+        <div className="flex items-center gap-2">
+          <button className="collection-play-btn" onClick={handlePlayButton} disabled={!tracks.length}>
+            {isPlayingFromAlbum && playing ? <Pause size={15} fill="currentColor" /> : <Play size={15} fill="currentColor" />}
+            {isPlayingFromAlbum && playing ? "Pause" : "Play"}
+          </button>
+          <button
+            className={`collection-shuffle-btn ${shuffle ? "collection-shuffle-btn--active" : ""}`}
+            onClick={toggleShuffle}
+            aria-pressed={shuffle}
+          >
+            <Shuffle size={15} />
+            Shuffle
+          </button>
+        </div>
+        <button 
+          onClick={() => {
+            const url = `${window.location.origin}/album/${album.slug || album.id}`;
+            if (navigator.share) {
+              navigator.share({ title: album.title, text: `Check out ${album.title} by ${album.artistName}`, url });
+            } else {
+              navigator.clipboard.writeText(url);
+            }
+          }}
+          className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors ml-auto"
+          title="Share album"
         >
-          <Shuffle size={15} />
-          Shuffle
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+          </svg>
         </button>
       </section>
 

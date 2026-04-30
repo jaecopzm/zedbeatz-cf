@@ -416,6 +416,22 @@ export default function RadioClient({ seedTrack }: { seedTrack: SeedTrack }) {
                 <SkipForward className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 <span className="hidden sm:inline">Next</span>
               </button>
+              <button 
+                onClick={() => {
+                  const url = `${window.location.origin}/radio/${seedTrack.id}`;
+                  if (navigator.share) {
+                    navigator.share({ title: `${seedTrack.artist} Radio`, text: `Listen to ${seedTrack.artist} Radio`, url });
+                  } else {
+                    navigator.clipboard.writeText(url);
+                  }
+                }}
+                className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+                title="Share radio"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                </svg>
+              </button>
               <button
                 onClick={() => router.back()}
                 className="ml-auto inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-3 rounded-full bg-white/0 hover:bg-white/5 text-white/70 hover:text-white text-xs sm:text-sm transition-all"

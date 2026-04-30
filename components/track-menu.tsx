@@ -139,7 +139,7 @@ function useMenuItems(track: Track, onClose: () => void, copied: boolean, setCop
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function TrackMenu({ track }: { track: Track }) {
+export function TrackMenu({ track, onNavigate }: { track: Track; onNavigate?: () => void }) {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState(-1);
@@ -153,6 +153,11 @@ export function TrackMenu({ track }: { track: Track }) {
     setOpen(false);
     setFocusedIndex(-1);
   }, []);
+
+  const closeAndNavigate = useCallback(() => {
+    close();
+    onNavigate?.();
+  }, [close, onNavigate]);
 
   const items = useMenuItems(track, close, copied, setCopied);
 
@@ -233,10 +238,10 @@ export function TrackMenu({ track }: { track: Track }) {
     >
       <button
         ref={buttonRef}
-        className={`flex items-center justify-center p-1.5 rounded-md transition-all ${
+        className={`flex items-center justify-center w-10 h-10 rounded-full transition-all active:scale-90 ${
           open 
-            ? "bg-white/10 text-white scale-95" 
-            : "text-white/50 hover:text-white hover:bg-white/10"
+            ? "bg-white/15 text-white" 
+            : "bg-white/8 text-white/75 hover:text-white"
         }`}
         onClick={(e) => {
           e.stopPropagation();
@@ -257,7 +262,7 @@ export function TrackMenu({ track }: { track: Track }) {
         aria-expanded={open}
         aria-label="More options"
       >
-        <MoreHorizontal size={16} />
+        <MoreHorizontal size={20} />
       </button>
 
       {open && createPortal(
@@ -276,7 +281,7 @@ export function TrackMenu({ track }: { track: Track }) {
           `}</style>
           <div
             ref={dropdownRef}
-            className={`fixed z-[9999] min-w-[240px] bg-[#282828] rounded-lg p-1 shadow-2xl border border-white/10 ${
+            className={`fixed z-[10000] min-w-[240px] bg-[#282828] rounded-lg p-1 shadow-2xl border border-white/10 ${
               openUpward ? "origin-bottom-right" : "origin-top-right"
             }`}
             style={{ 
@@ -339,7 +344,7 @@ export function TrackMenu({ track }: { track: Track }) {
                   onMouseEnter={() => setFocusedIndex(index)}
                   onClick={(e) => {
                     e.stopPropagation();
-                    close();
+                    closeAndNavigate();
                   }}
                 >
                   {content}

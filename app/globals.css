@@ -98,6 +98,8 @@
 /* ─── Base ─────────────────────────────────────────────── */
 html {
   scroll-behavior: smooth;
+  /* Fix for Facebook in-app browser scroll issues */
+  -webkit-overflow-scrolling: touch;
 }
 
 body {
@@ -105,6 +107,9 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), -apple-system, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
+  /* Fix for Facebook in-app browser scroll issues */
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y pan-x;
 }
 
 /* ─── Animations ───────────────────────────────────────── */

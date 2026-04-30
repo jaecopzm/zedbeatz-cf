@@ -87,11 +87,18 @@ export const usePlayer = create<PlayerState>((set, get) => ({
     } else if (repeat === "all") {
       nextIndex = 0;
     }
-    set({ currentIndex: nextIndex, playing: true, loading: true });
+    // Only set loading if we're actually changing tracks
+    if (nextIndex !== currentIndex) {
+      set({ currentIndex: nextIndex, playing: true, loading: true });
+    }
   },
 
   prev: () => {
     const { currentIndex, queue } = get();
-    set({ currentIndex: Math.max(currentIndex - 1, 0), playing: true, loading: true });
+    const prevIndex = Math.max(currentIndex - 1, 0);
+    // Only set loading if we're actually changing tracks
+    if (prevIndex !== currentIndex) {
+      set({ currentIndex: prevIndex, playing: true, loading: true });
+    }
   },
 }));

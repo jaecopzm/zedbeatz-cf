@@ -59,22 +59,58 @@ export async function POST(req: NextRequest) {
 
   const { action, artist_id } = await req.json();
 
+  if (!artist_id || typeof artist_id !== "number") {
+    return NextResponse.json({ error: "Invalid artist_id" }, { status: 400 });
+  }
+
   try {
     if (action === "follow") {
-      const { error } = await (supabase as any).from("follows").insert({ user_id: userId, artist_id });
+      // Check if already following to prevent duplicates
+      const { data: existing } = await (supabase as any)
+        .from("follows")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("artist_id", artist_id)
+        .single();
+
+      if (existing) {
+        return NextResponse.json({ success: true, message: "Already following" });
+      }
+
+      const { error } = await (supabase as any)
+        .from("follows")
+        .insert({ user_id: userId, artist_id });
+      
       if (error) {
+        // Handle unique constraint violation
+        if (error.code === "23505") {
+          return NextResponse.json({ success: true, message: "Already following" });
+        }
         console.error("Follow error:", error);
         return NextResponse.json({ error: error.message }, { status: 500 });
       }
     } else if (action === "unfollow") {
-      const { error } = await (supabase as any).from("follows").delete().eq("user_id", userId).eq("artist_id", artist_id);
+      const { error } = await (supabase as any)
+        .from("follows")
+        .delete()
+        .eq("user_id", userId)
+        .eq("artist_id", artist_id);
+      
       if (error) {
         console.error("Unfollow error:", error);
         return NextResponse.json({ error: error.message }, { status: 500 });
       }
+    } else {
+      return NextResponse.json({ error: "Invalid action" }, { status: 400 });
     }
 
-    return NextResponse.json({ success: true });
+    // Return updated count
+    const { count } = await (supabase as any)
+      .from("follows")
+      .select("id", { count: "exact", head: true })
+      .eq("artist_id", artist_id);
+
+    return NextResponse.json({ success: true, count: count ?? 0 });
   } catch (err) {
     console.error("Follow/unfollow exception:", err);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });

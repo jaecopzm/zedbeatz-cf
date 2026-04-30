@@ -38,7 +38,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const yearText = album.release_year ? ` (${album.release_year})` : "";
 
   return {
-    title: `${album.title} - ${artistName}${yearText} | Album Download | ZedBeatz`,
+    title: `${album.title} - ${artistName}${yearText}`,
     description: `Download ${album.title} by ${artistName} album${yearText}. Stream all ${trackCount} tracks, mp3 download free.${tracksText} Zambian music on ZedBeatz.`,
     keywords: [
       album.title, `${album.title} album`, `${artistName} ${album.title}`,
@@ -141,7 +141,9 @@ export default async function AlbumPage({ params }: { params: Promise<{ id: stri
 
       <AlbumClient
         album={{
+          id: album.id,
           title: album.title,
+          slug: album.slug ?? null,
           artistName,
           artistSlug: artistSlug ?? null,
           coverUrl,

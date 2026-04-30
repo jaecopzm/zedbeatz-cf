@@ -84,21 +84,29 @@ export default function HeroSection({ tracks, featuredAlbum }: { tracks: Track[]
         {featuredAlbum && (
           <Link
             href={`/album/${featuredAlbum.slug || featuredAlbum.id}`}
-            className="group shrink-0 flex flex-row md:flex-col items-center gap-3 md:gap-2 bg-white/10 hover:bg-white/15 border border-white/20 rounded-xl p-3 transition-all w-full md:w-40"
+            className="group shrink-0 w-full md:w-56 bg-black/30 hover:bg-black/40 backdrop-blur-sm border border-white/20 rounded-xl p-4 transition-all hover:scale-[1.02] hover:border-white/30"
           >
-            <div className="relative w-14 h-14 md:w-full md:aspect-square rounded-lg overflow-hidden shrink-0">
-              {featuredAlbum.coverUrl ? (
-                <Image src={featuredAlbum.coverUrl} alt={featuredAlbum.title} fill className="object-cover group-hover:scale-105 transition-transform duration-300" unoptimized />
-              ) : (
-                <div className="w-full h-full bg-white/10 flex items-center justify-center">
-                  <Disc3 size={20} className="text-white/40" />
+            <div className="flex items-center gap-3 md:flex-col md:items-start">
+              <div className="relative w-20 h-20 md:w-full md:aspect-square rounded-lg overflow-hidden shrink-0 shadow-lg ring-1 ring-white/10">
+                {featuredAlbum.coverUrl ? (
+                  <Image src={featuredAlbum.coverUrl} alt={featuredAlbum.title} fill className="object-cover group-hover:scale-110 transition-transform duration-500" unoptimized />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-white/10 to-white/5 flex items-center justify-center">
+                    <Disc3 size={32} className="text-white/30" />
+                  </div>
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <Disc3 size={12} className="text-[var(--primary)] shrink-0" />
+                  <p className="text-[10px] font-black uppercase tracking-wider text-[var(--primary)]">Featured Album</p>
                 </div>
-              )}
-            </div>
-            <div className="min-w-0">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-white/50 mb-0.5">Featured Album</p>
-              <p className="text-sm font-bold text-white truncate">{featuredAlbum.title}</p>
-              <p className="text-xs text-white/60 truncate">{featuredAlbum.artistName}</p>
+                <p className="text-base md:text-lg font-black text-white truncate mb-0.5 group-hover:text-[var(--primary)] transition-colors">{featuredAlbum.title}</p>
+                <p className="text-xs text-white/60 truncate">{featuredAlbum.artistName}</p>
+                {featuredAlbum.releaseYear && (
+                  <p className="text-[10px] text-white/40 mt-1">{featuredAlbum.releaseYear}</p>
+                )}
+              </div>
             </div>
           </Link>
         )}

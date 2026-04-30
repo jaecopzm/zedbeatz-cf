@@ -36,8 +36,12 @@ export default function FollowButton({ artistId }: { artistId: number }) {
   }, [artistId, isSignedIn]);
 
   async function toggle() {
+    if (loading) return; // Prevent multiple simultaneous requests
+    
     setLoading(true);
     const action = following ? "unfollow" : "follow";
+    const previousFollowing = following;
+    const previousCount = count;
     
     // Optimistic update
     setFollowing(!following);
@@ -56,15 +60,20 @@ export default function FollowButton({ artistId }: { artistId: number }) {
         throw new Error(data.error || "Failed to update");
       }
       
+      // Update with actual count from server
+      if (typeof data.count === "number") {
+        setCount(data.count);
+      }
+      
       console.log("Follow action successful:", action);
     } catch (error) {
       console.error("Follow error:", error);
       // Revert on error
-      setFollowing(following);
-      setCount(prev => action === "follow" ? Math.max(0, prev - 1) : prev + 1);
+      setFollowing(previousFollowing);
+      setCount(previousCount);
+    } finally {
+      setLoading(false);
     }
-    
-    setLoading(false);
   }
 
   const formatCount = (num: number) => {

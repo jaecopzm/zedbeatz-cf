@@ -25,6 +25,7 @@ import LikeButton from "@/components/like-button";
 import ShareButton from "@/components/share-button";
 import DownloadButton from "@/components/download-button";
 import LyricsView from "./lyrics-view";
+import { TrackMenu } from "@/components/track-menu";
 import type { Track } from "@/lib/player-store";
 import type { PlayContext } from "@/lib/player-store";
 import { useEffect, useRef, useState } from "react";
@@ -94,7 +95,9 @@ export default function MobileNowPlaying({
   const progressPercent = duration ? (progress / duration) * 100 : 0;
   const [isDragging, setIsDragging] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
-  const touchRef = useRef<{ x: number; y: number } | null>(null);
+  const touchRef = useRef<{ x: number; y: number; time: number } | null>(null);
+  const [swipeOffset, setSwipeOffset] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   useEffect(() => {
     const t = setTimeout(() => setIsMounted(true), 10);
@@ -107,17 +110,46 @@ export default function MobileNowPlaying({
       style={{ background: "#000" }}
       onTouchStart={(e) => {
         const t = e.touches[0];
-        touchRef.current = { x: t.clientX, y: t.clientY };
+        touchRef.current = { x: t.clientX, y: t.clientY, time: Date.now() };
+        setIsTransitioning(false);
+      }}
+      onTouchMove={(e) => {
+        if (!touchRef.current) return;
+        const dx = e.touches[0].clientX - touchRef.current.x;
+        const dy = e.touches[0].clientY - touchRef.current.y;
+        // Only track horizontal swipes
+        if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 10) {
+          setSwipeOffset(dx);
+        }
       }}
       onTouchEnd={(e) => {
         if (!touchRef.current) return;
         const dx = e.changedTouches[0].clientX - touchRef.current.x;
         const dy = e.changedTouches[0].clientY - touchRef.current.y;
+        const dt = Date.now() - touchRef.current.time;
+        const velocity = Math.abs(dx) / dt;
+        
         touchRef.current = null;
-        if (dy > 80 && Math.abs(dy) > Math.abs(dx)) { onClose(); return; }
-        if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy)) {
-          if (dx < 0) onNext(); else onPrev();
+        setIsTransitioning(true);
+        
+        // Swipe down to close
+        if (dy > 80 && Math.abs(dy) > Math.abs(dx)) { 
+          setSwipeOffset(0);
+          onClose(); 
+          return; 
         }
+        
+        // Swipe left/right for next/prev (lower threshold, consider velocity)
+        if ((Math.abs(dx) > 50 || velocity > 0.3) && Math.abs(dx) > Math.abs(dy)) {
+          if (dx < 0) {
+            onNext();
+          } else {
+            onPrev();
+          }
+        }
+        
+        // Reset offset
+        setTimeout(() => setSwipeOffset(0), 300);
       }}
     >
       {/* Dynamic blurred cover background */}
@@ -180,21 +212,10 @@ export default function MobileNowPlaying({
           />
         </div>
 
-        {/* Queue toggle */}
-        <button
-          onClick={onToggleQueue}
-          className="flex items-center justify-center w-10 h-10 rounded-full transition-all active:scale-90"
-          style={{
-            background: showQueue
-              ? "rgba(30,215,96,0.18)"
-              : "rgba(255,255,255,0.08)",
-          }}
-        >
-          <List
-            size={20}
-            style={{ color: showQueue ? "#1ed760" : "rgba(255,255,255,0.75)" }}
-          />
-        </button>
+        {/* Track menu */}
+        <div className="flex items-center justify-center w-10 h-10">
+          <TrackMenu track={track} onNavigate={onClose} />
+        </div>
       </div>
 
       {/* ── SCROLLABLE BODY ── */}
@@ -273,9 +294,11 @@ export default function MobileNowPlaying({
                 <div key="artwork" className="relative w-full h-full">
                   {/* Cover art */}
                   <div
-                    className="relative w-full h-full overflow-hidden transition-transform duration-300"
+                    className="relative w-full h-full overflow-hidden"
                     style={{
-                      transform: playing ? "scale(1)" : "scale(0.93)",
+                      transform: `scale(${playing ? 1 : 0.93}) translateX(${swipeOffset * 0.5}px)`,
+                      opacity: Math.max(0.3, 1 - Math.abs(swipeOffset) / 400),
+                      transition: isTransitioning ? "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease" : "transform 0.1s ease-out, opacity 0.1s ease-out",
                       boxShadow: playing
                         ? "0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.06)"
                         : "0 12px 40px rgba(0,0,0,0.5)",
@@ -496,6 +519,15 @@ export default function MobileNowPlaying({
               className="flex items-center gap-1"
               onClick={(e) => e.stopPropagation()}
             >
+              <ActionPill>
+                <button
+                  onClick={onToggleQueue}
+                  className="transition-all active:scale-90"
+                  style={{ color: showQueue ? "#1ed760" : "rgba(255,255,255,0.6)" }}
+                >
+                  <List size={18} />
+                </button>
+              </ActionPill>
               <ActionPill>
                 <DownloadButton
                   audioUrl={track.audioUrl}

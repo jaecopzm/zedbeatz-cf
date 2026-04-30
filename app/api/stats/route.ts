@@ -55,10 +55,12 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  // Get plays with timestamps to deduplicate
   const { data: plays, error } = await supabase
     .from("recently_played")
-    .select("track_id")
-    .eq("user_id", userId);
+    .select("track_id, played_at")
+    .eq("user_id", userId)
+    .order("played_at", { ascending: false });
 
   if (error || !plays) {
     return NextResponse.json({ error: "Failed to fetch stats" }, { status: 500 });
@@ -73,12 +75,23 @@ export async function GET() {
     });
   }
 
+  // Deduplicate plays within 30 seconds of each other (same track)
   const trackCounts: Record<number, number> = {};
+  const seenRecently = new Map<number, number>(); // trackId -> last timestamp
+  const validPlays: RecentlyPlayedRow[] = [];
 
   for (const play of plays as RecentlyPlayedRow[]) {
     const tid = play.track_id;
-    if (typeof tid === "number") {
+    if (typeof tid !== "number" || !play.played_at) continue;
+
+    const playTime = new Date(play.played_at).getTime();
+    const lastPlay = seenRecently.get(tid);
+
+    // Only count if it's been more than 30 seconds since last play of this track
+    if (!lastPlay || playTime - lastPlay > 30000) {
       trackCounts[tid] = (trackCounts[tid] || 0) + 1;
+      seenRecently.set(tid, playTime);
+      validPlays.push(play);
     }
   }
 
@@ -86,7 +99,7 @@ export async function GET() {
   if (playedTrackIds.length === 0) {
     return NextResponse.json({
       totalListeningTime: 0,
-      totalPlays: plays.length,
+      totalPlays: 0,
       topTracks: [],
       topArtists: [],
     });
@@ -105,18 +118,46 @@ export async function GET() {
     tracksData.map((track) => [track.id, track as TrackWithArtist])
   );
 
+  // Calculate actual listening time based on time between plays
   let totalListeningTime = 0;
   const artistCounts: Record<number, number> = {};
 
-  for (const [trackIdText, playsForTrack] of Object.entries(trackCounts)) {
-    const trackId = Number(trackIdText);
+  // Sort valid plays by time (oldest first) to calculate durations
+  const sortedPlays = [...validPlays].sort((a, b) => {
+    if (!a.played_at || !b.played_at) return 0;
+    return new Date(a.played_at).getTime() - new Date(b.played_at).getTime();
+  });
+
+  for (let i = 0; i < sortedPlays.length; i++) {
+    const play = sortedPlays[i];
+    const trackId = play.track_id;
+    if (typeof trackId !== "number" || !play.played_at) continue;
+
     const track = tracksById.get(trackId);
     if (!track) continue;
 
-    totalListeningTime += (track.duration ?? 0) * playsForTrack;
+    const trackDuration = track.duration ?? 180; // default 3 min if unknown
+    
+    // Calculate actual listen time
+    let listenTime = trackDuration;
+    
+    if (i < sortedPlays.length - 1 && sortedPlays[i + 1].played_at) {
+      // Not the last play - calculate time until next play
+      const currentTime = new Date(play.played_at).getTime();
+      const nextTime = new Date(sortedPlays[i + 1].played_at!).getTime();
+      const timeDiff = (nextTime - currentTime) / 1000; // in seconds
+      
+      // Use the minimum of track duration or time until next play
+      listenTime = Math.min(trackDuration, timeDiff);
+    } else {
+      // Last play - assume they listened for at least 30 seconds or full duration
+      listenTime = Math.min(trackDuration, 30);
+    }
+
+    totalListeningTime += listenTime;
 
     if (typeof track.artist_id === "number") {
-      artistCounts[track.artist_id] = (artistCounts[track.artist_id] || 0) + playsForTrack;
+      artistCounts[track.artist_id] = (artistCounts[track.artist_id] || 0) + 1;
     }
   }
 
@@ -198,7 +239,7 @@ export async function GET() {
 
   return NextResponse.json({
     totalListeningTime, // in seconds
-    totalPlays: plays.length,
+    totalPlays: Object.values(trackCounts).reduce((sum, count) => sum + count, 0),
     topTracks,
     topArtists,
     playedTracks,

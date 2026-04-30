@@ -39,7 +39,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const songsText = trackTitles.length > 0 ? ` Popular songs: ${trackTitles.join(", ")}.` : "";
 
   return {
-    title: `${artist.name} - New Songs, MP3 Download & Albums | ZedBeatz`,
+    title: `${artist.name} - New Songs, MP3 Download & Albums`,
     description: `Download ${artist.name} latest songs and albums. Stream ${artist.name} new music, mp3 download free.${songsText} Zambian music on ZedBeatz.`,
     keywords: [
       artist.name, `${artist.name} songs`, `${artist.name} new songs`,
