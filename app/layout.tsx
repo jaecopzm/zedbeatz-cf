@@ -54,6 +54,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <ClerkProvider>
       <html lang="en" className={`${geist.variable} h-full`} data-scroll-behavior="smooth">
         <head>
+          <meta name="google-adsense-account" content="ca-pub-2560191456415218" />
           <link rel="preconnect" href="https://fonts.googleapis.com" />
           <link rel="dns-prefetch" href="https://cdn.zedbeatz.com" />
         </head>
@@ -65,6 +66,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             gtag('js', new Date());
             gtag('config', 'G-55D0XM6BJB');
           `}</Script>
+          <Script
+            async
+            src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2560191456415218"
+            crossOrigin="anonymous"
+            strategy="afterInteractive"
+          />
           <PwaManager />
           <ToastContainer />
           <KeyboardShortcutsModal />
