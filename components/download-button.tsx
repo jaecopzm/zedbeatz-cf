@@ -23,54 +23,40 @@ export default function DownloadButton({
     try {
       showToast("Preparing download…", "info");
 
-      const [audioRes, coverRes] = await Promise.all([
-        fetch(audioUrl),
-        coverUrl ? fetch(coverUrl) : Promise.resolve(null),
-      ]);
-
+      const audioRes = await fetch(audioUrl);
       const audioBuffer = await audioRes.arrayBuffer();
-      const coverBuffer = coverRes ? await coverRes.arrayBuffer() : null;
-
+      
       let finalBuffer = audioBuffer;
 
-      if (coverBuffer) {
-        const { ID3Writer } = await import("browser-id3-writer");
-        const writer = new ID3Writer(audioBuffer);
+      if (coverUrl) {
+        try {
+          const { ID3Writer } = await import("browser-id3-writer");
+          const writer = new ID3Writer(audioBuffer);
 
-        // Detect image MIME type from buffer
-        const coverArray = new Uint8Array(coverBuffer);
-        let mimeType = "image/jpeg"; // default
-        if (coverArray[0] === 0x89 && coverArray[1] === 0x50 && coverArray[2] === 0x4E && coverArray[3] === 0x47) {
-          mimeType = "image/png";
-        } else if (coverArray[0] === 0xFF && coverArray[1] === 0xD8 && coverArray[2] === 0xFF) {
-          mimeType = "image/jpeg";
+          // Set metadata frames
+          writer.setFrame("TIT2", title);
+          
+          const fullArtist = featuredArtists ? `${artist} feat. ${featuredArtists}` : artist;
+          if (fullArtist) writer.setFrame("TPE1", [fullArtist]);
+          
+          writer.setFrame("TALB", "ZedBeatz");
+          
+          // Fetch and embed cover art
+          const coverRes = await fetch(coverUrl);
+          const coverBuffer = await coverRes.arrayBuffer();
+
+          writer.setFrame("APIC", {
+            type: 3,
+            data: coverBuffer,
+            description: "Cover",
+          });
+          
+          writer.addTag();
+          finalBuffer = await writer.getBlob().arrayBuffer();
+        } catch (err) {
+          console.error("Failed to embed cover art:", err);
+          // Continue with download even if cover fails
         }
-
-        // Title
-        writer.setFrame("TIT2", title);
-
-        // Artist display: "Artist feat. Featured" or just "Artist"
-        const fullArtist = featuredArtists ? `${artist} feat. ${featuredArtists}` : artist;
-        if (fullArtist) writer.setFrame("TPE1", [fullArtist]);
-
-        // Album = "ZedBeatz"
-        writer.setFrame("TALB", "ZedBeatz");
-
-        // Publisher
-        writer.setFrame("TPUB", "ZedBeatz");
-
-        // Comment
-        writer.setFrame("COMM", { description: "", text: "Downloaded from ZedBeatz.com", language: "eng" });
-
-        // Cover art with proper MIME type
-        writer.setFrame("APIC", {
-          type: 3,
-          data: coverBuffer,
-          description: "Cover",
-          useUnicodeEncoding: false,
-        });
-        
-        finalBuffer = writer.addTag();
       }
 
       const fullArtistName = featuredArtists ? `${artist} ft. ${featuredArtists}` : artist;
@@ -83,7 +69,8 @@ export default function DownloadButton({
       a.click();
       URL.revokeObjectURL(url);
       showToast("Download started", "success");
-    } catch {
+    } catch (err) {
+      console.error("Download error:", err);
       showToast("Download failed", "error");
     }
   }
