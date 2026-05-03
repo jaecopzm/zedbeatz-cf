@@ -97,9 +97,9 @@
 
 /* ─── Base ─────────────────────────────────────────────── */
 html {
-  scroll-behavior: smooth;
   /* Fix for Facebook in-app browser scroll issues */
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior: none;
 }
 
 body {
@@ -109,7 +109,8 @@ body {
   -webkit-font-smoothing: antialiased;
   /* Fix for Facebook in-app browser scroll issues */
   -webkit-overflow-scrolling: touch;
-  touch-action: pan-y pan-x;
+  touch-action: pan-y;
+  overscroll-behavior: none;
 }
 
 /* ─── Animations ───────────────────────────────────────── */

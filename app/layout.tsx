@@ -52,7 +52,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <ClerkProvider>
-      <html lang="en" className={`${geist.variable} h-full`} data-scroll-behavior="smooth">
+      <html lang="en" className={`${geist.variable} h-full`}>
         <head>
           <meta name="google-adsense-account" content="ca-pub-2560191456415218" />
           <link rel="preconnect" href="https://fonts.googleapis.com" />
