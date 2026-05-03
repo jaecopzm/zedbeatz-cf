@@ -1,4 +1,3 @@
-import { unstable_cache } from "next/cache";
 import { notFound } from "next/navigation";
 import { supabase } from "@/lib/db";
 import { getPublicUrl } from "@/lib/r2";
@@ -6,28 +5,26 @@ import type { Metadata } from "next";
 import TrackPageClient from "./client";
 
 async function getTrackData(id: string) {
-  return unstable_cache(async () => {
-    let query = supabase.from("tracks").select("id, title, audio_key, cover_key, duration, artist_id, genre, plays, featured_artists, created_at, lyrics, synced_lyrics, artists(name, slug), slug");
-    query = isNaN(Number(id)) ? query.eq("slug", id) : query.eq("id", Number(id));
-    const { data, error } = await query.single();
-    if (error) {
-      if (error.code !== "PGRST116") {
-        console.error("Error fetching track data:", error);
-        throw error;
-      }
-      return null;
+  let query = supabase.from("tracks").select("id, title, audio_key, cover_key, duration, artist_id, genre, plays, featured_artists, created_at, lyrics, synced_lyrics, artists(name, slug), slug");
+  query = isNaN(Number(id)) ? query.eq("slug", id) : query.eq("id", Number(id));
+  const { data, error } = await query.single();
+  if (error) {
+    if (error.code !== "PGRST116") {
+      console.error("Error fetching track data:", error);
+      throw error;
     }
-    if (!data) return null;
+    return null;
+  }
+  if (!data) return null;
 
-    const { data: artistTracks } = await supabase
-      .from("tracks")
-      .select("id, title, cover_key, audio_key, duration, slug, artists(name, slug)")
-      .eq("artist_id", data.artist_id ?? 0)
-      .neq("id", data.id)
-      .limit(5);
+  const { data: artistTracks } = await supabase
+    .from("tracks")
+    .select("id, title, cover_key, audio_key, duration, slug, artists(name, slug)")
+    .eq("artist_id", data.artist_id ?? 0)
+    .neq("id", data.id)
+    .limit(5);
 
-    return { data, artistTracks: artistTracks ?? [] };
-  }, [`track-${id}`], { revalidate: 30 })();
+  return { data, artistTracks: artistTracks ?? [] };
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {

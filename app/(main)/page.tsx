@@ -38,7 +38,6 @@ export const dynamic = "force-dynamic";
 import { supabase } from "@/lib/db";
 import { getPublicUrl } from "@/lib/r2";
 import { sanitizeFeaturedArtists } from "@/lib/featured-artists";
-import { unstable_cache } from "next/cache";
 
 const TRACK_SELECT = "id, title, audio_key, cover_key, duration, artist_id, slug, featured_artists, artists(name, slug)";
 
@@ -55,7 +54,7 @@ function mapTrack(r: any): Track {
   };
 }
 
-const getHomeData = unstable_cache(async () => {
+async function getHomeData() {
   const [heroRes, trendingRes, latestRes, artistsRes, albumsRes, playlistsRes, featuredAlbumRes] = await Promise.all([
     supabase.from("hero_tracks").select(`position, tracks(${TRACK_SELECT})`).order("position").limit(5),
     supabase.from("tracks").select(TRACK_SELECT).order("plays", { ascending: false }).limit(8),
@@ -105,7 +104,7 @@ const getHomeData = unstable_cache(async () => {
   } : null;
 
   return { heroTracks, trending, latest, artists, albums, playlists, featuredAlbum };
-}, ["home-data"], { revalidate: 10 });
+}
 
 /* ─── Section Header ─────────────────────────────────────── */
 function SectionHeader({

@@ -1,4 +1,3 @@
-import { unstable_cache } from "next/cache";
 import { notFound } from "next/navigation";
 import { supabase } from "@/lib/db";
 import { getPublicUrl } from "@/lib/r2";
@@ -11,19 +10,17 @@ import ArtistTracks from "@/components/artist/artist-tracks";
 import { sanitizeFeaturedArtists } from "@/lib/featured-artists";
 
 async function getArtistData(id: string) {
-  return unstable_cache(async () => {
-    let artistQuery = supabase.from("artists").select("id, name, bio, image_key, slug");
-    artistQuery = isNaN(Number(id)) ? artistQuery.eq("slug", id) : artistQuery.eq("id", Number(id));
-    const { data: artist } = await artistQuery.single();
-    if (!artist) return null;
+  let artistQuery = supabase.from("artists").select("id, name, bio, image_key, slug");
+  artistQuery = isNaN(Number(id)) ? artistQuery.eq("slug", id) : artistQuery.eq("id", Number(id));
+  const { data: artist } = await artistQuery.single();
+  if (!artist) return null;
 
-    const [{ data: rawTracks }, { data: rawAlbums }] = await Promise.all([
-      supabase.from("tracks").select("id, title, audio_key, cover_key, duration, artist_id, slug, featured_artists, plays").eq("artist_id", artist.id).order("plays", { ascending: false }),
-      supabase.from("albums").select("id, title, cover_key, release_year, slug").eq("artist_id", artist.id).order("release_year", { ascending: false }),
-    ]);
+  const [{ data: rawTracks }, { data: rawAlbums }] = await Promise.all([
+    supabase.from("tracks").select("id, title, audio_key, cover_key, duration, artist_id, slug, featured_artists, plays").eq("artist_id", artist.id).order("plays", { ascending: false }),
+    supabase.from("albums").select("id, title, cover_key, release_year, slug").eq("artist_id", artist.id).order("release_year", { ascending: false }),
+  ]);
 
-    return { artist, rawTracks: rawTracks ?? [], rawAlbums: rawAlbums ?? [] };
-  }, [`artist-${id}`], { revalidate: 30 })();
+  return { artist, rawTracks: rawTracks ?? [], rawAlbums: rawAlbums ?? [] };
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {

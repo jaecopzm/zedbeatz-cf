@@ -1,4 +1,3 @@
-import { unstable_cache } from "next/cache";
 import { supabase } from "@/lib/db";
 import { getPublicUrl } from "@/lib/r2";
 import { sanitizeFeaturedArtists } from "@/lib/featured-artists";
@@ -15,15 +14,11 @@ export default async function AllTracksPage({ searchParams }: { searchParams: Pr
   const page = parseInt(params.page || "1");
   const offset = (page - 1) * TRACKS_PER_PAGE;
 
-  const { data: rawTracks, count } = await unstable_cache(
-    async () => supabase
-      .from("tracks")
-      .select("id, title, audio_key, cover_key, duration, artist_id, slug, featured_artists, artists(name, slug)", { count: "exact" })
-      .order("created_at", { ascending: false })
-      .range(offset, offset + TRACKS_PER_PAGE - 1),
-    [`tracks-page-${page}`],
-    { revalidate: 30 }
-  )();
+  const { data: rawTracks, count } = await supabase
+    .from("tracks")
+    .select("id, title, audio_key, cover_key, duration, artist_id, slug, featured_artists, artists(name, slug)", { count: "exact" })
+    .order("created_at", { ascending: false })
+    .range(offset, offset + TRACKS_PER_PAGE - 1);
 
   const trackList: Track[] = (rawTracks ?? []).map((r): Track => ({
     id: r.id,

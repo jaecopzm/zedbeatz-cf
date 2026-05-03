@@ -1,4 +1,3 @@
-import { unstable_cache } from "next/cache";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { supabase } from "@/lib/db";
@@ -10,7 +9,7 @@ import FeaturedPlaylists from "@/components/browse/featured-playlists";
 import NewReleases from "@/components/browse/new-releases";
 import TopCharts from "@/components/browse/top-charts";
 
-const getBrowseData = unstable_cache(async () => {
+async function getBrowseData() {
   const [{ data: rawTracks }, { data: rawArtists }] = await Promise.all([
     supabase
       .from("tracks")
@@ -36,7 +35,7 @@ const getBrowseData = unstable_cache(async () => {
   const plays: Record<number, number> = Object.fromEntries((rawTracks ?? []).map((t) => [t.id, t.plays ?? 0]));
 
   return { tracks, genres, plays };
-}, ["browse-data"], { revalidate: 30 });
+}
 
 export default async function BrowsePage() {
   const { tracks, genres, plays } = await getBrowseData();

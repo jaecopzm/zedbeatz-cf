@@ -2,7 +2,6 @@ import { supabase } from "@/lib/db";
 import { getPublicUrl } from "@/lib/r2";
 import { sanitizeFeaturedArtists } from "@/lib/featured-artists";
 import { NextResponse } from "next/server";
-import { unstable_cache } from "next/cache";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -22,7 +21,7 @@ function mapTrack(r: any) {
   };
 }
 
-const getHomeData = unstable_cache(async () => {
+async function getHomeData() {
   const [heroRes, trendingRes, latestRes, artistsRes, albumsRes, playlistsRes, featuredAlbumRes] = await Promise.all([
     supabase.from("hero_tracks").select(`position, tracks(${TRACK_SELECT})`).order("position").limit(5),
     supabase.from("tracks").select(TRACK_SELECT).order("plays", { ascending: false }).limit(8),
@@ -73,7 +72,7 @@ const getHomeData = unstable_cache(async () => {
   } : null;
 
   return { heroTracks, trending, latest, artists, albums, playlists, featuredAlbum };
-}, ["home-data"], { revalidate: 10 });
+}
 
 export async function GET() {
   const data = await getHomeData();

@@ -1,4 +1,3 @@
-import { unstable_cache } from "next/cache";
 import { notFound } from "next/navigation";
 import { supabase } from "@/lib/db";
 import { getPublicUrl } from "@/lib/r2";
@@ -10,22 +9,12 @@ import AlbumClient from "./client";
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
 
-  const { data: album } = await unstable_cache(
-    async () => {
-      let query = supabase.from("albums").select("id, title, cover_key, release_year, artist_id, slug, artists(name, slug)");
-      return isNaN(Number(id)) ? query.eq("slug", id).single() : query.eq("id", Number(id)).single();
-    },
-    [`album-meta-${id}`],
-    { revalidate: 30 }
-  )();
+  let query = supabase.from("albums").select("id, title, cover_key, release_year, artist_id, slug, artists(name, slug)");
+  const { data: album } = await (isNaN(Number(id)) ? query.eq("slug", id).single() : query.eq("id", Number(id)).single());
 
   if (!album) return {};
 
-  const { data: rawTracks } = await unstable_cache(
-    async () => supabase.from("tracks").select("title").eq("album_id", album.id).order("created_at"),
-    [`album-tracks-meta-${album.id}`],
-    { revalidate: 30 }
-  )();
+  const { data: rawTracks } = await supabase.from("tracks").select("title").eq("album_id", album.id).order("created_at");
 
   const artistName = (album.artists as { name: string; slug?: string } | null)?.name ?? "Unknown";
   const artistSlug = (album.artists as { name: string; slug?: string } | null)?.slug;
@@ -69,22 +58,12 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 export default async function AlbumPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
-  const { data: album } = await unstable_cache(
-    async () => {
-      let query = supabase.from("albums").select("id, title, cover_key, release_year, artist_id, slug, artists(name, slug)");
-      return isNaN(Number(id)) ? query.eq("slug", id).single() : query.eq("id", Number(id)).single();
-    },
-    [`album-${id}`],
-    { revalidate: 30 }
-  )();
+  let query = supabase.from("albums").select("id, title, cover_key, release_year, artist_id, slug, artists(name, slug)");
+  const { data: album } = await (isNaN(Number(id)) ? query.eq("slug", id).single() : query.eq("id", Number(id)).single());
 
   if (!album) notFound();
 
-  const { data: rawTracks } = await unstable_cache(
-    async () => supabase.from("tracks").select("id, title, audio_key, cover_key, duration, artist_id, slug, featured_artists, plays, artists(name, slug)").eq("album_id", album.id).order("created_at"),
-    [`album-tracks-${album.id}`],
-    { revalidate: 30 }
-  )();
+  const { data: rawTracks } = await supabase.from("tracks").select("id, title, audio_key, cover_key, duration, artist_id, slug, featured_artists, plays, artists(name, slug)").eq("album_id", album.id).order("created_at");
 
   const artistName = (album.artists as { name: string; slug?: string } | null)?.name ?? "Unknown";
   const artistSlug = (album.artists as { name: string; slug?: string } | null)?.slug;
