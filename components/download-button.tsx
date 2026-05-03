@@ -37,6 +37,15 @@ export default function DownloadButton({
         const { ID3Writer } = await import("browser-id3-writer");
         const writer = new ID3Writer(audioBuffer);
 
+        // Detect image MIME type from buffer
+        const coverArray = new Uint8Array(coverBuffer);
+        let mimeType = "image/jpeg"; // default
+        if (coverArray[0] === 0x89 && coverArray[1] === 0x50 && coverArray[2] === 0x4E && coverArray[3] === 0x47) {
+          mimeType = "image/png";
+        } else if (coverArray[0] === 0xFF && coverArray[1] === 0xD8 && coverArray[2] === 0xFF) {
+          mimeType = "image/jpeg";
+        }
+
         // Title
         writer.setFrame("TIT2", title);
 
@@ -53,13 +62,14 @@ export default function DownloadButton({
         // Comment
         writer.setFrame("COMM", { description: "", text: "Downloaded from ZedBeatz.com", language: "eng" });
 
-        // Cover art
+        // Cover art with proper MIME type
         writer.setFrame("APIC", {
           type: 3,
           data: coverBuffer,
           description: "Cover",
           useUnicodeEncoding: false,
         });
+        
         finalBuffer = writer.addTag();
       }
 
