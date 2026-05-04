@@ -7,6 +7,9 @@ import ToastContainer from "@/components/toast";
 import KeyboardShortcutsModal from "@/components/keyboard-shortcuts-modal";
 import "./globals.css";
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zedbeatz.com";
+const ogImage = new URL("/Logo.png", siteUrl).toString();
+
 const geist = Geist({ 
   variable: "--font-geist-sans", 
   subsets: ["latin"],
@@ -15,6 +18,7 @@ const geist = Geist({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: {
     default: "ZedBeatz - Zambian Music MP3 Download & Streaming",
     template: "%s | ZedBeatz"
@@ -33,15 +37,24 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_ZM",
-    url: "https://zedbeatz.com",
+    url: siteUrl,
     title: "ZedBeatz - Download Latest Zambian Music MP3",
     description: "Stream & download latest Zambian music. Yo Maps, Chile One, Kell Kay new songs. Free MP3 download.",
     siteName: "ZedBeatz",
+    images: [
+      {
+        url: ogImage,
+        width: 1800,
+        height: 400,
+        alt: "ZedBeatz logo",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "ZedBeatz - Zambian Music MP3 Download",
     description: "Download latest Zambian music MP3. Yo Maps, Chile One new songs & more.",
+    images: [ogImage],
   },
   robots: {
     index: true,
@@ -52,13 +65,13 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <ClerkProvider>
-      <html lang="en" className={`${geist.variable} h-full`}>
+      <html lang="en" className={`${geist.variable} min-h-full`}>
         <head>
           <meta name="google-adsense-account" content="ca-pub-2560191456415218" />
           <link rel="preconnect" href="https://fonts.googleapis.com" />
           <link rel="dns-prefetch" href="https://cdn.zedbeatz.com" />
         </head>
-        <body className="h-full bg-background text-foreground antialiased selection:bg-[var(--primary)] selection:text-black">
+        <body className="min-h-full bg-background text-foreground antialiased selection:bg-[var(--primary)] selection:text-black">
           <Script src="https://www.googletagmanager.com/gtag/js?id=G-55D0XM6BJB" strategy="afterInteractive" />
           <Script id="ga-init" strategy="afterInteractive">{`
             window.dataLayer = window.dataLayer || [];

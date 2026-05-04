@@ -13,6 +13,9 @@ import { Suspense } from "react";
 import { RecentlyPlayedSkeleton } from "@/components/home/home-skeletons";
 import ReleaseRadar from "@/components/home/release-radar";
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zedbeatz.com";
+const ogImage = new URL("/Logo.png", siteUrl).toString();
+
 export const metadata: Metadata = {
   title: "ZedBeatz - Download Latest Zambian Music MP3 2026",
   description:
@@ -25,9 +28,25 @@ export const metadata: Metadata = {
     "Zambian artists", "ZedBeatz",
   ].join(", "),
   openGraph: {
+    url: siteUrl,
     title: "ZedBeatz - Latest Zambian Music MP3 Download",
     description:
       "Download Yo Maps, Chile One, Kell Kay new songs. Free Zambian music MP3 download 2026.",
+    images: [
+      {
+        url: ogImage,
+        width: 1800,
+        height: 400,
+        alt: "ZedBeatz logo",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "ZedBeatz - Download Latest Zambian Music MP3 2026",
+    description:
+      "Download latest Zambian music MP3 free. Yo Maps new songs, Chile One, Kell Kay, Chef 187 mp3 download.",
+    images: [ogImage],
   },
 };
 
@@ -291,5 +310,4 @@ export default async function HomePage() {
 }
 
 /* ─── Async Server Sub-components ───────────────────────── */
-
 

@@ -8,10 +8,7 @@ export default function ScrollToTop() {
 
   useEffect(() => {
     const main = document.querySelector("main") as HTMLElement | null;
-    const ua = navigator.userAgent || "";
-    const isIOS = /iPhone|iPad|iPod/i.test(ua);
-    const isInApp = /(FBAN|FBAV|Instagram|Line|MicroMessenger)/i.test(ua);
-    const useDocumentScroll = isIOS && isInApp;
+    const useDocumentScroll = window.matchMedia("(max-width: 1023px)").matches;
     const scroller = useDocumentScroll
       ? (document.scrollingElement as HTMLElement | null)
       : main;
@@ -28,10 +25,7 @@ export default function ScrollToTop() {
   const scrollToTop = () => {
     if ('vibrate' in navigator) navigator.vibrate(10);
     const main = document.querySelector("main") as HTMLElement | null;
-    const ua = navigator.userAgent || "";
-    const isIOS = /iPhone|iPad|iPod/i.test(ua);
-    const isInApp = /(FBAN|FBAV|Instagram|Line|MicroMessenger)/i.test(ua);
-    const useDocumentScroll = isIOS && isInApp;
+    const useDocumentScroll = window.matchMedia("(max-width: 1023px)").matches;
     const scroller = useDocumentScroll
       ? (document.scrollingElement as HTMLElement | null)
       : main;
