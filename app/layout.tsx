@@ -8,7 +8,7 @@ import KeyboardShortcutsModal from "@/components/keyboard-shortcuts-modal";
 import "./globals.css";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zedbeatz.com";
-const ogImage = new URL("/Logo.png", siteUrl).toString();
+const ogImage = new URL("/og-image.png", siteUrl).toString();
 
 const geist = Geist({ 
   variable: "--font-geist-sans", 
