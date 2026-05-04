@@ -14,7 +14,19 @@ export default function ScrollRestoration() {
     // from the actual container position, blocking upward scroll.
     // NOTE: Do NOT call window.scrollTo() here either — same reason.
     const main = document.querySelector("main");
-    if (main) main.scrollTop = 0;
+    const root = document.documentElement;
+    const ua = navigator.userAgent || "";
+    const isIOS = /iPhone|iPad|iPod/i.test(ua);
+    const isInApp = /(FBAN|FBAV|Instagram|Line|MicroMessenger)/i.test(ua);
+    const useDocumentScroll = isIOS && isInApp;
+
+    root.classList.toggle("inapp-ios", useDocumentScroll);
+
+    const scroller = useDocumentScroll
+      ? (document.scrollingElement as HTMLElement | null)
+      : (main as HTMLElement | null);
+
+    if (scroller) scroller.scrollTop = 0;
   }, [pathname]);
 
   return null;

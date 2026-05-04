@@ -123,6 +123,20 @@ main {
   overscroll-behavior-y: contain;
 }
 
+/* Fallback for Facebook/Instagram in-app browsers on iOS:
+   nested overflow containers can get stuck after downward scroll. */
+html.inapp-ios,
+html.inapp-ios body {
+  height: auto;
+  min-height: 100%;
+  overflow-y: auto;
+}
+
+html.inapp-ios main {
+  overflow-y: visible !important;
+  -webkit-overflow-scrolling: auto;
+}
+
 /* ─── Animations ───────────────────────────────────────── */
 @keyframes shimmer {
   0%   { background-position: -200% 0; }

@@ -7,22 +7,37 @@ export default function ScrollToTop() {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
-    // The real scroll container is <main>, not window.
-    // window.scrollY is always 0 in FBIAB since only <main> scrolls.
-    const main = document.querySelector("main");
-    if (!main) return;
+    const main = document.querySelector("main") as HTMLElement | null;
+    const ua = navigator.userAgent || "";
+    const isIOS = /iPhone|iPad|iPod/i.test(ua);
+    const isInApp = /(FBAN|FBAV|Instagram|Line|MicroMessenger)/i.test(ua);
+    const useDocumentScroll = isIOS && isInApp;
+    const scroller = useDocumentScroll
+      ? (document.scrollingElement as HTMLElement | null)
+      : main;
+
+    if (!scroller) return;
+
     const handleScroll = () => {
-      setShow(main.scrollTop > 400);
+      setShow(scroller.scrollTop > 400);
     };
-    main.addEventListener("scroll", handleScroll, { passive: true });
-    return () => main.removeEventListener("scroll", handleScroll);
+    scroller.addEventListener("scroll", handleScroll, { passive: true });
+    return () => scroller.removeEventListener("scroll", handleScroll);
   }, []);
 
   const scrollToTop = () => {
     if ('vibrate' in navigator) navigator.vibrate(10);
-    const main = document.querySelector("main");
-    if (main) {
-      main.scrollTo({ top: 0, behavior: "smooth" });
+    const main = document.querySelector("main") as HTMLElement | null;
+    const ua = navigator.userAgent || "";
+    const isIOS = /iPhone|iPad|iPod/i.test(ua);
+    const isInApp = /(FBAN|FBAV|Instagram|Line|MicroMessenger)/i.test(ua);
+    const useDocumentScroll = isIOS && isInApp;
+    const scroller = useDocumentScroll
+      ? (document.scrollingElement as HTMLElement | null)
+      : main;
+
+    if (scroller) {
+      scroller.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
