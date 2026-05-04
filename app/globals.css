@@ -97,9 +97,10 @@
 
 /* ─── Base ─────────────────────────────────────────────── */
 html {
-  /* Fix for Facebook in-app browser scroll issues */
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: none;
+  /* Do NOT add overscroll-behavior or -webkit-overflow-scrolling here —
+     FBIAB (Facebook in-app browser) intercepts touch events on the root
+     element and causes one-directional scroll locks. */
+  height: 100%;
 }
 
 body {
@@ -107,10 +108,19 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), -apple-system, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
-  /* Fix for Facebook in-app browser scroll issues */
+  /* Prevent pull-to-refresh on body but do NOT set touch-action: pan-y
+     on the root — FBIAB fights that and blocks upward scroll */
+  overscroll-behavior-y: contain;
+}
+
+/* ─── Facebook in-app browser scroll fix ──────────────────
+   FBIAB clips the scroll container height and locks upward scroll
+   when the scroll element is a nested overflow-y div inside a
+   full-viewport flex layout. We pin the main content area so
+   FBIAB treats it as the primary scroll surface. */
+main {
   -webkit-overflow-scrolling: touch;
-  touch-action: pan-y;
-  overscroll-behavior: none;
+  overscroll-behavior-y: contain;
 }
 
 /* ─── Animations ───────────────────────────────────────── */

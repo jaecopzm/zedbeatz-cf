@@ -26,8 +26,10 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             <Sidebar />
           </div>
 
-          {/* Main scrollable area */}
-          <main className="flex-1 overflow-y-auto scrollbar-hide">
+        {/* Main scrollable area — overflow-hidden removed from parent wrapper
+             because FBIAB (Facebook in-app browser) clips the detectable
+             scroll surface at the initial viewport, blocking upward scroll */}
+          <main className="flex-1 overflow-y-auto scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
             {children}
             <Footer />
           </main>

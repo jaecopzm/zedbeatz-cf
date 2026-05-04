@@ -7,16 +7,23 @@ export default function ScrollToTop() {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
+    // The real scroll container is <main>, not window.
+    // window.scrollY is always 0 in FBIAB since only <main> scrolls.
+    const main = document.querySelector("main");
+    if (!main) return;
     const handleScroll = () => {
-      setShow(window.scrollY > 400);
+      setShow(main.scrollTop > 400);
     };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    main.addEventListener("scroll", handleScroll, { passive: true });
+    return () => main.removeEventListener("scroll", handleScroll);
   }, []);
 
   const scrollToTop = () => {
     if ('vibrate' in navigator) navigator.vibrate(10);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    const main = document.querySelector("main");
+    if (main) {
+      main.scrollTo({ top: 0, behavior: "smooth" });
+    }
   };
 
   if (!show) return null;

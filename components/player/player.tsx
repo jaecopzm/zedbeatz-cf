@@ -3,13 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 import { usePlayer } from "@/lib/player-store";
 import {
-  Play, Pause, SkipBack, SkipForward, Volume2, VolumeX,
+  Play, Pause, SkipBack, SkipForward, Volume2, Volume1, VolumeX, Maximize2,
   Shuffle, Repeat, Repeat1, List, X, ChevronDown, Mic2
 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import Image from "next/image";
 import Link from "next/link";
 import LikeButton from "@/components/like-button";
+import AddToPlaylist from "@/components/add-to-playlist";
 import ShareButton from "@/components/share-button";
 import DownloadButton from "@/components/download-button";
 import WhatsAppBanner from "@/components/whatsapp-banner";
@@ -34,6 +35,10 @@ export default function Player() {
   const [duration, setDuration] = useState(0);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const dragIndexRef = useRef<number | null>(null);
+  const progressBarRef = useRef<HTMLDivElement>(null);
+  const [hoverTime, setHoverTime] = useState<number | null>(null);
+  const [hoverTimeX, setHoverTimeX] = useState(0);
+  const [showRemainingTime, setShowRemainingTime] = useState(false);
 
   const haptic = () => {
     if ('vibrate' in navigator) navigator.vibrate(10);
@@ -453,66 +458,86 @@ export default function Player() {
       <div className="hidden lg:block border-t border-[var(--glass-border)] shrink-0" style={{ height: "var(--player-height)" }}>
         <div className="h-full glass-card flex items-center justify-between gap-6 px-6">
 
-          {/* Left: track info */}
-          <div className="flex items-center gap-3 w-72 min-w-0 shrink-0">
+          {/* ── LEFT: Track info ──────────────────────────────────── */}
+          <div className="flex items-center gap-3 w-[280px] min-w-0 shrink-0">
+            {/* Album art — rounded, hover expand overlay */}
             <div
-              className="relative shrink-0 cursor-pointer group/thumb"
+              className="relative shrink-0 cursor-pointer group/thumb rounded-md overflow-hidden shadow-lg"
+              style={{ width: 56, height: 56 }}
               onClick={() => setShowFullScreen(true)}
             >
               {track.coverUrl ? (
                 <Image
                   src={track.coverUrl}
                   alt={track.title}
-                  width={54}
-                  height={54}
-                  className="object-cover shadow-lg group-hover/thumb:opacity-80 transition-opacity"
+                  width={56}
+                  height={56}
+                  className="object-cover transition-transform duration-300 group-hover/thumb:scale-105"
                 />
               ) : (
-                <div className="w-[54px] h-[54px] rounded-lg bg-[var(--surface-2)]" />
+                <div className="w-full h-full bg-[var(--surface-2)]" />
               )}
+              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex items-center justify-center">
+                <Maximize2 size={14} className="text-white drop-shadow" />
+              </div>
               {playing && (
-                <div className="absolute -bottom-1 -right-1 flex items-end gap-[2px] bg-[var(--background)] rounded-full p-1">
-                  {[1,2,3].map((i) => (
-                    <span key={i} className="eq-bar eq-bar--active" style={{ animationDelay: `${i * 0.15}s`, height: `${4+i*2}px` }} />
+                <div className="absolute bottom-1 right-1 flex items-end gap-[2px]">
+                  {[0,1,2].map((i) => (
+                    <span key={i} className="eq-bar eq-bar--active" style={{ animationDelay: `${i * 0.2}s`, height: `${5+i*3}px` }} />
                   ))}
                 </div>
               )}
             </div>
+
+            {/* Title + artist + context */}
             <div className="min-w-0 flex-1">
               <Link href={track.slug ? `/track/${track.slug}` : `/track/${track.id}`} className="block group/link">
-                <p className="text-sm font-semibold truncate group-hover/link:text-[var(--primary)] transition-colors">{track.title}</p>
-                <p className="text-xs text-[var(--muted)] truncate">{track.artist}</p>
+                <p className="text-sm font-semibold truncate group-hover/link:text-[var(--primary)] transition-colors leading-tight">{track.title}</p>
+                <p className="text-[11px] text-[var(--muted)] truncate mt-0.5">
+                  {track.artist}
+                  {track.featuredArtists && <span className="text-white/30"> ft. {track.featuredArtists}</span>}
+                </p>
               </Link>
               {context && (
-                <p className="text-[10px] text-white/30 truncate mt-0.5">
-                  {context.href ? (
-                    <Link href={context.href} className="hover:text-white/60 transition-colors">
-                      Playing from {context.label}
-                    </Link>
-                  ) : (
-                    <>Playing from {context.label}</>
-                  )}
+                <p className="text-[10px] text-white/25 truncate mt-0.5 leading-none">
+                  {context.href
+                    ? <Link href={context.href} className="hover:text-white/60 transition-colors">{context.label}</Link>
+                    : context.label}
                 </p>
               )}
             </div>
-            <LikeButton trackId={track.id} size={16} />
+
+            {/* Like + Add to playlist */}
+            <div className="flex items-center gap-0.5 shrink-0">
+              <LikeButton trackId={track.id} size={16} />
+              <AddToPlaylist trackId={track.id} />
+            </div>
           </div>
 
-          {/* Center: controls + progress */}
-          <div className="flex flex-col items-center gap-2 flex-1 max-w-xl">
-            <div className="flex items-center gap-5">
-              <button
-                onClick={toggleShuffle}
-                className={`transition-all ${shuffle ? "text-[var(--primary)]" : "text-[var(--muted)] hover:text-white"}`}
-              >
-                <Shuffle size={16} />
-              </button>
-              <button onClick={handlePrev} className="text-[var(--muted)] hover:text-white transition-colors">
+          {/* ── CENTER: Controls + Progress ───────────────────────── */}
+          <div className="flex flex-col items-center gap-1.5 flex-1 max-w-[680px]">
+            {/* Transport buttons */}
+            <div className="flex items-center gap-4">
+              {/* Shuffle with active dot */}
+              <div className="relative flex flex-col items-center">
+                <button
+                  onClick={toggleShuffle}
+                  className={`p-1.5 rounded transition-all hover:scale-110 active:scale-95 ${shuffle ? "text-[var(--primary)]" : "text-[var(--muted)] hover:text-white"}`}
+                  title="Shuffle"
+                >
+                  <Shuffle size={16} />
+                </button>
+                {shuffle && <span className="absolute -bottom-1 w-1 h-1 rounded-full bg-[var(--primary)]" />}
+              </div>
+
+              <button onClick={handlePrev} className="p-1 text-[var(--muted)] hover:text-white hover:scale-110 active:scale-95 transition-all">
                 <SkipBack size={20} fill="currentColor" />
               </button>
+
+              {/* Play / Pause — larger, bolder shadow */}
               <button
                 onClick={toggle}
-                className="w-9 h-9 rounded-full bg-white hover:scale-105 active:scale-95 flex items-center justify-center text-black transition-all shadow-lg relative"
+                className="w-10 h-10 rounded-full bg-white hover:scale-105 active:scale-95 flex items-center justify-center text-black transition-all shadow-[0_4px_20px_rgba(0,0,0,0.55)] relative shrink-0"
               >
                 {loading ? (
                   <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
@@ -522,55 +547,116 @@ export default function Player() {
                   <Play size={18} fill="currentColor" className="ml-0.5" />
                 )}
               </button>
-              <button onClick={next} className="text-[var(--muted)] hover:text-white transition-colors">
+
+              <button onClick={next} className="p-1 text-[var(--muted)] hover:text-white hover:scale-110 active:scale-95 transition-all">
                 <SkipForward size={20} fill="currentColor" />
               </button>
-              <button
-                onClick={cycleRepeat}
-                className={`transition-all ${repeat !== "off" ? "text-[var(--primary)]" : "text-[var(--muted)] hover:text-white"}`}
-              >
-                {repeat === "one" ? <Repeat1 size={16} /> : <Repeat size={16} />}
-              </button>
+
+              {/* Repeat with active dot */}
+              <div className="relative flex flex-col items-center">
+                <button
+                  onClick={cycleRepeat}
+                  className={`p-1.5 rounded transition-all hover:scale-110 active:scale-95 ${repeat !== "off" ? "text-[var(--primary)]" : "text-[var(--muted)] hover:text-white"}`}
+                  title={repeat === "off" ? "Repeat off" : repeat === "all" ? "Repeat all" : "Repeat one"}
+                >
+                  {repeat === "one" ? <Repeat1 size={16} /> : <Repeat size={16} />}
+                </button>
+                {repeat !== "off" && <span className="absolute -bottom-1 w-1 h-1 rounded-full bg-[var(--primary)]" />}
+              </div>
             </div>
-            <div className="flex items-center gap-3 w-full">
-              <span className="text-xs text-[var(--muted)] w-9 text-right tabular-nums font-medium">{fmt(progress)}</span>
-              <Slider
-                value={[progress]}
-                max={duration || 1}
-                step={0.1}
-                onValueChange={([v]: number[]) => { if (audioRef.current) audioRef.current.currentTime = v; }}
-                className="flex-1"
-              />
-              <span className="text-xs text-[var(--muted)] w-9 tabular-nums font-medium">{fmt(duration)}</span>
+
+            {/* Progress row with hover timestamp tooltip */}
+            <div className="flex items-center gap-2 w-full">
+              <span className="text-[11px] text-[var(--muted)] w-9 text-right tabular-nums font-medium select-none shrink-0">
+                {fmt(progress)}
+              </span>
+
+              {/* Slider wrapper — captures hover for tooltip */}
+              <div
+                ref={progressBarRef}
+                className="flex-1 relative group/prog"
+                onMouseMove={(e) => {
+                  if (!progressBarRef.current) return;
+                  const rect = progressBarRef.current.getBoundingClientRect();
+                  const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+                  setHoverTime((x / rect.width) * (duration || 1));
+                  setHoverTimeX(x);
+                }}
+                onMouseLeave={() => setHoverTime(null)}
+              >
+                {hoverTime !== null && (
+                  <div
+                    className="absolute -top-7 -translate-x-1/2 bg-[var(--surface-3)] text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow-lg pointer-events-none z-10 whitespace-nowrap"
+                    style={{ left: hoverTimeX }}
+                  >
+                    {fmt(hoverTime)}
+                  </div>
+                )}
+                <Slider
+                  value={[progress]}
+                  max={duration || 1}
+                  step={0.1}
+                  onValueChange={([v]: number[]) => { if (audioRef.current) audioRef.current.currentTime = v; }}
+                />
+              </div>
+
+              {/* Right timestamp — click to toggle remaining/total */}
+              <button
+                onClick={() => setShowRemainingTime((r) => !r)}
+                className="text-[11px] text-[var(--muted)] hover:text-white w-9 tabular-nums font-medium text-left select-none shrink-0 transition-colors"
+                title={showRemainingTime ? "Show total duration" : "Show remaining time"}
+              >
+                {showRemainingTime ? `-${fmt(Math.max(0, duration - progress))}` : fmt(duration)}
+              </button>
             </div>
           </div>
 
-          {/* Right: volume + queue + lyrics */}
-          <div className="flex items-center gap-3 w-48 shrink-0 justify-end">
+          {/* ── RIGHT: Actions + Volume ────────────────────────────── */}
+          <div className="flex items-center gap-1 w-[220px] shrink-0 justify-end">
+            {/* Lyrics */}
             <button
               onClick={() => { setShowLyrics(!showLyrics); if (!showFullScreen) setShowFullScreen(true); setShowQueue(false); }}
-              className={`transition-all ${showLyrics && showFullScreen ? "text-[var(--primary)]" : "text-[var(--muted)] hover:text-white"}`}
+              className={`p-2 rounded transition-all hover:scale-110 active:scale-95 ${showLyrics && showFullScreen ? "text-[var(--primary)]" : "text-[var(--muted)] hover:text-white"}`}
               title="Lyrics"
             >
-              <Mic2 size={17} />
+              <Mic2 size={16} />
             </button>
+
+            {/* Queue */}
             <button
               onClick={() => { setShowQueue(!showQueue); setShowLyrics(false); }}
-              className={`transition-all ${showQueue ? "text-[var(--primary)]" : "text-[var(--muted)] hover:text-white"}`}
+              className={`p-2 rounded transition-all hover:scale-110 active:scale-95 ${showQueue ? "text-[var(--primary)]" : "text-[var(--muted)] hover:text-white"}`}
               title="Queue"
             >
-              <List size={17} />
+              <List size={16} />
             </button>
-            <button onClick={toggleMute} className="text-[var(--muted)] hover:text-white transition-colors">
-              {volume === 0 ? <VolumeX size={17} /> : <Volume2 size={17} />}
+
+            {/* Fullscreen */}
+            <button
+              onClick={() => setShowFullScreen(true)}
+              className="p-2 rounded text-[var(--muted)] hover:text-white hover:scale-110 active:scale-95 transition-all"
+              title="Full screen (F)"
+            >
+              <Maximize2 size={16} />
             </button>
-            <Slider
-              value={[volume]}
-              max={1}
-              step={0.01}
-              onValueChange={([v]: number[]) => setVolume(v)}
-              className="w-24"
-            />
+
+            {/* Volume — 3-state icon + slider */}
+            <div className="flex items-center gap-1.5 ml-1">
+              <button
+                onClick={toggleMute}
+                className="p-1 text-[var(--muted)] hover:text-white transition-all hover:scale-110 active:scale-95 shrink-0"
+                title={volume === 0 ? "Unmute" : "Mute"}
+              >
+                {volume === 0 ? <VolumeX size={16} /> : volume < 0.5 ? <Volume1 size={16} /> : <Volume2 size={16} />}
+              </button>
+              <Slider
+                value={[volume]}
+                max={1}
+                step={0.01}
+                onValueChange={([v]: number[]) => setVolume(v)}
+                className="w-24"
+              />
+            </div>
           </div>
         </div>
       </div>

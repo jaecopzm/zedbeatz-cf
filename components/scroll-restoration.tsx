@@ -1,21 +1,20 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 
 export default function ScrollRestoration() {
   const pathname = usePathname();
-  const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if ("scrollRestoration" in history) history.scrollRestoration = "manual";
-  }, []);
-
-  useEffect(() => {
-    // Scroll the main scrollable container, not window
+    // Scroll the main scrollable container on route change.
+    // NOTE: Do NOT set history.scrollRestoration = "manual" here —
+    // FBIAB (Facebook in-app browser) maintains its own scroll state,
+    // and overriding it desyncs the browser's tracked scroll position
+    // from the actual container position, blocking upward scroll.
+    // NOTE: Do NOT call window.scrollTo() here either — same reason.
     const main = document.querySelector("main");
     if (main) main.scrollTop = 0;
-    window.scrollTo(0, 0);
   }, [pathname]);
 
   return null;
