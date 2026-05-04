@@ -12,7 +12,7 @@ import Link from "next/link";
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   return (
     <LikesProvider>
-      <div className="flex min-h-screen flex-col bg-[var(--background)] relative">
+      <div className="flex h-screen flex-col bg-[var(--background)] relative">
         {/* Mobile Header */}
         <header className="lg:hidden fixed top-0 left-0 right-0 h-14 z-40 flex items-center px-4 border-b border-white/[0.07] bg-[rgba(10,10,15,0.55)] backdrop-blur-xl [-webkit-backdrop-filter:blur(24px)] supports-[backdrop-filter]:bg-[rgba(10,10,15,0.45)]">
           <MobileMenu />
@@ -20,13 +20,13 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           <div className="w-9" />
         </header>
 
-        <div className="flex flex-1 flex-col lg:flex-row overflow-visible lg:overflow-hidden pt-14 lg:pt-0">
+        <div className="flex flex-1 flex-col lg:flex-row lg:overflow-hidden pt-14 lg:pt-0">
           {/* Sidebar — desktop only */}
           <div className="hidden lg:block shrink-0 z-20">
             <Sidebar />
           </div>
 
-          <main className="flex-1 overflow-visible lg:min-h-0 lg:overflow-y-auto scrollbar-hide">
+          <main className="flex-1 lg:min-h-0 lg:overflow-y-auto scrollbar-hide">
             {children}
             <Footer />
           </main>
