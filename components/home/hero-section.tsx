@@ -29,7 +29,7 @@ function HeroCard({
 }) {
   return (
     <div className="relative w-full shrink-0 snap-start overflow-hidden">
-      <div className="relative aspect-[2/1] md:aspect-[3/1] min-h-[280px] md:min-h-[380px] flex items-center">
+      <div className="relative min-h-[140px] md:min-h-[380px] flex items-center">
         {/* Blurred backdrop */}
         {track.coverUrl ? (
           <Image
@@ -48,30 +48,30 @@ function HeroCard({
         <div className="absolute inset-0 bg-[var(--background)]/40" />
 
         {/* Content */}
-        <div className="relative z-10 w-full flex flex-col md:flex-row items-center gap-6 md:gap-10 px-6 md:px-10">
+        <div className="relative z-10 w-full flex flex-row items-center gap-3 md:gap-10 px-4 md:px-10">
           {/* Artwork */}
           {track.coverUrl && (
-            <div className="relative w-32 h-32 md:w-48 md:h-48 shrink-0 rounded-xl overflow-hidden shadow-2xl ring-1 ring-white/10">
+            <div className="relative w-16 h-16 md:w-48 md:h-48 shrink-0 rounded-lg md:rounded-xl overflow-hidden shadow-lg md:shadow-2xl ring-1 ring-white/10">
               <Image
                 src={track.coverUrl}
                 alt={track.title}
                 fill
                 className="object-cover"
                 priority
-                sizes="(max-width: 768px) 128px, 192px"
+                sizes="(max-width: 768px) 64px, 192px"
               />
             </div>
           )}
 
           {/* Text & actions */}
-          <div className="min-w-0 text-center md:text-left">
-            <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-white/40 mb-2">
+          <div className="min-w-0 text-left">
+            <p className="hidden md:block text-[11px] font-bold uppercase tracking-[0.15em] text-white/40 mb-2">
               Featured Track
             </p>
-            <h2 className="text-2xl md:text-5xl font-black text-white mb-2 leading-tight max-w-2xl drop-shadow-sm">
+            <h2 className="text-sm md:text-5xl font-black text-white leading-tight max-w-2xl drop-shadow-sm line-clamp-2 md:line-clamp-none">
               {track.title}
             </h2>
-            <p className="text-sm md:text-lg text-white/60 mb-5 max-w-xl">
+            <p className="text-[11px] md:text-lg text-white/60 mt-0.5 md:mb-5 max-w-xl truncate md:line-clamp-none">
               <Link
                 href={track.artistSlug ? `/artist/${track.artistSlug}` : `/artist/${track.artistId}`}
                 className="hover:underline font-semibold text-white/85"
@@ -81,7 +81,7 @@ function HeroCard({
               {track.featuredArtists && <span className="text-white/40"> feat. {track.featuredArtists}</span>}
             </p>
 
-            <div className="flex items-center gap-3 justify-center md:justify-start">
+            <div className="hidden md:flex items-center gap-3 justify-start">
               <button
                 onClick={onPlay}
                 className="inline-flex items-center gap-2.5 px-7 py-3 bg-[var(--primary)] text-black rounded-full font-bold text-sm hover:scale-105 active:scale-95 transition-all shadow-xl shadow-[var(--primary-glow)]"
@@ -100,6 +100,18 @@ function HeroCard({
               </Link>
             </div>
           </div>
+
+          {/* Mobile play button */}
+          <button
+            onClick={onPlay}
+            className="md:hidden shrink-0 w-10 h-10 rounded-full bg-[var(--primary)] text-black flex items-center justify-center shadow-lg"
+          >
+            {isActive && playing ? (
+              <Pause size={16} fill="currentColor" />
+            ) : (
+              <Play size={16} fill="currentColor" className="ml-0.5" />
+            )}
+          </button>
         </div>
       </div>
     </div>
