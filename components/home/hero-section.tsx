@@ -29,14 +29,19 @@ function HeroCard({
 }) {
   return (
     <div className="relative w-full shrink-0 snap-start overflow-hidden">
-      <div className="relative min-h-[140px] md:min-h-[380px] flex items-center">
+      <div
+        onClick={onPlay}
+        role="button"
+        tabIndex={0}
+        className="relative w-full min-h-[140px] md:min-h-[380px] flex items-center text-left cursor-pointer active:scale-[0.98] transition-transform"
+      >
         {/* Blurred backdrop */}
         {track.coverUrl ? (
           <Image
             src={track.coverUrl}
             alt=""
             fill
-            className="object-cover blur-xl scale-105 opacity-60"
+            className="object-cover blur-xl scale-105 opacity-60 pointer-events-none"
             priority
             sizes="100vw"
           />
@@ -51,7 +56,7 @@ function HeroCard({
         <div className="relative z-10 w-full flex flex-row items-center gap-3 md:gap-10 px-4 md:px-10">
           {/* Artwork */}
           {track.coverUrl && (
-            <div className="relative w-16 h-16 md:w-48 md:h-48 shrink-0 rounded-lg md:rounded-xl overflow-hidden shadow-lg md:shadow-2xl ring-1 ring-white/10">
+            <div className="relative w-16 h-16 md:w-48 md:h-48 shrink-0 rounded-lg md:rounded-xl overflow-hidden shadow-lg md:shadow-2xl ring-1 ring-white/10 pointer-events-none">
               <Image
                 src={track.coverUrl}
                 alt={track.title}
@@ -64,7 +69,7 @@ function HeroCard({
           )}
 
           {/* Text & actions */}
-          <div className="min-w-0 text-left">
+          <div className="min-w-0 text-left pointer-events-none">
             <p className="hidden md:block text-[11px] font-bold uppercase tracking-[0.15em] text-white/40 mb-2">
               Featured Track
             </p>
@@ -72,47 +77,32 @@ function HeroCard({
               {track.title}
             </h2>
             <p className="text-[11px] md:text-lg text-white/60 mt-0.5 md:mb-5 max-w-xl truncate md:line-clamp-none">
-              <Link
-                href={track.artistSlug ? `/artist/${track.artistSlug}` : `/artist/${track.artistId}`}
-                className="hover:underline font-semibold text-white/85"
-              >
-                {track.artist}
-              </Link>
+              <span className="font-semibold text-white/85">{track.artist}</span>
               {track.featuredArtists && <span className="text-white/40"> feat. {track.featuredArtists}</span>}
             </p>
-
-            <div className="hidden md:flex items-center gap-3 justify-start">
-              <button
-                onClick={onPlay}
-                className="inline-flex items-center gap-2.5 px-7 py-3 bg-[var(--primary)] text-black rounded-full font-bold text-sm hover:scale-105 active:scale-95 transition-all shadow-xl shadow-[var(--primary-glow)]"
-              >
-                {isActive && playing ? (
-                  <><Pause size={16} fill="currentColor" />Pause</>
-                ) : (
-                  <><Play size={16} fill="currentColor" className="ml-0.5" />Play</>
-                )}
-              </button>
-              <Link
-                href={track.slug ? `/track/${track.slug}` : `/track/${track.id}`}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-white/10 backdrop-blur-sm hover:bg-white/20 border border-white/15 text-white rounded-full font-semibold text-sm transition-all"
-              >
-                View Track
-              </Link>
-            </div>
           </div>
-
-          {/* Mobile play button */}
-          <button
-            onClick={onPlay}
-            className="md:hidden shrink-0 w-10 h-10 rounded-full bg-[var(--primary)] text-black flex items-center justify-center shadow-lg"
-          >
-            {isActive && playing ? (
-              <Pause size={16} fill="currentColor" />
-            ) : (
-              <Play size={16} fill="currentColor" className="ml-0.5" />
-            )}
-          </button>
         </div>
+      </div>
+
+      {/* Desktop buttons */}
+      <div className="hidden md:flex absolute bottom-5 right-10 z-20 items-center gap-3">
+        <button
+          onClick={(e) => { e.stopPropagation(); onPlay(); }}
+          className="inline-flex items-center gap-2.5 px-7 py-3 bg-[var(--primary)] text-black rounded-full font-bold text-sm hover:scale-105 active:scale-95 transition-all shadow-xl shadow-[var(--primary-glow)]"
+        >
+          {isActive && playing ? (
+            <><Pause size={16} fill="currentColor" />Pause</>
+          ) : (
+            <><Play size={16} fill="currentColor" className="ml-0.5" />Play</>
+          )}
+        </button>
+        <Link
+          href={track.slug ? `/track/${track.slug}` : `/track/${track.id}`}
+          className="inline-flex items-center gap-2 px-6 py-3 bg-white/10 backdrop-blur-sm hover:bg-white/20 border border-white/15 text-white rounded-full font-semibold text-sm transition-all"
+          onClick={(e) => e.stopPropagation()}
+        >
+          View Track
+        </Link>
       </div>
     </div>
   );
@@ -185,19 +175,19 @@ export default function HeroSection({ tracks, featuredAlbum }: { tracks: Track[]
           ))}
         </div>
 
-        {/* Nav arrows */}
+        {/* Nav arrows - desktop only */}
         {tracks.length > 1 && (
           <>
             <button
               onClick={goPrev}
-              className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center text-white/80 hover:bg-black/80 hover:text-white transition-all md:opacity-0 md:group-hover/hero:opacity-100"
+              className="hidden md:flex absolute left-3 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-black/60 backdrop-blur-sm items-center justify-center text-white/80 hover:bg-black/80 hover:text-white transition-all opacity-0 group-hover/hero:opacity-100"
               aria-label="Previous track"
             >
               <ChevronLeft size={18} />
             </button>
             <button
               onClick={goNext}
-              className="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center text-white/80 hover:bg-black/80 hover:text-white transition-all md:opacity-0 md:group-hover/hero:opacity-100"
+              className="hidden md:flex absolute right-3 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-black/60 backdrop-blur-sm items-center justify-center text-white/80 hover:bg-black/80 hover:text-white transition-all opacity-0 group-hover/hero:opacity-100"
               aria-label="Next track"
             >
               <ChevronRight size={18} />
