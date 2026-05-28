@@ -150,7 +150,7 @@ export default function HeroSection({ tracks, featuredAlbum }: { tracks: Track[]
   }
 
   return (
-    <section className="relative mx-4 md:mx-8 mb-6 md:mb-10 rounded-2xl overflow-hidden bg-[var(--surface)] border border-[var(--border)]">
+    <section className="group/hero relative mx-4 md:mx-8 mb-6 md:mb-10 rounded-2xl overflow-hidden bg-[var(--surface)] border border-[var(--border)]">
       {/* Carousel */}
       <div className="relative">
         <div className="flex overflow-x-hidden snap-x snap-mandatory">
@@ -178,14 +178,14 @@ export default function HeroSection({ tracks, featuredAlbum }: { tracks: Track[]
           <>
             <button
               onClick={goPrev}
-              className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center text-white/80 hover:bg-black/80 hover:text-white transition-all opacity-0 group-hover:opacity-100 md:opacity-0 md:group-hover/hero:opacity-100"
+              className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center text-white/80 hover:bg-black/80 hover:text-white transition-all md:opacity-0 md:group-hover/hero:opacity-100"
               aria-label="Previous track"
             >
               <ChevronLeft size={18} />
             </button>
             <button
               onClick={goNext}
-              className="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center text-white/80 hover:bg-black/80 hover:text-white transition-all opacity-0 group-hover:opacity-100 md:opacity-0 md:group-hover/hero:opacity-100"
+              className="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center text-white/80 hover:bg-black/80 hover:text-white transition-all md:opacity-0 md:group-hover/hero:opacity-100"
               aria-label="Next track"
             >
               <ChevronRight size={18} />
