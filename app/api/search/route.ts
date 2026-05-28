@@ -1,9 +1,9 @@
-export const runtime = 'edge';
-
-import { supabase } from "@/lib/db";
+import { db } from "@/lib/db/drizzle";
+import { tracks, artists, albums } from "@/lib/db/schema";
 import { getPublicUrl } from "@/lib/r2";
 import { NextRequest, NextResponse } from "next/server";
 import { sanitizeFeaturedArtists } from "@/lib/featured-artists";
+import { ilike, eq, inArray, desc, and, isNotNull } from "drizzle-orm";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -12,81 +12,134 @@ export async function GET(req: NextRequest) {
   const q = req.nextUrl.searchParams.get("q")?.trim();
   if (!q) return NextResponse.json({ tracks: [], artists: [], albums: [], genres: [] });
 
-  // Split query into words for better matching
   const words = q.toLowerCase().split(/\s+/).filter(w => w.length > 0);
-  const searchPattern = words.join('%');
+  const searchPattern = `%${words.join('%')}%`;
 
-  const [{ data: tracksByTitle }, { data: artists }, { data: albums }, { data: genreTracks }, { data: tracksByGenre }] = await Promise.all([
-    supabase
-      .from("tracks")
-      .select("id, title, audio_key, cover_key, duration, artist_id, slug, featured_artists, artists(name, slug)")
-      .ilike("title", `%${searchPattern}%`)
+  const [tracksByTitle, artistsResult, albumsResult, genreTracks, tracksByGenre] = await Promise.all([
+    db
+      .select({
+        id: tracks.id,
+        title: tracks.title,
+        audioKey: tracks.audioKey,
+        coverKey: tracks.coverKey,
+        duration: tracks.duration,
+        artistId: tracks.artistId,
+        slug: tracks.slug,
+        featuredArtists: tracks.featuredArtists,
+        artistName: artists.name,
+        artistSlug: artists.slug,
+      })
+      .from(tracks)
+      .leftJoin(artists, eq(tracks.artistId, artists.id))
+      .where(ilike(tracks.title, searchPattern))
       .limit(20),
-    supabase
-      .from("artists")
-      .select("id, name, slug, image_key")
-      .ilike("name", `%${searchPattern}%`)
+    db
+      .select({
+        id: artists.id,
+        name: artists.name,
+        slug: artists.slug,
+        imageKey: artists.imageKey,
+      })
+      .from(artists)
+      .where(ilike(artists.name, searchPattern))
       .limit(8),
-    supabase
-      .from("albums")
-      .select("id, title, cover_key, release_year, slug, artists(name, slug)")
-      .ilike("title", `%${searchPattern}%`)
+    db
+      .select({
+        id: albums.id,
+        title: albums.title,
+        coverKey: albums.coverKey,
+        releaseYear: albums.releaseYear,
+        slug: albums.slug,
+        artistName: artists.name,
+        artistSlug: artists.slug,
+      })
+      .from(albums)
+      .leftJoin(artists, eq(albums.artistId, artists.id))
+      .where(ilike(albums.title, searchPattern))
       .limit(8),
-    supabase
-      .from("tracks")
-      .select("genre")
-      .ilike("genre", `%${searchPattern}%`)
-      .not("genre", "is", null)
+    db
+      .select({ genre: tracks.genre })
+      .from(tracks)
+      .where(and(isNotNull(tracks.genre), ilike(tracks.genre, searchPattern)))
       .limit(10),
-    supabase
-      .from("tracks")
-      .select("id, title, audio_key, cover_key, duration, artist_id, slug, featured_artists, artists(name, slug)")
-      .ilike("genre", `%${q}%`)
-      .order("plays", { ascending: false })
+    db
+      .select({
+        id: tracks.id,
+        title: tracks.title,
+        audioKey: tracks.audioKey,
+        coverKey: tracks.coverKey,
+        duration: tracks.duration,
+        artistId: tracks.artistId,
+        slug: tracks.slug,
+        featuredArtists: tracks.featuredArtists,
+        artistName: artists.name,
+        artistSlug: artists.slug,
+      })
+      .from(tracks)
+      .leftJoin(artists, eq(tracks.artistId, artists.id))
+      .where(ilike(tracks.genre, `%${q}%`))
+      .orderBy(desc(tracks.plays))
       .limit(30),
   ]);
 
-  // Find tracks by matched artist IDs
-  const artistIds = (artists ?? []).map((a) => a.id);
-  const { data: tracksByArtist } = artistIds.length > 0
-    ? await supabase
-        .from("tracks")
-        .select("id, title, audio_key, cover_key, duration, artist_id, slug, featured_artists, artists(name, slug)")
-        .in("artist_id", artistIds)
-        .limit(15)
-    : { data: [] };
+  const artistIds = artistsResult.map((a) => a.id);
+  let tracksByArtist: typeof tracksByTitle = [];
+  if (artistIds.length > 0) {
+    tracksByArtist = await db
+      .select({
+        id: tracks.id,
+        title: tracks.title,
+        audioKey: tracks.audioKey,
+        coverKey: tracks.coverKey,
+        duration: tracks.duration,
+        artistId: tracks.artistId,
+        slug: tracks.slug,
+        featuredArtists: tracks.featuredArtists,
+        artistName: artists.name,
+        artistSlug: artists.slug,
+      })
+      .from(tracks)
+      .leftJoin(artists, eq(tracks.artistId, artists.id))
+      .where(inArray(tracks.artistId, artistIds))
+      .limit(15);
+  }
 
-  // Merge and deduplicate tracks (genre tracks take priority when genre matches)
   const seen = new Set<number>();
-  const allTracks = [...(tracksByGenre ?? []), ...(tracksByTitle ?? []), ...(tracksByArtist ?? [])].filter(t => {
-    if (seen.has(t.id)) return false;
+  const allTracks = [...tracksByGenre, ...tracksByTitle, ...tracksByArtist].filter((t) => {
+    if (!t.id || seen.has(t.id)) return false;
     seen.add(t.id);
     return true;
   }).slice(0, 30);
 
-  // Get unique genres
-  const genres = Array.from(new Set((genreTracks ?? []).map(t => t.genre).filter(Boolean))) as string[];
+  const genres = Array.from(new Set(genreTracks.map((t) => t.genre).filter(Boolean))) as string[];
 
   return NextResponse.json({
     tracks: allTracks.map((t) => ({
-      id: t.id, title: t.title, artistId: t.artist_id,
-      artist: (t.artists as unknown as { name: string; slug?: string } | null)?.name ?? "Unknown",
-      artistSlug: (t.artists as unknown as { name: string; slug?: string } | null)?.slug,
-      featuredArtists: sanitizeFeaturedArtists(t.featured_artists),
-      audioUrl: getPublicUrl(t.audio_key),
-      coverUrl: t.cover_key ? getPublicUrl(t.cover_key) : null,
-      duration: t.duration, slug: t.slug,
+      id: t.id,
+      title: t.title,
+      artistId: t.artistId,
+      artist: t.artistName ?? "Unknown",
+      artistSlug: t.artistSlug,
+      featuredArtists: sanitizeFeaturedArtists(t.featuredArtists),
+      audioUrl: t.audioKey ? getPublicUrl(t.audioKey) : "",
+      coverUrl: t.coverKey ? getPublicUrl(t.coverKey) : null,
+      duration: t.duration,
+      slug: t.slug,
     })),
-    artists: (artists ?? []).map((a) => ({
-      id: a.id, name: a.name, slug: a.slug,
-      imageUrl: a.image_key ? getPublicUrl(a.image_key) : null,
+    artists: artistsResult.map((a) => ({
+      id: a.id,
+      name: a.name,
+      slug: a.slug,
+      imageUrl: a.imageKey ? getPublicUrl(a.imageKey) : null,
     })),
-    albums: (albums ?? []).map((a) => ({
-      id: a.id, title: a.title, slug: a.slug,
-      releaseYear: a.release_year,
-      coverUrl: a.cover_key ? getPublicUrl(a.cover_key) : null,
-      artistName: (a.artists as unknown as { name: string; slug?: string } | null)?.name ?? "Unknown",
-      artistSlug: (a.artists as unknown as { name: string; slug?: string } | null)?.slug,
+    albums: albumsResult.map((a) => ({
+      id: a.id,
+      title: a.title,
+      slug: a.slug,
+      releaseYear: a.releaseYear,
+      coverUrl: a.coverKey ? getPublicUrl(a.coverKey) : null,
+      artistName: a.artistName ?? "Unknown",
+      artistSlug: a.artistSlug,
     })),
     genres: genres.slice(0, 6),
   });

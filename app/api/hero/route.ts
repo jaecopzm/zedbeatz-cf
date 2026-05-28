@@ -1,34 +1,46 @@
-import { supabase } from "@/lib/db";
+import { db } from "@/lib/db/drizzle";
+import { heroTracks, tracks, artists } from "@/lib/db/schema";
 import { getPublicUrl } from "@/lib/r2";
 import { NextResponse } from "next/server";
 import { sanitizeFeaturedArtists } from "@/lib/featured-artists";
+import { eq, asc } from "drizzle-orm";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-const TRACK_SELECT = "track_id, position, tracks(id, title, audio_key, cover_key, duration, slug, featured_artists, artist_id, artists(name, slug))";
-
-function mapTrack(r: any) {
-  const t = r.tracks;
-  return {
-    id: t.id,
-    title: t.title,
-    artistId: t.artist_id,
-    artist: t.artists?.name ?? "Unknown",
-    artistSlug: t.artists?.slug,
-    featuredArtists: sanitizeFeaturedArtists(t.featured_artists),
-    audioUrl: getPublicUrl(t.audio_key),
-    coverUrl: t.cover_key ? getPublicUrl(t.cover_key) : null,
-    duration: t.duration,
-    slug: t.slug,
-  };
-}
-
 export async function GET() {
-  const { data, error } = await supabase
-    .from("hero_tracks")
-    .select(TRACK_SELECT)
-    .order("position");
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json((data ?? []).map(mapTrack));
+  const data = await db
+    .select({
+      trackId: heroTracks.trackId,
+      position: heroTracks.position,
+      trackId2: tracks.id,
+      title: tracks.title,
+      audioKey: tracks.audioKey,
+      coverKey: tracks.coverKey,
+      duration: tracks.duration,
+      slug: tracks.slug,
+      featuredArtists: tracks.featuredArtists,
+      artistId: tracks.artistId,
+      artistName: artists.name,
+      artistSlug: artists.slug,
+    })
+    .from(heroTracks)
+    .leftJoin(tracks, eq(heroTracks.trackId, tracks.id))
+    .leftJoin(artists, eq(tracks.artistId, artists.id))
+    .orderBy(asc(heroTracks.position));
+
+  const mapped = data.map((r) => ({
+    id: r.trackId2,
+    title: r.title,
+    artistId: r.artistId,
+    artist: r.artistName ?? "Unknown",
+    artistSlug: r.artistSlug,
+    featuredArtists: sanitizeFeaturedArtists(r.featuredArtists),
+    audioUrl: r.audioKey ? getPublicUrl(r.audioKey) : "",
+    coverUrl: r.coverKey ? getPublicUrl(r.coverKey) : null,
+    duration: r.duration,
+    slug: r.slug,
+  }));
+
+  return NextResponse.json(mapped);
 }

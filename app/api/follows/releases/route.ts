@@ -1,8 +1,10 @@
-import { supabase } from "@/lib/db";
+import { db } from "@/lib/db/drizzle";
+import { follows, tracks, artists } from "@/lib/db/schema";
 import { getPublicUrl } from "@/lib/r2";
 import { sanitizeFeaturedArtists } from "@/lib/featured-artists";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
+import { eq, desc, inArray } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -14,40 +16,49 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ tracks: [] });
   }
 
-  // Get the artist IDs the user follows
-  const { data: follows } = await supabase
-    .from("follows")
-    .select("artist_id")
-    .eq("user_id", userId);
+  const followedArtists = await db
+    .select({ artistId: follows.artistId })
+    .from(follows)
+    .where(eq(follows.userId, userId));
 
-  if (!follows || follows.length === 0) {
+  if (followedArtists.length === 0) {
     return NextResponse.json({ tracks: [] });
   }
 
-  const artistIds = follows.map((f: any) => f.artist_id);
+  const artistIds = followedArtists.map((f) => f.artistId);
 
-  // Get the latest tracks from those artists
-  const { data: tracks } = await supabase
-    .from("tracks")
-    .select("id, title, audio_key, cover_key, duration, artist_id, slug, featured_artists, created_at, artists(name, slug)")
-    .in("artist_id", artistIds)
-    .order("created_at", { ascending: false })
+  const trackList = await db
+    .select({
+      id: tracks.id,
+      title: tracks.title,
+      audioKey: tracks.audioKey,
+      coverKey: tracks.coverKey,
+      duration: tracks.duration,
+      artistId: tracks.artistId,
+      slug: tracks.slug,
+      featuredArtists: tracks.featuredArtists,
+      createdAt: tracks.createdAt,
+      artistName: artists.name,
+      artistSlug: artists.slug,
+    })
+    .from(tracks)
+    .leftJoin(artists, eq(tracks.artistId, artists.id))
+    .where(inArray(tracks.artistId, artistIds))
+    .orderBy(desc(tracks.createdAt))
     .limit(20);
 
-  if (!tracks) return NextResponse.json({ tracks: [] });
-
-  const mapped = tracks.map((t: any) => ({
+  const mapped = trackList.map((t) => ({
     id: t.id,
     title: t.title,
-    artistId: t.artist_id,
-    artist: t.artists?.name ?? "Unknown",
-    artistSlug: t.artists?.slug,
-    featuredArtists: sanitizeFeaturedArtists(t.featured_artists),
-    audioUrl: getPublicUrl(t.audio_key),
-    coverUrl: t.cover_key ? getPublicUrl(t.cover_key) : null,
+    artistId: t.artistId,
+    artist: t.artistName ?? "Unknown",
+    artistSlug: t.artistSlug,
+    featuredArtists: sanitizeFeaturedArtists(t.featuredArtists),
+    audioUrl: getPublicUrl(t.audioKey),
+    coverUrl: t.coverKey ? getPublicUrl(t.coverKey) : null,
     duration: t.duration,
     slug: t.slug,
-    createdAt: t.created_at,
+    createdAt: t.createdAt,
   }));
 
   return NextResponse.json({ tracks: mapped });

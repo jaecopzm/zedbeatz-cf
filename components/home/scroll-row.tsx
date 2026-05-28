@@ -1,19 +1,34 @@
 "use client";
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-export default function ScrollRow({ children, className = "", arrowTop = 70 }: { children: React.ReactNode; className?: string; arrowTop?: number }) {
+export default function ScrollRow({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   const ref = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
+  function updateScrollState() {
+    if (!ref.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = ref.current;
+    setCanScrollLeft(scrollLeft > 4);
+    setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 4);
+  }
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    updateScrollState();
+    el.addEventListener("scroll", updateScrollState, { passive: true });
+    return () => el.removeEventListener("scroll", updateScrollState);
+  }, []);
 
   function scroll(dir: 1 | -1) {
     if (!ref.current) return;
     ref.current.scrollBy({ left: dir * ref.current.clientWidth * 0.75, behavior: "smooth" });
   }
 
-  const arrowStyle = { top: `${arrowTop}px` };
-
   return (
-    <div className="relative group/row px-4 md:px-6">
+    <div className="relative group/row px-4 md:px-8">
       <div
         ref={ref}
         className={`flex gap-2 md:gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory ${className}`}
@@ -21,23 +36,25 @@ export default function ScrollRow({ children, className = "", arrowTop = 70 }: {
         {children}
       </div>
 
-      <button
-        onClick={() => scroll(-1)}
-        style={arrowStyle}
-        className="hidden md:flex absolute left-2 z-10 w-8 h-8 items-center justify-center bg-black/80 text-white opacity-0 group-hover/row:opacity-100 transition-opacity duration-200 hover:bg-black"
-        aria-label="Scroll left"
-      >
-        <ChevronLeft size={14} />
-      </button>
+      {canScrollLeft && (
+        <button
+          onClick={() => scroll(-1)}
+          className="hidden md:flex absolute left-1 top-[calc(50%-4px)] -translate-y-1/2 z-10 w-10 h-10 items-center justify-center rounded-full bg-[var(--background)]/90 border border-[var(--border)] text-white shadow-xl backdrop-blur-sm opacity-0 group-hover/row:opacity-100 hover:bg-[var(--surface)] hover:scale-105 active:scale-95 transition-all duration-200"
+          aria-label="Scroll left"
+        >
+          <ChevronLeft size={16} strokeWidth={2.5} />
+        </button>
+      )}
 
-      <button
-        onClick={() => scroll(1)}
-        style={arrowStyle}
-        className="hidden md:flex absolute right-2 z-10 w-8 h-8 items-center justify-center bg-black/80 text-white opacity-0 group-hover/row:opacity-100 transition-opacity duration-200 hover:bg-black"
-        aria-label="Scroll right"
-      >
-        <ChevronRight size={14} />
-      </button>
+      {canScrollRight && (
+        <button
+          onClick={() => scroll(1)}
+          className="hidden md:flex absolute right-1 top-[calc(50%-4px)] -translate-y-1/2 z-10 w-10 h-10 items-center justify-center rounded-full bg-[var(--background)]/90 border border-[var(--border)] text-white shadow-xl backdrop-blur-sm opacity-0 group-hover/row:opacity-100 hover:bg-[var(--surface)] hover:scale-105 active:scale-95 transition-all duration-200"
+          aria-label="Scroll right"
+        >
+          <ChevronRight size={16} strokeWidth={2.5} />
+        </button>
+      )}
     </div>
   );
 }

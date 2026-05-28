@@ -37,7 +37,10 @@ export default function MobileMenu() {
         </div>
 
         {/* Nav links */}
-        <nav className="flex flex-col gap-1 px-3 py-4 flex-1">
+        <nav className="flex flex-col gap-0.5 px-3 py-4 flex-1">
+          <p className="text-[11px] font-bold text-white/20 uppercase tracking-[0.12em] px-3 mb-3">
+            Menu
+          </p>
           {links.map(({ href, label, icon: Icon }) => {
             const isActive = path === href;
             return (
@@ -46,18 +49,25 @@ export default function MobileMenu() {
                 href={href}
                 onClick={() => setOpen(false)}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold transition-all duration-200",
+                  "relative flex items-center gap-3.5 px-3 py-2.5 rounded-lg text-sm transition-all duration-200",
                   isActive
-                    ? "bg-[var(--glass-hover)] text-white border border-[var(--glass-border)]"
-                    : "text-[var(--muted)] hover:text-white hover:bg-[var(--glass-hover)]"
+                    ? "text-white font-semibold bg-white/[0.07]"
+                    : "text-white/35 font-medium hover:text-white/70 hover:bg-white/[0.04]"
                 )}
               >
-                <span className={cn(
-                  "w-8 h-8 rounded-lg flex items-center justify-center",
-                  isActive ? "bg-[var(--primary-dim)] text-[var(--primary)]" : ""
-                )}>
-                  <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />
-                </span>
+                {isActive && (
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-[var(--primary)]" />
+                )}
+                <Icon
+                  size={20}
+                  strokeWidth={isActive ? 2.5 : 1.8}
+                  className={cn(
+                    "shrink-0 transition-colors duration-200",
+                    isActive
+                      ? "text-[var(--primary)]"
+                      : "text-white/30"
+                  )}
+                />
                 {label}
               </Link>
             );

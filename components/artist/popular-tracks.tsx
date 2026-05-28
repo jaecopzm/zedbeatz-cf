@@ -3,29 +3,22 @@
 import Image from "next/image";
 import { Play, Pause } from "lucide-react";
 import { usePlayer, type Track } from "@/lib/player-store";
-import LikeButton from "@/components/like-button";
-
-function fmt(s: number) {
-  return `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
-}
 
 export default function PopularTracks({
   tracks,
   allTracks,
 }: {
-  tracks: (Track & { plays?: number })[];
+  tracks: Track[];
   allTracks: Track[];
 }) {
   const { queue, currentIndex, playing, setQueue, toggle } = usePlayer();
 
   return (
     <section className="px-4 md:px-10 mb-8">
-      <div className="flex items-center gap-2.5 mb-3">
-        <h2 className="text-2xl md:text-3xl font-black tracking-tight">Popular</h2>
-      </div>
+      <h2 className="text-xl md:text-[26px] font-black tracking-tight mb-3">Popular</h2>
 
       <div className="flex flex-col gap-0.5">
-        {tracks.map((track, i) => {
+        {tracks.map((track) => {
           const isActive = queue[currentIndex]?.id === track.id;
 
           return (
@@ -37,18 +30,14 @@ export default function PopularTracks({
                   : setQueue(allTracks, allTracks.findIndex((t) => t.id === track.id))
               }
               className={`group flex items-center gap-3 px-3 py-2 rounded-xl cursor-pointer transition-colors ${
-                isActive ? "bg-white/8 ring-1 ring-[#1db954]/30" : "hover:bg-white/5"
+                isActive ? "bg-[var(--surface)]" : "hover:bg-[var(--surface)]"
               }`}
             >
-              <span className={`text-xs font-bold w-4 text-center shrink-0 tabular-nums ${isActive ? "text-[#1db954]" : "text-white/30"}`}>
-                {i + 1}
-              </span>
-
-              <div className="relative w-10 h-10 rounded-lg overflow-hidden shrink-0">
+              <div className="relative w-10 h-10 rounded-lg overflow-hidden shrink-0 bg-[var(--surface-3)]">
                 {track.coverUrl ? (
                   <Image src={track.coverUrl} alt={track.title} fill className="object-cover" unoptimized />
                 ) : (
-                  <div className="w-full h-full bg-white/5 flex items-center justify-center text-white/20">♪</div>
+                  <div className="w-full h-full flex items-center justify-center text-lg">♪</div>
                 )}
                 {isActive && playing && (
                   <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
@@ -62,29 +51,20 @@ export default function PopularTracks({
               </div>
 
               <div className="flex-1 min-w-0">
-                <p className={`text-sm font-semibold truncate ${isActive ? "text-[#1db954]" : "text-white"}`}>
+                <p className={`text-sm font-semibold truncate ${isActive ? "text-[var(--primary)]" : "text-white"}`}>
                   {track.title}
                 </p>
-                <p className="text-xs text-white/40 truncate">
-                  {track.featuredArtists ? `feat. ${track.featuredArtists}` : ""}
-                  {track.featuredArtists && track.plays ? " · " : ""}
-                  {track.plays ? `${track.plays.toLocaleString()} plays` : ""}
-                </p>
+                {track.featuredArtists && (
+                  <p className="text-xs text-[var(--muted)] truncate">feat. {track.featuredArtists}</p>
+                )}
               </div>
 
-              {track.duration && (
-                <span className="text-xs text-white/30 tabular-nums shrink-0">{fmt(track.duration)}</span>
-              )}
-
-              <div className="flex items-center gap-2 shrink-0">
-                <div className="opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
-                  <LikeButton trackId={track.id} size={15} />
-                </div>
-                <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
-                  isActive && playing ? "bg-[#1db954] text-black" : "text-white/40 group-hover:bg-white/10 group-hover:text-white"
-                }`}>
-                  {isActive && playing ? <Pause size={12} fill="currentColor" /> : <Play size={12} fill="currentColor" className="ml-0.5" />}
-                </div>
+              <div className="w-8 h-8 rounded-full bg-[var(--primary)] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all scale-90 group-hover:scale-100 shrink-0">
+                {isActive && playing ? (
+                  <Pause size={12} fill="currentColor" className="text-black" />
+                ) : (
+                  <Play size={12} fill="currentColor" className="text-black ml-0.5" />
+                )}
               </div>
             </div>
           );

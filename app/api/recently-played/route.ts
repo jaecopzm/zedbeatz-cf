@@ -1,6 +1,5 @@
-export const runtime = 'edge';
-
-import { supabase } from "@/lib/db";
+import { db } from "@/lib/db/drizzle";
+import { recentlyPlayed } from "@/lib/db/schema";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 
@@ -13,16 +12,16 @@ export async function POST(req: NextRequest) {
 
   if (!track_id) return NextResponse.json({ error: "Missing track_id" }, { status: 400 });
 
-  if (userId) {
-    // Append play event to history
+  const values: { trackId: number; userId?: string; playedAt: Date } = {
+    trackId: track_id,
+    playedAt: new Date(),
+  };
 
-    await supabase
-      .from("recently_played")
-      .insert({ track_id, user_id: userId, played_at: new Date().toISOString() });
-  } else {
-    // Anonymous play
-    await supabase.from("recently_played").insert({ track_id, played_at: new Date().toISOString() });
+  if (userId) {
+    values.userId = userId;
   }
+
+  await db.insert(recentlyPlayed).values(values);
 
   return NextResponse.json({ ok: true });
 }

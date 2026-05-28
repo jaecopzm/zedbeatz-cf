@@ -1,54 +1,71 @@
-import { supabase } from "@/lib/db";
+import { db } from "@/lib/db/drizzle";
+import { heroTracks, tracks, artists } from "@/lib/db/schema";
 import { getPublicUrl } from "@/lib/r2";
 import { NextRequest, NextResponse } from "next/server";
 import { sanitizeFeaturedArtists } from "@/lib/featured-artists";
 import { requireAdmin } from "@/lib/require-admin";
+import { eq, asc, sql } from "drizzle-orm";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-const TRACK_SELECT = "track_id, position, tracks(id, title, audio_key, cover_key, duration, slug, featured_artists, artist_id, artists(name, slug))";
-
 function mapTrack(r: any) {
-  const t = r.tracks;
   return {
-    id: t.id,
-    title: t.title,
-    artistId: t.artist_id,
-    artist: t.artists?.name ?? "Unknown",
-    artistSlug: t.artists?.slug,
-    featuredArtists: sanitizeFeaturedArtists(t.featured_artists),
-    audioUrl: getPublicUrl(t.audio_key),
-    coverUrl: t.cover_key ? getPublicUrl(t.cover_key) : null,
-    duration: t.duration,
-    slug: t.slug,
+    id: r.trackId2,
+    title: r.title,
+    artistId: r.artistId,
+    artist: r.artistName ?? "Unknown",
+    artistSlug: r.artistSlug,
+    featuredArtists: sanitizeFeaturedArtists(r.featuredArtists),
+    audioUrl: r.audioKey ? getPublicUrl(r.audioKey) : "",
+    coverUrl: r.coverKey ? getPublicUrl(r.coverKey) : null,
+    duration: r.duration,
+    slug: r.slug,
   };
 }
 
 export async function GET() {
   const deny = await requireAdmin(); if (deny) return deny;
-  const { data, error } = await supabase
-    .from("hero_tracks")
-    .select(TRACK_SELECT)
-    .order("position");
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  const data = await db
+    .select({
+      trackId: heroTracks.trackId,
+      position: heroTracks.position,
+      trackId2: tracks.id,
+      title: tracks.title,
+      audioKey: tracks.audioKey,
+      coverKey: tracks.coverKey,
+      duration: tracks.duration,
+      slug: tracks.slug,
+      featuredArtists: tracks.featuredArtists,
+      artistId: tracks.artistId,
+      artistName: artists.name,
+      artistSlug: artists.slug,
+    })
+    .from(heroTracks)
+    .leftJoin(tracks, eq(heroTracks.trackId, tracks.id))
+    .leftJoin(artists, eq(tracks.artistId, artists.id))
+    .orderBy(asc(heroTracks.position));
+
   return NextResponse.json((data ?? []).map(mapTrack));
 }
 
 export async function POST(req: NextRequest) {
   const deny = await requireAdmin(); if (deny) return deny;
   const { track_id } = await req.json();
-  const { count } = await supabase.from("hero_tracks").select("*", { count: "exact", head: true });
-  const { error } = await supabase.from("hero_tracks").upsert({ track_id, position: count ?? 0 }, { onConflict: "track_id" });
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  const [countResult] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(heroTracks);
+  await db
+    .insert(heroTracks)
+    .values({ trackId: track_id, position: countResult?.count ?? 0 })
+    .onConflictDoNothing({ target: heroTracks.trackId });
   return NextResponse.json({ ok: true });
 }
 
 export async function DELETE(req: NextRequest) {
   const deny = await requireAdmin(); if (deny) return deny;
   const { track_id } = await req.json();
-  const { error } = await supabase.from("hero_tracks").delete().eq("track_id", track_id);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  await db.delete(heroTracks).where(eq(heroTracks.trackId, track_id));
   return NextResponse.json({ ok: true });
 }
 
@@ -57,7 +74,7 @@ export async function PATCH(req: NextRequest) {
   const { order } = await req.json();
   await Promise.all(
     order.map(({ track_id, position }: { track_id: number; position: number }) =>
-      supabase.from("hero_tracks").update({ position }).eq("track_id", track_id)
+      db.update(heroTracks).set({ position }).where(eq(heroTracks.trackId, track_id))
     )
   );
   return NextResponse.json({ ok: true });

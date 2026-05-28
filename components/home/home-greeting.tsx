@@ -28,15 +28,15 @@ export default function HomeGreeting() {
       initial={{ opacity: 0, y: -12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
-      className="px-4 md:px-8 pt-3 md:pt-4 pb-1"
+      className="px-4 md:px-8 pt-4 md:pt-6 pb-2"
     >
-      <h1 className="text-xl md:text-3xl font-bold tracking-tight">
+      <h1 className="text-2xl md:text-4xl font-black tracking-tight leading-tight">
         {text}
         {name && (
           <span className="gradient-text ml-2">{name}</span>
         )}
       </h1>
-      <p className="text-xs md:text-sm text-[var(--muted)] mt-0.5 md:mt-1">
+      <p className="text-xs md:text-sm text-[var(--muted)] mt-1 md:mt-1.5">
         Discover today's freshest Zambian hits
       </p>
     </motion.div>

@@ -1,4 +1,36 @@
+import type { Metadata } from "next";
 import { Mail, MessageCircle, Phone } from "lucide-react";
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zedbeatz.com";
+
+export const metadata: Metadata = {
+  title: "Contact ZedBeatz - Zambian Music Platform Support",
+  description: "Get in touch with ZedBeatz support team. Questions about Zambian music downloads, streaming, or submissions? Contact us today.",
+  keywords: [
+    "Zambian music streaming", "free Zambian music", "Zambia songs download",
+    "listen to Zambian music online", "new Zambian songs today", "Zambian music 2026 hits",
+    "top Zambian songs", "Zambian music charts", "Kopala music", "Zambian artists list",
+    "Kalindula music", "Zamdancehall", "Zambian hip hop", "Zambian gospel music",
+    "Zambian Afrobeat", "Lusaka music", "Copperbelt music", "Ndola music",
+    "Zambian music platform", "best Zambian music site", "Zambia mp3 streaming",
+    "Zambian music online", "Zambian songs mp3", "Zambia urban music",
+    "Zambian dancehall", "Zambian R&B", "Zambian traditional music",
+    "ZedBeatz Zambian music", "Zambian music download mp3 2026",
+  ],
+  openGraph: {
+    title: "Contact ZedBeatz - Zambian Music Platform Support | ZedBeatz",
+    description: "Get in touch with ZedBeatz support team. Questions about Zambian music downloads, streaming, or submissions? Contact us today.",
+    url: `${siteUrl}/contact`,
+    siteName: "ZedBeatz",
+    locale: "en_ZM",
+    countryName: "Zambia",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Contact ZedBeatz - Zambian Music Platform Support",
+    description: "Get in touch with ZedBeatz support team. Questions about Zambian music downloads, streaming, or submissions? Contact us today.",
+  },
+};
 
 export default function ContactPage() {
   return (

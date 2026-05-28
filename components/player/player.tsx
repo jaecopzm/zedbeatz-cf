@@ -456,7 +456,7 @@ export default function Player() {
 
       {/* ==================== DESKTOP PLAYER BAR ==================== */}
       <div className="hidden lg:block border-t border-[var(--glass-border)] shrink-0" style={{ height: "var(--player-height)" }}>
-        <div className="h-full glass-card flex items-center justify-between gap-6 px-6">
+        <div className="h-full bg-black flex items-center justify-between gap-6 px-6">
 
           {/* ── LEFT: Track info ──────────────────────────────────── */}
           <div className="flex items-center gap-3 w-[280px] min-w-0 shrink-0">

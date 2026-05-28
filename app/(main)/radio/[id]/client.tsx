@@ -255,7 +255,7 @@ export default function RadioClient({ seedTrack }: { seedTrack: SeedTrack }) {
 
   if (loading) {
     return (
-      <div className="relative min-h-screen bg-black overflow-hidden">
+      <div className="relative min-h-screen bg-black overflow-hidden pb-6">
         <div className="pointer-events-none absolute inset-0">
           <div className="absolute inset-0 bg-gradient-to-b from-purple-900/25 via-black to-black" />
         </div>
@@ -327,7 +327,7 @@ export default function RadioClient({ seedTrack }: { seedTrack: SeedTrack }) {
   const displayTracks = isRadioQueue ? queue : radioTracks;
 
   return (
-    <div className="relative min-h-screen bg-black overflow-hidden">
+    <div className="relative min-h-screen bg-black overflow-hidden pb-6">
       {/* Ambient background */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute inset-0 bg-gradient-to-b from-purple-900/25 via-black to-black" />

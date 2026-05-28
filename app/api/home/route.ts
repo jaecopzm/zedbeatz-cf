@@ -1,43 +1,126 @@
-import { supabase } from "@/lib/db";
+import { db } from "@/lib/db/drizzle";
+import { heroTracks, tracks, artists, albums, playlists } from "@/lib/db/schema";
 import { getPublicUrl } from "@/lib/r2";
 import { sanitizeFeaturedArtists } from "@/lib/featured-artists";
 import { NextResponse } from "next/server";
+import { eq, desc, asc, isNotNull, sql, and } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-const TRACK_SELECT = "id, title, audio_key, cover_key, duration, artist_id, slug, featured_artists, artists(name, slug)";
-
 function mapTrack(r: any) {
   return {
-    id: r.id, title: r.title, artistId: r.artist_id ?? undefined,
-    artist: r.artists?.name ?? "Unknown",
-    artistSlug: r.artists?.slug ?? undefined,
-    featuredArtists: sanitizeFeaturedArtists(r.featured_artists),
-    audioUrl: getPublicUrl(r.audio_key),
-    coverUrl: r.cover_key ? getPublicUrl(r.cover_key) : null,
+    id: r.id,
+    title: r.title,
+    artistId: r.artistId ?? undefined,
+    artist: r.artistName ?? "Unknown",
+    artistSlug: r.artistSlug ?? undefined,
+    featuredArtists: sanitizeFeaturedArtists(r.featuredArtists),
+    audioUrl: r.audioKey ? getPublicUrl(r.audioKey) : "",
+    coverUrl: r.coverKey ? getPublicUrl(r.coverKey) : null,
     duration: r.duration ?? undefined,
     slug: r.slug ?? undefined,
   };
 }
 
 async function getHomeData() {
-  const [heroRes, trendingRes, latestRes, artistsRes, albumsRes, playlistsRes, featuredAlbumRes] = await Promise.all([
-    supabase.from("hero_tracks").select(`position, tracks(${TRACK_SELECT})`).order("position").limit(5),
-    supabase.from("tracks").select(TRACK_SELECT).order("plays", { ascending: false }).limit(8),
-    supabase.from("tracks").select(TRACK_SELECT).order("created_at", { ascending: false }).limit(20),
-    supabase.from("artists").select("id, name, slug, image_key").limit(40),
-    supabase.from("albums").select("id, title, cover_key, release_year, slug, artists(name, slug)").order("release_year", { ascending: false }).limit(20),
-    supabase.from("playlists").select("id, name, cover_key, category").eq("is_featured", true).order("created_at", { ascending: false }).limit(20),
-    (supabase.from("albums") as any).select("id, title, cover_key, release_year, slug, artists(name, slug)").eq("is_featured", true).limit(1).maybeSingle(),
+  const [heroRes, trendingRes, latestRes, artistsRes, albumsRes, playlistsRes] = await Promise.all([
+    db
+      .select({
+        position: heroTracks.position,
+        id: tracks.id,
+        title: tracks.title,
+        audioKey: tracks.audioKey,
+        coverKey: tracks.coverKey,
+        duration: tracks.duration,
+        slug: tracks.slug,
+        featuredArtists: tracks.featuredArtists,
+        artistId: tracks.artistId,
+        artistName: artists.name,
+        artistSlug: artists.slug,
+      })
+      .from(heroTracks)
+      .leftJoin(tracks, eq(heroTracks.trackId, tracks.id))
+      .leftJoin(artists, eq(tracks.artistId, artists.id))
+      .orderBy(asc(heroTracks.position))
+      .limit(5),
+    db
+      .select({
+        id: tracks.id,
+        title: tracks.title,
+        audioKey: tracks.audioKey,
+        coverKey: tracks.coverKey,
+        duration: tracks.duration,
+        slug: tracks.slug,
+        featuredArtists: tracks.featuredArtists,
+        artistId: tracks.artistId,
+        artistName: artists.name,
+        artistSlug: artists.slug,
+      })
+      .from(tracks)
+      .leftJoin(artists, eq(tracks.artistId, artists.id))
+      .orderBy(desc(tracks.plays))
+      .limit(8),
+    db
+      .select({
+        id: tracks.id,
+        title: tracks.title,
+        audioKey: tracks.audioKey,
+        coverKey: tracks.coverKey,
+        duration: tracks.duration,
+        slug: tracks.slug,
+        featuredArtists: tracks.featuredArtists,
+        artistId: tracks.artistId,
+        artistName: artists.name,
+        artistSlug: artists.slug,
+      })
+      .from(tracks)
+      .leftJoin(artists, eq(tracks.artistId, artists.id))
+      .orderBy(desc(tracks.createdAt))
+      .limit(20),
+    db
+      .select({
+        id: artists.id,
+        name: artists.name,
+        slug: artists.slug,
+        imageKey: artists.imageKey,
+      })
+      .from(artists)
+      .limit(40),
+    db
+      .select({
+        id: albums.id,
+        title: albums.title,
+        coverKey: albums.coverKey,
+        releaseYear: albums.releaseYear,
+        slug: albums.slug,
+        artistName: artists.name,
+        artistSlug: artists.slug,
+      })
+      .from(albums)
+      .leftJoin(artists, eq(albums.artistId, artists.id))
+      .orderBy(desc(albums.releaseYear))
+      .limit(20),
+    db
+      .select({
+        id: playlists.id,
+        name: playlists.name,
+        coverKey: playlists.coverKey,
+        category: playlists.category,
+      })
+      .from(playlists)
+      .where(eq(playlists.isFeatured, true))
+      .orderBy(desc(playlists.createdAt))
+      .limit(20),
   ]);
 
-  const heroTracks = (heroRes.data ?? []).map((r: any) => mapTrack(r.tracks));
-  const trending = (trendingRes.data ?? []).map(mapTrack);
-  const latest = (latestRes.data ?? []).map(mapTrack);
+  const heroTracksMapped = heroRes.map((r) => mapTrack(r));
+
+  const trending = trendingRes.map(mapTrack);
+  const latest = latestRes.map(mapTrack);
 
   const PRIORITY = ["Yo Maps", "Chile One", "Slapdee", "Chef 187", "Macky 2", "Kell Kay", "Dizmo", "Drifta Trek"];
-  const artists = (artistsRes.data ?? [])
+  const artistsMapped = artistsRes
     .sort((a, b) => {
       const ai = PRIORITY.findIndex(p => a.name.toLowerCase().includes(p.toLowerCase()));
       const bi = PRIORITY.findIndex(p => b.name.toLowerCase().includes(p.toLowerCase()));
@@ -47,31 +130,61 @@ async function getHomeData() {
       return a.name.localeCompare(b.name);
     })
     .slice(0, 20)
-    .map((a: any) => ({ id: a.id, name: a.name, slug: a.slug, coverUrl: a.image_key ? getPublicUrl(a.image_key) : null }));
+    .map((a: any) => ({ id: a.id, name: a.name, slug: a.slug, coverUrl: a.imageKey ? getPublicUrl(a.imageKey) : null }));
 
-  const albums = (albumsRes.data ?? []).map((a: any) => ({
-    id: a.id, title: a.title, slug: a.slug,
-    releaseYear: a.release_year ?? null,
-    artistName: a.artists?.name ?? "Unknown",
-    artistSlug: a.artists?.slug ?? null,
-    coverUrl: a.cover_key ? getPublicUrl(a.cover_key) : null,
+  const albumsMapped = albumsRes.map((a) => ({
+    id: a.id,
+    title: a.title,
+    slug: a.slug,
+    releaseYear: a.releaseYear ?? null,
+    artistName: a.artistName ?? "Unknown",
+    artistSlug: a.artistSlug ?? null,
+    coverUrl: a.coverKey ? getPublicUrl(a.coverKey) : null,
   }));
 
-  const playlists = (playlistsRes.data ?? []).map((p: any) => ({
-    id: p.id, name: p.name, category: p.category,
-    coverUrl: p.cover_key ? getPublicUrl(p.cover_key) : null,
+  const playlistsMapped = playlistsRes.map((p) => ({
+    id: p.id,
+    name: p.name,
+    category: p.category,
+    coverUrl: p.coverKey ? getPublicUrl(p.coverKey) : null,
   }));
 
-  const fa = featuredAlbumRes.data;
-  const featuredAlbum = fa ? {
-    id: fa.id, title: fa.title, slug: fa.slug,
-    releaseYear: fa.release_year,
-    artistName: (fa.artists as any)?.name ?? "Unknown",
-    artistSlug: (fa.artists as any)?.slug ?? null,
-    coverUrl: fa.cover_key ? getPublicUrl(fa.cover_key) : null,
-  } : null;
+  const [featuredAlbum] = await db
+    .select({
+      id: albums.id,
+      title: albums.title,
+      slug: albums.slug,
+      coverKey: albums.coverKey,
+      releaseYear: albums.releaseYear,
+      artistName: artists.name,
+      artistSlug: artists.slug,
+    })
+    .from(albums)
+    .leftJoin(artists, eq(albums.artistId, artists.id))
+    .where(eq(albums.isFeatured, true))
+    .limit(1);
 
-  return { heroTracks, trending, latest, artists, albums, playlists, featuredAlbum };
+  const featuredAlbumMapped = featuredAlbum
+    ? {
+        id: featuredAlbum.id,
+        title: featuredAlbum.title,
+        slug: featuredAlbum.slug,
+        releaseYear: featuredAlbum.releaseYear,
+        artistName: featuredAlbum.artistName ?? "Unknown",
+        artistSlug: featuredAlbum.artistSlug ?? null,
+        coverUrl: featuredAlbum.coverKey ? getPublicUrl(featuredAlbum.coverKey) : null,
+      }
+    : null;
+
+  return {
+    heroTracks: heroTracksMapped,
+    trending,
+    latest,
+    artists: artistsMapped,
+    albums: albumsMapped,
+    playlists: playlistsMapped,
+    featuredAlbum: featuredAlbumMapped,
+  };
 }
 
 export async function GET() {

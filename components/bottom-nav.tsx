@@ -17,7 +17,7 @@ export default function BottomNav() {
   return (
     <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
       {/* Glass bar */}
-      <div className="relative glass-card border-t border-[var(--glass-border)] flex">
+      <div className="relative bg-black border-t border-[var(--glass-border)] flex">
         {/* Top gradient line */}
         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[var(--primary)]/30 to-transparent" />
 

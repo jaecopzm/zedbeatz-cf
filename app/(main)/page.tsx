@@ -3,7 +3,7 @@ import type { Track } from "@/lib/player-store";
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
-import { Clock, Disc3, Flame, ChevronRight, Users, ListMusic, LayoutGrid } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import HeroSection from "@/components/home/hero-section";
 import TrendingSection from "@/components/home/trending-section";
 import RecentlyPlayedSection from "@/components/home/recently-played-section";
@@ -19,25 +19,34 @@ const ogImage = new URL("/Logo.png", siteUrl).toString();
 export const metadata: Metadata = {
   title: "ZedBeatz - Download Latest Zambian Music MP3 2026",
   description:
-    "Download latest Zambian music MP3 free. Yo Maps new songs, Chile One, Kell Kay, Chef 187 mp3 download. Stream aweah mp3 download, Zambian music 2026.",
+    "Download latest Zambian music MP3 free in 2026. Yo Maps new songs, Chile One, Kell Kay, Chef 187 mp3 download. Stream aweah mp3, Zambian music 2026. #1 platform for Zambian music download and streaming.",
   keywords: [
     "Zambian music download", "latest Zambian songs", "Yo Maps new songs",
     "Yo Maps mp3 download", "Chile One new songs", "Kell Kay mp3",
-    "aweah mp3 download", "Zambian music 2026", "free mp3 download",
+    "aweah mp3 download", "Zambian music 2026", "free mp3 download Zambia",
     "Zambia music streaming", "Chef 187", "Macky 2", "Slapdee",
-    "Zambian artists", "ZedBeatz",
-  ].join(", "),
+    "Zambian artists", "ZedBeatz", "Zambian music mp3", "Zambia songs",
+    "Zambian music streaming", "free Zambian music", "Zambia songs download",
+    "listen to Zambian music online", "new Zambian songs today", "Zambian music 2026 hits",
+    "top Zambian songs", "Zambian music charts", "Kopala music", "Zambian artists list",
+    "Kalindula music", "Zamdancehall", "Zambian hip hop", "Zambian gospel music",
+    "Zambian Afrobeat", "Lusaka music", "Copperbelt music", "Ndola music",
+    "Zambian music platform", "best Zambian music site", "Zambia mp3 streaming",
+    "Zambian music online", "Zambian songs mp3", "Zambia urban music",
+    "Zambian dancehall", "Zambian R&B", "Zambian traditional music",
+    "Zambian music video", "Zambian music 2026 playlist", "ZedBeatz Zambian music"
+  ],
   openGraph: {
     url: siteUrl,
     title: "ZedBeatz - Latest Zambian Music MP3 Download",
     description:
-      "Download Yo Maps, Chile One, Kell Kay new songs. Free Zambian music MP3 download 2026.",
+      "Download Yo Maps, Chile One, Kell Kay new songs. Free Zambian music MP3 download 2026 on ZedBeatz.",
     images: [
       {
         url: ogImage,
         width: 1800,
         height: 400,
-        alt: "ZedBeatz logo",
+        alt: "ZedBeatz - Zambian Music Streaming Platform",
       },
     ],
   },
@@ -48,48 +57,143 @@ export const metadata: Metadata = {
       "Download latest Zambian music MP3 free. Yo Maps new songs, Chile One, Kell Kay, Chef 187 mp3 download.",
     images: [ogImage],
   },
+  alternates: {
+    canonical: siteUrl,
+  },
 };
 
-export const revalidate = 0;
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 /* ─── Data Fetcher ─────────────────────────────────────── */
-import { supabase } from "@/lib/db";
+import { db } from "@/lib/db/drizzle";
+import { tracks, artists, albums, playlists, heroTracks } from "@/lib/db/schema";
 import { getPublicUrl } from "@/lib/r2";
 import { sanitizeFeaturedArtists } from "@/lib/featured-artists";
-
-const TRACK_SELECT = "id, title, audio_key, cover_key, duration, artist_id, slug, featured_artists, artists(name, slug)";
+import { eq, desc, asc } from "drizzle-orm";
 
 function mapTrack(r: any): Track {
   return {
-    id: r.id, title: r.title, artistId: r.artist_id ?? undefined,
-    artist: r.artists?.name ?? "Unknown",
-    artistSlug: r.artists?.slug ?? undefined,
-    featuredArtists: sanitizeFeaturedArtists(r.featured_artists),
-    audioUrl: getPublicUrl(r.audio_key),
-    coverUrl: r.cover_key ? getPublicUrl(r.cover_key) : undefined,
-    duration: r.duration ?? undefined,
+    id: r.id, title: r.title, artistId: r.artistId ?? undefined,
+    artist: r.artistName ?? "Unknown",
+    artistSlug: r.artistSlug ?? undefined,
+    featuredArtists: sanitizeFeaturedArtists(r.featuredArtists),
+    audioUrl: getPublicUrl(r.audioKey),
+    coverUrl: r.coverKey ? getPublicUrl(r.coverKey) : undefined,
+    duration: r.duration ? Number(r.duration) : undefined,
     slug: r.slug ?? undefined,
   };
 }
 
 async function getHomeData() {
   const [heroRes, trendingRes, latestRes, artistsRes, albumsRes, playlistsRes, featuredAlbumRes] = await Promise.all([
-    supabase.from("hero_tracks").select(`position, tracks(${TRACK_SELECT})`).order("position").limit(5),
-    supabase.from("tracks").select(TRACK_SELECT).order("plays", { ascending: false }).limit(8),
-    supabase.from("tracks").select(TRACK_SELECT).order("created_at", { ascending: false }).limit(20),
-    supabase.from("artists").select("id, name, slug, image_key").limit(40),
-    supabase.from("albums").select("id, title, cover_key, release_year, slug, artists(name, slug)").order("release_year", { ascending: false }).limit(20),
-    supabase.from("playlists").select("id, name, cover_key, category").eq("is_featured", true).order("created_at", { ascending: false }).limit(20),
-    (supabase.from("albums") as any).select("id, title, cover_key, release_year, slug, artists(name, slug)").eq("is_featured", true).limit(1).maybeSingle(),
+    db
+      .select({
+        position: heroTracks.position,
+        id: tracks.id,
+        title: tracks.title,
+        audioKey: tracks.audioKey,
+        coverKey: tracks.coverKey,
+        duration: tracks.duration,
+        slug: tracks.slug,
+        featuredArtists: tracks.featuredArtists,
+        artistId: tracks.artistId,
+        artistName: artists.name,
+        artistSlug: artists.slug,
+      })
+      .from(heroTracks)
+      .leftJoin(tracks, eq(heroTracks.trackId, tracks.id))
+      .leftJoin(artists, eq(tracks.artistId, artists.id))
+      .orderBy(asc(heroTracks.position))
+      .limit(5),
+    db
+      .select({
+        id: tracks.id,
+        title: tracks.title,
+        audioKey: tracks.audioKey,
+        coverKey: tracks.coverKey,
+        duration: tracks.duration,
+        slug: tracks.slug,
+        featuredArtists: tracks.featuredArtists,
+        artistId: tracks.artistId,
+        artistName: artists.name,
+        artistSlug: artists.slug,
+      })
+      .from(tracks)
+      .leftJoin(artists, eq(tracks.artistId, artists.id))
+      .orderBy(desc(tracks.plays))
+      .limit(20),
+    db
+      .select({
+        id: tracks.id,
+        title: tracks.title,
+        audioKey: tracks.audioKey,
+        coverKey: tracks.coverKey,
+        duration: tracks.duration,
+        slug: tracks.slug,
+        featuredArtists: tracks.featuredArtists,
+        artistId: tracks.artistId,
+        artistName: artists.name,
+        artistSlug: artists.slug,
+      })
+      .from(tracks)
+      .leftJoin(artists, eq(tracks.artistId, artists.id))
+      .orderBy(desc(tracks.createdAt))
+      .limit(20),
+    db
+      .select({
+        id: artists.id,
+        name: artists.name,
+        slug: artists.slug,
+        imageKey: artists.imageKey,
+      })
+      .from(artists)
+      .limit(40),
+    db
+      .select({
+        id: albums.id,
+        title: albums.title,
+        coverKey: albums.coverKey,
+        releaseYear: albums.releaseYear,
+        slug: albums.slug,
+        artistName: artists.name,
+      })
+      .from(albums)
+      .leftJoin(artists, eq(albums.artistId, artists.id))
+      .orderBy(desc(albums.releaseYear))
+      .limit(20),
+    db
+      .select({
+        id: playlists.id,
+        name: playlists.name,
+        coverKey: playlists.coverKey,
+        category: playlists.category,
+      })
+      .from(playlists)
+      .where(eq(playlists.isFeatured, true))
+      .orderBy(desc(playlists.createdAt))
+      .limit(20),
+    db
+      .select({
+        id: albums.id,
+        title: albums.title,
+        coverKey: albums.coverKey,
+        releaseYear: albums.releaseYear,
+        slug: albums.slug,
+        artistName: artists.name,
+        artistSlug: artists.slug,
+      })
+      .from(albums)
+      .leftJoin(artists, eq(albums.artistId, artists.id))
+      .where(eq(albums.isFeatured, true))
+      .limit(1),
   ]);
 
-  const heroTracks = (heroRes.data ?? []).map((r: any) => mapTrack(r.tracks));
-  const trending = (trendingRes.data ?? []).map(mapTrack);
-  const latest = (latestRes.data ?? []).map(mapTrack);
+  const heroTracksMapped = heroRes.map((r) => mapTrack(r));
+  const trending = trendingRes.map(mapTrack);
+  const latest = latestRes.map(mapTrack);
 
   const PRIORITY = ["Yo Maps", "Chile One", "Slapdee", "Chef 187", "Macky 2", "Kell Kay", "Dizmo", "Drifta Trek"];
-  const artists = (artistsRes.data ?? [])
+  const artistsMapped = artistsRes
     .sort((a: any, b: any) => {
       const ai = PRIORITY.findIndex(p => a.name.toLowerCase().includes(p.toLowerCase()));
       const bi = PRIORITY.findIndex(p => b.name.toLowerCase().includes(p.toLowerCase()));
@@ -99,46 +203,40 @@ async function getHomeData() {
       return a.name.localeCompare(b.name);
     })
     .slice(0, 20)
-    .map((a: any) => ({ id: a.id, name: a.name, slug: a.slug, coverUrl: a.image_key ? getPublicUrl(a.image_key) : null }));
+    .map((a: any) => ({ id: a.id, name: a.name, slug: a.slug, coverUrl: a.imageKey ? getPublicUrl(a.imageKey) : null }));
 
-  const albums = (albumsRes.data ?? []).map((a: any) => ({
+  const albumsMapped = albumsRes.map((a: any) => ({
     id: a.id, title: a.title, slug: a.slug,
-    releaseYear: a.release_year ?? null,
-    artistName: a.artists?.name ?? "Unknown",
-    coverUrl: a.cover_key ? getPublicUrl(a.cover_key) : null,
+    releaseYear: a.releaseYear ?? null,
+    artistName: a.artistName ?? "Unknown",
+    coverUrl: a.coverKey ? getPublicUrl(a.coverKey) : null,
   }));
 
-  const playlists = (playlistsRes.data ?? []).map((p: any) => ({
+  const playlistsMapped = playlistsRes.map((p: any) => ({
     id: p.id, name: p.name, category: p.category,
-    coverUrl: p.cover_key ? getPublicUrl(p.cover_key) : null,
+    coverUrl: p.coverKey ? getPublicUrl(p.coverKey) : null,
   }));
 
-  const fa = featuredAlbumRes.data;
+  const fa = featuredAlbumRes[0];
   const featuredAlbum = fa ? {
     id: fa.id, title: fa.title, slug: fa.slug,
-    releaseYear: fa.release_year,
-    artistName: (fa.artists as any)?.name ?? "Unknown",
-    artistSlug: (fa.artists as any)?.slug ?? null,
-    coverUrl: fa.cover_key ? getPublicUrl(fa.cover_key) : null,
+    releaseYear: fa.releaseYear,
+    artistName: fa.artistName ?? "Unknown",
+    artistSlug: fa.artistSlug ?? null,
+    coverUrl: fa.coverKey ? getPublicUrl(fa.coverKey) : null,
   } : null;
 
-  return { heroTracks, trending, latest, artists, albums, playlists, featuredAlbum };
+  return { heroTracks: heroTracksMapped, trending, latest, artists: artistsMapped, albums: albumsMapped, playlists: playlistsMapped, featuredAlbum };
 }
 
 /* ─── Section Header ─────────────────────────────────────── */
-function SectionHeader({
-  icon: _Icon, title, href,
-}: {
-  icon: React.ElementType;
-  title: string;
-  href?: string;
-}) {
+function SectionHeader({ title, href }: { title: string; href?: string }) {
   return (
     <div className="flex items-center justify-between mb-3 md:mb-4">
-      <h2 className="text-2xl md:text-3xl font-black tracking-tight">{title}</h2>
+      <h2 className="text-xl md:text-[26px] font-black tracking-tight">{title}</h2>
       {href && (
-        <Link href={href} className="flex items-center gap-1 text-xs font-bold text-white/40 hover:text-white transition-colors uppercase tracking-wider group">
-          See all
+        <Link href={href} className="flex items-center gap-1 text-[11px] font-bold text-white/35 hover:text-white transition-colors tracking-wider group">
+          See All
           <ChevronRight size={12} className="group-hover:translate-x-0.5 transition-transform" />
         </Link>
       )}
@@ -151,19 +249,44 @@ export default async function HomePage() {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zedbeatz.vercel.app";
   const data = await getHomeData();
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    name: "ZedBeatz",
-    url: baseUrl,
-    description: "Download latest Zambian music MP3. Stream Yo Maps, Chile One, Kell Kay new songs.",
-    potentialAction: {
-      "@type": "SearchAction",
-      target: `${baseUrl}/search?q={search_term_string}`,
-      "query-input": "required name=search_term_string",
+  const jsonLd = [
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      name: "ZedBeatz",
+      url: baseUrl,
+      description: "Download latest Zambian music MP3. Stream Yo Maps, Chile One, Kell Kay new songs.",
+      potentialAction: {
+        "@type": "SearchAction",
+        target: {
+          "@type": "EntryPoint",
+          urlTemplate: `${baseUrl}/search?q={search_term_string}`,
+        },
+        "query-input": "required name=search_term_string",
+      },
     },
-    publisher: { "@type": "Organization", name: "ZedBeatz", url: baseUrl, logo: `${baseUrl}/Logo.png` },
-  };
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      name: "ZedBeatz",
+      url: baseUrl,
+      logo: `${baseUrl}/Logo.png`,
+      description: "Zambian music streaming and download platform. Download latest Zambian music MP3 free.",
+      foundingDate: "2024",
+      areaServed: "ZM",
+      sameAs: [
+        "https://www.facebook.com/profile.php?id=61579237109236",
+        "https://www.youtube.com/@zedbeatzm",
+      ],
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "MusicGroup",
+      name: "Featured Artists on ZedBeatz",
+      description: "Browse popular Zambian artists including Yo Maps, Chile One, Kell Kay, Macky 2, Chef 187, Slapdee and more.",
+      genre: "Zambian Music",
+    },
+  ];
 
   const heroTracks: Track[] = data ? (data.heroTracks.length > 0 ? data.heroTracks : data.latest.slice(0, 5)) : [];
   const trending: Track[] = data?.trending ?? [];
@@ -195,14 +318,14 @@ export default async function HomePage() {
         {/* Trending */}
         {trending.length > 0 && (
           <section className="px-4 md:px-8 mb-10 md:mb-14">
-            <SectionHeader icon={Flame} title="Trending Now" href="/tracks" />
+            <SectionHeader title="Trending Now" href="/tracks" />
             <TrendingSection tracks={trending} />
           </section>
         )}
 
         {/* Recently Played */}
-        <section className="px-4 md:px-6 mb-6 md:mb-8">
-          <SectionHeader icon={Clock} title="Recently Played" href="/library" />
+        <section className="px-4 md:px-8 mb-8 md:mb-10">
+          <SectionHeader title="Recently Played" href="/library" />
           <Suspense fallback={<RecentlyPlayedSkeleton />}>
             <RecentlyPlayedSection />
           </Suspense>
@@ -213,14 +336,14 @@ export default async function HomePage() {
 
         {/* New Releases */}
         {latest.length > 0 && (
-          <section className="mb-6 md:mb-8">
-            <div className="px-4 md:px-6">
-              <SectionHeader icon={Disc3} title="New Releases" href="/tracks" />
+          <section className="mb-8 md:mb-10">
+            <div className="px-4 md:px-8">
+              <SectionHeader title="New Releases" href="/tracks" />
             </div>
             <ScrollRow>
               {latest.map((t) => (
                 <div key={t.id} className="flex-shrink-0 w-[140px] md:w-[176px] snap-start">
-                  <TrackCard track={t} queue={latest} bare />
+                  <TrackCard track={t} queue={latest} bare minimal />
                 </div>
               ))}
             </ScrollRow>
@@ -229,26 +352,19 @@ export default async function HomePage() {
 
         {/* Featured Artists */}
         {artists.length > 0 && (
-          <section className="mb-6 md:mb-8">
-            <div className="px-4 md:px-6">
-              <SectionHeader icon={Users} title="Featured Artists" href="/browse" />
+          <section className="mb-8 md:mb-10">
+            <div className="px-4 md:px-8">
+              <SectionHeader title="Featured Artists" href="/browse" />
             </div>
-            <ScrollRow arrowTop={40}>
+            <ScrollRow>
               {artists.map((artist) => (
                 <Link key={artist.id} href={`/artist/${artist.slug || artist.id}`}
-                  className="group flex flex-col items-center gap-2 shrink-0 snap-start w-[80px] md:w-[96px]">
-                  <div className="relative w-[80px] h-[80px] md:w-[96px] md:h-[96px]">
-                    <div className="absolute inset-[-3px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                      style={{ background: "conic-gradient(from 0deg, #1ed760, #a855f7, #3b82f6, #1ed760)", animation: "spin-ring 3s linear infinite" }} />
-                    <div className="absolute inset-0 rounded-full bg-[var(--background)] scale-[0.94]" />
-                    <div className="absolute inset-[3px] rounded-full overflow-hidden bg-[var(--surface-3)] shadow-lg transition-transform duration-300 group-hover:scale-105">
-                      <div className="absolute inset-0 bg-gradient-to-br from-[var(--surface-3)] to-[var(--surface-2)] flex items-center justify-center -z-10">
-                        <Users size={24} className="text-[var(--muted)]/50" />
-                      </div>
-                      {artist.coverUrl && <Image src={artist.coverUrl} alt={artist.name} fill className="object-cover" unoptimized />}
-                    </div>
+                  className="group flex flex-col items-center gap-2.5 shrink-0 snap-start w-[100px] md:w-[120px]">
+                  <div className="relative w-[100px] h-[100px] md:w-[120px] md:h-[120px] rounded-full overflow-hidden bg-[var(--surface-3)] shadow-lg ring-1 ring-white/[0.04] transition-transform duration-300 group-hover:scale-105">
+                    <div className="absolute inset-0 bg-gradient-to-br from-[var(--surface-3)] to-[var(--surface-2)] -z-10" />
+                    {artist.coverUrl && <Image src={artist.coverUrl} alt={artist.name} fill className="object-cover" unoptimized />}
                   </div>
-                  <p className="text-[11px] md:text-xs font-semibold text-center leading-tight w-full truncate group-hover:text-[var(--primary)] transition-colors duration-200">
+                  <p className="text-xs md:text-sm font-semibold text-center leading-tight w-full truncate group-hover:text-[var(--primary)] transition-colors duration-200">
                     {artist.name}
                   </p>
                 </Link>
@@ -259,14 +375,14 @@ export default async function HomePage() {
 
         {/* Albums */}
         {albums.length > 0 && (
-          <section className="mb-6">
+          <section className="mb-8 md:mb-10">
             <div className="px-4 md:px-8">
-              <SectionHeader icon={LayoutGrid} title="Albums" href="/browse" />
+              <SectionHeader title="Albums" href="/browse" />
             </div>
             <ScrollRow>
               {albums.map((album) => (
                 <Link key={album.id} href={`/album/${album.slug || album.id}`} className="group flex-shrink-0 w-[140px] md:w-[176px] snap-start">
-                  <div className="relative w-full aspect-square overflow-hidden bg-[var(--surface-3)] mb-2.5 shadow-lg ring-1 ring-white/5 group-hover:ring-[var(--primary)]/40 transition-all duration-400">
+                  <div className="relative w-full aspect-square overflow-hidden bg-[var(--surface-3)] mb-2.5 shadow-lg ring-1 ring-white/5 group-hover:ring-[var(--primary)]/40 transition-all duration-400 rounded-lg">
                     {album.coverUrl && <Image src={album.coverUrl} alt={album.title} fill loading="lazy" className="object-cover group-hover:scale-105 transition-transform duration-600" unoptimized />}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                     {album.releaseYear && (
@@ -285,20 +401,17 @@ export default async function HomePage() {
         {playlists.length > 0 && (
           <section className="mb-4">
             <div className="px-4 md:px-8">
-              <SectionHeader icon={ListMusic} title="Playlists" />
+              <SectionHeader title="Playlists" />
             </div>
             <ScrollRow>
               {playlists.map((playlist) => (
                 <Link key={playlist.id} href={`/playlist/${playlist.id}`} className="group flex-shrink-0 w-[140px] md:w-[176px] snap-start">
-                  <div className="relative w-full aspect-square overflow-hidden bg-[var(--surface-3)] mb-2.5 shadow-lg ring-1 ring-white/5 group-hover:ring-[var(--primary)]/40 transition-all duration-400">
-                    <div className="absolute inset-0 bg-gradient-to-br from-[var(--surface-3)] to-[var(--surface-2)] flex items-center justify-center -z-10">
-                      <ListMusic size={32} className="text-[var(--muted)]/40" />
-                    </div>
+                  <div className="relative w-full aspect-square overflow-hidden bg-[var(--surface-3)] mb-2.5 shadow-lg ring-1 ring-white/5 group-hover:ring-[var(--primary)]/40 transition-all duration-400 rounded-lg">
+                    <div className="absolute inset-0 bg-gradient-to-br from-[var(--surface-3)] to-[var(--surface-2)] flex items-center justify-center -z-10" />
                     {playlist.coverUrl && <Image src={playlist.coverUrl} alt={playlist.name} fill loading="lazy" className="object-cover group-hover:scale-105 transition-transform duration-600" unoptimized />}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                   </div>
                   <p className="text-xs md:text-sm font-bold truncate group-hover:text-[var(--primary)] transition-colors">{playlist.name}</p>
-                  <p className="text-[10px] md:text-xs text-[var(--muted)] truncate mt-0.5">Playlist</p>
                 </Link>
               ))}
             </ScrollRow>
@@ -310,4 +423,3 @@ export default async function HomePage() {
 }
 
 /* ─── Async Server Sub-components ───────────────────────── */
-

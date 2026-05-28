@@ -1,4 +1,6 @@
-import { supabase } from "@/lib/db";
+import { db } from "@/lib/db/drizzle";
+import { tracks } from "@/lib/db/schema";
+import { eq, sql } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = 'force-dynamic';
@@ -8,11 +10,18 @@ export async function POST(req: NextRequest) {
   const { id } = await req.json();
   if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 
-  // Try RPC first, fall back to read-increment-write
-  const { error } = await supabase.rpc("increment_plays", { track_id: id });
-  if (error) {
-    const { data } = await supabase.from("tracks").select("plays").eq("id", id).single();
-    await supabase.from("tracks").update({ plays: (data?.plays ?? 0) + 1 }).eq("id", id);
+  try {
+    await db.execute(sql`SELECT increment_plays(${Number(id)})`);
+  } catch {
+    const [data] = await db
+      .select({ plays: tracks.plays })
+      .from(tracks)
+      .where(eq(tracks.id, Number(id)))
+      .limit(1);
+    await db
+      .update(tracks)
+      .set({ plays: (data?.plays ?? 0) + 1 })
+      .where(eq(tracks.id, Number(id)));
   }
 
   return NextResponse.json({ ok: true });

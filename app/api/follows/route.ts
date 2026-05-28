@@ -1,56 +1,53 @@
 import { auth } from "@clerk/nextjs/server";
-import { supabase } from "@/lib/db";
+import { db } from "@/lib/db/drizzle";
+import { follows, artists } from "@/lib/db/schema";
 import { NextRequest, NextResponse } from "next/server";
+import { eq, and, desc, sql } from "drizzle-orm";
 
 export async function GET(req: NextRequest) {
   const type = req.nextUrl.searchParams.get("type");
 
-  // Count doesn't require auth
   if (type === "count") {
     const artistId = req.nextUrl.searchParams.get("artist_id");
     try {
-      const { count, error } = await (supabase as any)
-        .from("follows")
-        .select("id", { count: "exact", head: true })
-        .eq("artist_id", Number(artistId));
-      
-      console.log(`Count query for artist ${artistId}:`, { count, error });
-      
-      if (error) {
-        console.error("Count error:", error);
-        return NextResponse.json({ count: 0, error: error.message });
-      }
-      
-      return NextResponse.json({ count: count ?? 0 });
+      const [result] = await db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(follows)
+        .where(eq(follows.artistId, Number(artistId)));
+
+      return NextResponse.json({ count: result?.count ?? 0 });
     } catch (err) {
       console.error("Count exception:", err);
       return NextResponse.json({ count: 0, error: String(err) });
     }
   }
 
-  // Other operations require auth
   const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   if (type === "check") {
     const artistId = req.nextUrl.searchParams.get("artist_id");
-    const { data } = await (supabase as any)
-      .from("follows")
-      .select("id")
-      .eq("user_id", userId)
-      .eq("artist_id", Number(artistId))
-      .single();
+    const [data] = await db
+      .select({ id: follows.id })
+      .from(follows)
+      .where(and(eq(follows.userId, userId), eq(follows.artistId, Number(artistId))))
+      .limit(1);
     return NextResponse.json({ following: !!data });
   }
 
-  // Get all followed artists
-  const { data } = await (supabase as any)
-    .from("follows")
-    .select("artist_id, artists(id, name, slug, image_key)")
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false });
+  const data = await db
+    .select({
+      artistId: follows.artistId,
+      artistName: artists.name,
+      artistSlug: artists.slug,
+      artistImageKey: artists.imageKey,
+    })
+    .from(follows)
+    .leftJoin(artists, eq(follows.artistId, artists.id))
+    .where(eq(follows.userId, userId))
+    .orderBy(desc(follows.createdAt));
 
-  return NextResponse.json(data ?? []);
+  return NextResponse.json(data);
 }
 
 export async function POST(req: NextRequest) {
@@ -65,52 +62,31 @@ export async function POST(req: NextRequest) {
 
   try {
     if (action === "follow") {
-      // Check if already following to prevent duplicates
-      const { data: existing } = await (supabase as any)
-        .from("follows")
-        .select("id")
-        .eq("user_id", userId)
-        .eq("artist_id", artist_id)
-        .single();
+      const [existing] = await db
+        .select({ id: follows.id })
+        .from(follows)
+        .where(and(eq(follows.userId, userId), eq(follows.artistId, artist_id)))
+        .limit(1);
 
       if (existing) {
         return NextResponse.json({ success: true, message: "Already following" });
       }
 
-      const { error } = await (supabase as any)
-        .from("follows")
-        .insert({ user_id: userId, artist_id });
-      
-      if (error) {
-        // Handle unique constraint violation
-        if (error.code === "23505") {
-          return NextResponse.json({ success: true, message: "Already following" });
-        }
-        console.error("Follow error:", error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
-      }
+      await db.insert(follows).values({ userId, artistId: artist_id });
     } else if (action === "unfollow") {
-      const { error } = await (supabase as any)
-        .from("follows")
-        .delete()
-        .eq("user_id", userId)
-        .eq("artist_id", artist_id);
-      
-      if (error) {
-        console.error("Unfollow error:", error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
-      }
+      await db
+        .delete(follows)
+        .where(and(eq(follows.userId, userId), eq(follows.artistId, artist_id)));
     } else {
       return NextResponse.json({ error: "Invalid action" }, { status: 400 });
     }
 
-    // Return updated count
-    const { count } = await (supabase as any)
-      .from("follows")
-      .select("id", { count: "exact", head: true })
-      .eq("artist_id", artist_id);
+    const [result] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(follows)
+      .where(eq(follows.artistId, artist_id));
 
-    return NextResponse.json({ success: true, count: count ?? 0 });
+    return NextResponse.json({ success: true, count: result?.count ?? 0 });
   } catch (err) {
     console.error("Follow/unfollow exception:", err);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });

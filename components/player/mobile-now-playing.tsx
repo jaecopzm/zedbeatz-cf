@@ -294,7 +294,7 @@ export default function MobileNowPlaying({
                 <div key="artwork" className="relative w-full h-full">
                   {/* Cover art */}
                   <div
-                    className="relative w-full h-full overflow-hidden"
+                    className="relative w-full h-full overflow-hidden rounded"
                     style={{
                       transform: `scale(${playing ? 1 : 0.93}) translateX(${swipeOffset * 0.5}px)`,
                       opacity: Math.max(0.3, 1 - Math.abs(swipeOffset) / 400),

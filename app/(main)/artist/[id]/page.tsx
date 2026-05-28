@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { supabase } from "@/lib/db";
+import { db } from "@/lib/db/drizzle";
 import { getPublicUrl } from "@/lib/r2";
 import type { Track } from "@/lib/player-store";
 import type { Metadata } from "next";
@@ -8,16 +8,48 @@ import PopularTracks from "@/components/artist/popular-tracks";
 import ArtistAlbums from "@/components/artist/artist-albums";
 import ArtistTracks from "@/components/artist/artist-tracks";
 import { sanitizeFeaturedArtists } from "@/lib/featured-artists";
+import { artists, tracks, albums } from "@/lib/db/schema";
+import { eq, desc } from "drizzle-orm";
 
 async function getArtistData(id: string) {
-  let artistQuery = supabase.from("artists").select("id, name, bio, image_key, slug");
-  artistQuery = isNaN(Number(id)) ? artistQuery.eq("slug", id) : artistQuery.eq("id", Number(id));
-  const { data: artist } = await artistQuery.single();
+  const [artist] = await db.select({
+    id: artists.id,
+    name: artists.name,
+    bio: artists.bio,
+    imageKey: artists.imageKey,
+    slug: artists.slug,
+  })
+    .from(artists)
+    .where(isNaN(Number(id)) ? eq(artists.slug, id) : eq(artists.id, Number(id)))
+    .limit(1);
+
   if (!artist) return null;
 
-  const [{ data: rawTracks }, { data: rawAlbums }] = await Promise.all([
-    supabase.from("tracks").select("id, title, audio_key, cover_key, duration, artist_id, slug, featured_artists, plays").eq("artist_id", artist.id).order("plays", { ascending: false }),
-    supabase.from("albums").select("id, title, cover_key, release_year, slug").eq("artist_id", artist.id).order("release_year", { ascending: false }),
+  const [rawTracks, rawAlbums] = await Promise.all([
+    db.select({
+      id: tracks.id,
+      title: tracks.title,
+      audioKey: tracks.audioKey,
+      coverKey: tracks.coverKey,
+      duration: tracks.duration,
+      artistId: tracks.artistId,
+      slug: tracks.slug,
+      featuredArtists: tracks.featuredArtists,
+      plays: tracks.plays,
+    })
+      .from(tracks)
+      .where(eq(tracks.artistId, artist.id))
+      .orderBy(desc(tracks.plays)),
+    db.select({
+      id: albums.id,
+      title: albums.title,
+      coverKey: albums.coverKey,
+      releaseYear: albums.releaseYear,
+      slug: albums.slug,
+    })
+      .from(albums)
+      .where(eq(albums.artistId, artist.id))
+      .orderBy(desc(albums.releaseYear)),
   ]);
 
   return { artist, rawTracks: rawTracks ?? [], rawAlbums: rawAlbums ?? [] };
@@ -31,33 +63,54 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zedbeatz.vercel.app";
   const artistUrl = `${baseUrl}/artist/${artist.slug || artist.id}`;
-  const imageUrl = artist.image_key ? getPublicUrl(artist.image_key) : undefined;
+  const imageUrl = artist.imageKey ? getPublicUrl(artist.imageKey) : undefined;
   const trackTitles = rawTracks.slice(0, 5).map((t: any) => t.title);
+  const trackCount = rawTracks.length;
+  const bioExcerpt = artist.bio ? artist.bio.slice(0, 120) : "";
   const songsText = trackTitles.length > 0 ? ` Popular songs: ${trackTitles.join(", ")}.` : "";
+  const descBase = bioExcerpt || `Download ${artist.name} latest songs and albums. Stream ${artist.name} new music, mp3 download free.`;
 
   return {
-    title: `${artist.name} - New Songs, MP3 Download & Albums`,
-    description: `Download ${artist.name} latest songs and albums. Stream ${artist.name} new music, mp3 download free.${songsText} Zambian music on ZedBeatz.`,
+    title: `${artist.name} - New Songs, MP3 Download & Albums | Zambian Music`,
+    description: `${descBase}${songsText} ${trackCount} tracks available. Zambian music on ZedBeatz.`,
     keywords: [
       artist.name, `${artist.name} songs`, `${artist.name} new songs`,
-      `${artist.name} mp3 download`, `${artist.name} latest songs`,
+      `${artist.name} mp3 download`, `${artist.name} latest songs 2026`,
       `${artist.name} ft`, `${artist.name} albums`, `${artist.name} music download`,
-      `${artist.name} aweah mp3`, ...trackTitles.map((t: string) => `${artist.name} ${t}`),
-      "Zambian music", "Zambian artist", "ZedBeatz",
-    ].join(", "),
+      `${artist.name} aweah mp3`, `${artist.name} new music 2026`,
+      ...trackTitles.map((t: string) => `${artist.name} ${t}`),
+      ...trackTitles.map((t: string) => `${t} mp3 download`),
+      "Zambian music", "Zambian artist", "Zambia music 2026", "ZedBeatz",
+    ].concat([
+      "Zambian music streaming", "free Zambian music", "Zambia songs download",
+      "listen to Zambian music online", "new Zambian songs today", "Zambian music 2026 hits",
+      "top Zambian songs", "Zambian music charts", "Kopala music", "Zambian artists list",
+      "Kalindula music", "Zamdancehall", "Zambian hip hop", "Zambian gospel music",
+      "Zambian Afrobeat", "Lusaka music", "Copperbelt music", "Ndola music",
+      "Zambian music platform", "best Zambian music site", "Zambia mp3 streaming",
+      "Zambian music online", "Zambian songs mp3", "Zambia urban music",
+      "Zambian dancehall", "Zambian R&B", "Zambian traditional music",
+      "Zambian music video", "Zambian music 2026 playlist", "ZedBeatz Zambian music",
+      "Zambian music download mp3 2026", "Zambian music audio", "listen to Zambian music",
+    ]),
     openGraph: {
-      title: `${artist.name} - New Songs & Albums`,
-      description: `Stream and download ${artist.name} latest music on ZedBeatz`,
+      title: `${artist.name} - New Songs & Albums | Zambian Music`,
+      description: `Stream and download ${artist.name} latest music on ZedBeatz. ${trackCount} tracks available.`,
       url: artistUrl, siteName: "ZedBeatz",
-      images: imageUrl ? [{ url: imageUrl, width: 800, height: 800, alt: artist.name }] : [],
+      images: imageUrl ? [{ url: imageUrl, width: 800, height: 800, alt: `${artist.name} - Zambian Artist`, type: "image/jpeg" }] : [],
       locale: "en_ZM", type: "profile",
+      countryName: "Zambia",
     },
     twitter: {
-      card: "summary_large_image", title: `${artist.name} - New Songs`,
-      description: `Download ${artist.name} latest music on ZedBeatz`,
+      card: "summary_large_image", title: `${artist.name} - New Songs | Zambian Artist`,
+      description: `Download ${artist.name} latest music on ZedBeatz. ${trackCount} songs available.`,
       images: imageUrl ? [imageUrl] : [],
     },
     alternates: { canonical: artistUrl },
+    robots: {
+      index: true, follow: true,
+      googleBot: { index: true, follow: true, "max-video-preview": -1, "max-image-preview": "large", "max-snippet": -1 },
+    },
   };
 }
 
@@ -67,66 +120,81 @@ export default async function ArtistPage({ params }: { params: Promise<{ id: str
   if (!result) notFound();
   const { artist, rawTracks, rawAlbums } = result;
 
-  const tracks: (Track & { plays?: number })[] = (rawTracks ?? []).map((t) => ({
+  const tracksList: (Track & { plays?: number })[] = (rawTracks ?? []).map((t) => ({
     id: t.id,
     title: t.title,
-    artistId: t.artist_id ?? undefined,
+    artistId: t.artistId ?? undefined,
     artist: artist.name,
     artistSlug: artist.slug ?? undefined,
-    featuredArtists: sanitizeFeaturedArtists(t.featured_artists),
-    audioUrl: getPublicUrl(t.audio_key),
-    coverUrl: t.cover_key ? getPublicUrl(t.cover_key) : undefined,
-    duration: t.duration ?? undefined,
+    featuredArtists: sanitizeFeaturedArtists(t.featuredArtists),
+    audioUrl: getPublicUrl(t.audioKey),
+    coverUrl: t.coverKey ? getPublicUrl(t.coverKey) : undefined,
+    duration: t.duration ? Number(t.duration) : undefined,
     slug: t.slug ?? undefined,
     plays: t.plays ?? 0,
   }));
 
-  const totalPlays = tracks.reduce((sum, t) => sum + (t.plays ?? 0), 0);
+  const totalPlays = tracksList.reduce((sum, t) => sum + (t.plays ?? 0), 0);
 
-  const albums = (rawAlbums ?? []).map((a) => ({
+  const albumsList = (rawAlbums ?? []).map((a) => ({
     id: a.id,
     title: a.title,
     slug: a.slug,
-    releaseYear: a.release_year,
-    coverUrl: a.cover_key ? getPublicUrl(a.cover_key) : null,
+    releaseYear: a.releaseYear,
+    coverUrl: a.coverKey ? getPublicUrl(a.coverKey) : null,
   }));
 
   const artistData = {
     id: artist.id,
     name: artist.name,
     bio: artist.bio,
-    imageUrl: artist.image_key ? getPublicUrl(artist.image_key) : null,
+    imageUrl: artist.imageKey ? getPublicUrl(artist.imageKey) : null,
     slug: artist.slug,
-    trackCount: tracks.length,
-    albumCount: albums.length,
+    trackCount: tracksList.length,
+    albumCount: albumsList.length,
     totalPlays,
   };
 
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zedbeatz.vercel.app";
   const artistUrl = `${baseUrl}/artist/${artist.slug || artist.id}`;
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "MusicGroup",
-    name: artist.name,
-    url: artistUrl,
-    ...(artist.bio && { description: artist.bio }),
-    ...(artistData.imageUrl && { image: artistData.imageUrl }),
-    genre: "Zambian Music",
-    ...(albums.length > 0 && {
-      album: albums.slice(0, 10).map((a) => ({
-        "@type": "MusicAlbum",
-        name: a.title,
-        ...(a.releaseYear && { datePublished: `${a.releaseYear}` }),
-        ...(a.coverUrl && { image: a.coverUrl }),
+  const jsonLd = [
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": baseUrl },
+        { "@type": "ListItem", "position": 2, "name": "Artists", "item": `${baseUrl}/browse` },
+        { "@type": "ListItem", "position": 3, "name": artist.name, "item": artistUrl },
+      ],
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "MusicGroup",
+      name: artist.name,
+      url: artistUrl,
+      ...(artist.bio && { description: artist.bio }),
+      ...(artistData.imageUrl && { image: [{ "@type": "ImageObject", url: artistData.imageUrl, caption: artist.name }] }),
+      genre: "Zambian Music",
+      areaServed: "ZM",
+      ...(albumsList.length > 0 && {
+        album: albumsList.map((al) => ({
+          "@type": "MusicAlbum",
+          name: al.title,
+          ...(al.releaseYear && { datePublished: `${al.releaseYear}` }),
+          ...(al.coverUrl && { image: al.coverUrl }),
+          url: `${baseUrl}/album/${al.slug || al.id}`,
+        })),
+      }),
+      track: tracksList.map((t) => ({
+        "@type": "MusicRecording",
+        name: t.title,
+        ...(t.duration && { duration: `PT${Math.floor(t.duration)}S` }),
+        url: `${baseUrl}/track/${t.slug || t.id}`,
       })),
-    }),
-    track: tracks.slice(0, 10).map((t) => ({
-      "@type": "MusicRecording",
-      name: t.title,
-      ...(t.duration && { duration: `PT${Math.floor(t.duration)}S` }),
-    })),
-  };
+      ...(tracksList.length > 0 && { numTracks: tracksList.length }),
+    },
+  ];
 
   return (
     <div className="pb-6">
@@ -134,17 +202,17 @@ export default async function ArtistPage({ params }: { params: Promise<{ id: str
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <ArtistHeader artist={artistData} tracks={tracks} />
+      <ArtistHeader artist={artistData} tracks={tracksList} />
 
-      {tracks.length === 0 ? (
+      {tracksList.length === 0 ? (
         <div className="px-5 md:px-10 py-16 text-center">
           <p className="text-[var(--muted)] text-sm">No tracks available yet.</p>
         </div>
       ) : (
         <>
-          <PopularTracks tracks={tracks.slice(0, 5)} allTracks={tracks} />
-          {albums.length > 0 && <ArtistAlbums albums={albums} />}
-          <ArtistTracks tracks={tracks} />
+          <PopularTracks tracks={tracksList.slice(0, 5)} allTracks={tracksList} />
+          {albumsList.length > 0 && <ArtistAlbums albums={albumsList} />}
+          <ArtistTracks tracks={tracksList} />
         </>
       )}
     </div>

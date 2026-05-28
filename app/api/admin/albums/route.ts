@@ -1,20 +1,31 @@
-import { supabase } from "@/lib/db";
+import { db } from "@/lib/db/drizzle";
+import { albums, artists } from "@/lib/db/schema";
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/require-admin";
+import { eq, desc } from "drizzle-orm";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export async function GET() {
   const deny = await requireAdmin(); if (deny) return deny;
-  const { data } = await supabase.from("albums").select("id, title, artist_id, release_year, artists(name)").order("created_at", { ascending: false });
-  return NextResponse.json(data ?? []);
+  const data = await db
+    .select({
+      id: albums.id,
+      title: albums.title,
+      artistId: albums.artistId,
+      releaseYear: albums.releaseYear,
+      artistName: artists.name,
+    })
+    .from(albums)
+    .leftJoin(artists, eq(albums.artistId, artists.id))
+    .orderBy(desc(albums.createdAt));
+  return NextResponse.json(data);
 }
 
 export async function POST(req: NextRequest) {
   const deny = await requireAdmin(); if (deny) return deny;
   const body = await req.json();
-  const { data, error } = await supabase.from("albums").insert(body).select().single();
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  const [data] = await db.insert(albums).values(body).returning();
   return NextResponse.json(data);
 }

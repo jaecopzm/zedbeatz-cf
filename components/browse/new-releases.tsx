@@ -9,7 +9,7 @@ export default function NewReleases({ tracks }: { tracks: Track[] }) {
     <ScrollRow>
       {tracks.slice(0, 12).map((track) => (
         <div key={track.id} className="flex-shrink-0 w-[140px] md:w-[176px] snap-start">
-          <TrackCard track={track} queue={tracks} bare />
+          <TrackCard track={track} queue={tracks} bare minimal />
         </div>
       ))}
     </ScrollRow>

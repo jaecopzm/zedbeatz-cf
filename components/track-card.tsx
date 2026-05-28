@@ -9,7 +9,7 @@ import AddToPlaylist from "@/components/add-to-playlist";
 import LikeButton from "@/components/like-button";
 import { useLongPress } from "@/lib/use-long-press";
 
-export default function TrackCard({ track, queue, bare }: { track: Track; queue?: Track[]; bare?: boolean }) {
+export default function TrackCard({ track, queue, bare, minimal }: { track: Track; queue?: Track[]; bare?: boolean; minimal?: boolean }) {
   const { queue: pQueue, currentIndex, playing, loading, setQueue, play, toggle } = usePlayer();
   const isActive = pQueue[currentIndex]?.id === track.id;
   const [showActions, setShowActions] = useState(false);
@@ -58,7 +58,7 @@ export default function TrackCard({ track, queue, bare }: { track: Track; queue?
     <div
       {...longPress}
       onClick={handlePlay}
-      className={`group cursor-pointer transition-all duration-200 relative overflow-hidden ${
+      className={`group cursor-pointer transition-all duration-200 relative overflow-hidden w-full ${
         bare
           ? "bg-transparent p-0"
           : `p-1.5 md:p-3 ${
@@ -76,7 +76,7 @@ export default function TrackCard({ track, queue, bare }: { track: Track; queue?
         bare
           ? "group-hover:shadow-lg"
           : ""
-      } transition-all duration-200`}>
+      } transition-all duration-200 ${minimal ? "rounded-lg" : ""}`}>
         {/* Fallback background with Music icon */}
         <div className="absolute inset-0 bg-gradient-to-br from-[var(--surface-3)] to-[var(--surface-2)] flex items-center justify-center -z-10">
           <Music size={24} className="opacity-20 text-white md:w-8 md:h-8" />
@@ -113,7 +113,7 @@ export default function TrackCard({ track, queue, bare }: { track: Track; queue?
         )}
 
         {/* Duration badge */}
-        {track.duration && !isActive && (
+        {track.duration && !isActive && !minimal && (
           <div className="absolute bottom-1.5 right-1.5 md:bottom-2 md:right-2 px-1.5 py-0.5 bg-black/70 backdrop-blur-sm text-[9px] md:text-[10px] font-medium text-white/90 tabular-nums">
             {Math.floor(track.duration / 60)}:{String(Math.floor(track.duration % 60)).padStart(2, '0')}
           </div>
@@ -125,26 +125,43 @@ export default function TrackCard({ track, queue, bare }: { track: Track; queue?
         )}
 
         {/* Hover overlay with play button */}
-        <div className={`absolute inset-0 bg-black/50 backdrop-blur-[2px] flex items-center justify-center transition-all duration-300 ${
-          isActive && playing ? "opacity-0 md:group-hover:opacity-100" : "opacity-0 md:group-hover:opacity-100"
-        }`}>
-          <div className="relative w-9 h-9 md:w-12 md:h-12 rounded-full bg-[var(--primary)] flex items-center justify-center shadow-xl shadow-[var(--primary-glow)] transition-all duration-200 scale-90 group-hover:scale-100 hover:bg-[var(--primary-hover)]">
-            {isActive && playing ? (
-              <Pause size={16} className="text-black fill-black md:w-5 md:h-5" />
-            ) : (
-              <Play size={16} className="text-black fill-black ml-0.5 md:w-5 md:h-5" />
-            )}
+        {!minimal && (
+          <div className={`absolute inset-0 bg-black/50 backdrop-blur-[2px] flex items-center justify-center transition-all duration-300 ${
+            isActive && playing ? "opacity-0 md:group-hover:opacity-100" : "opacity-0 md:group-hover:opacity-100"
+          }`}>
+            <div className="relative w-9 h-9 md:w-12 md:h-12 rounded-full bg-[var(--primary)] flex items-center justify-center shadow-xl shadow-[var(--primary-glow)] transition-all duration-200 scale-90 group-hover:scale-100 hover:bg-[var(--primary-hover)]">
+              {isActive && playing ? (
+                <Pause size={16} className="text-black fill-black md:w-5 md:h-5" />
+              ) : (
+                <Play size={16} className="text-black fill-black ml-0.5 md:w-5 md:h-5" />
+              )}
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* Minimal play overlay */}
+        {minimal && (
+          <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+            <div className="w-9 h-9 md:w-12 md:h-12 rounded-full bg-[var(--primary)] flex items-center justify-center shadow-xl shadow-[var(--primary-glow)] scale-90 group-hover:scale-100 transition-transform duration-200">
+              {isActive && playing ? (
+                <Pause size={14} className="text-black fill-black md:w-5 md:h-5" />
+              ) : (
+                <Play size={14} className="text-black fill-black ml-0.5 md:w-5 md:h-5" />
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Action buttons row — desktop only */}
-        <div
-          className="hidden md:flex absolute bottom-2 right-2 gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200 translate-y-1 group-hover:translate-y-0"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <LikeButton trackId={track.id} size={12} />
-          <AddToPlaylist trackId={track.id} />
-        </div>
+        {!minimal && (
+          <div
+            className="hidden md:flex absolute bottom-2 right-2 gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200 translate-y-1 group-hover:translate-y-0"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <LikeButton trackId={track.id} size={12} />
+            <AddToPlaylist trackId={track.id} />
+          </div>
+        )}
       </div>
 
       {/* Text */}
@@ -175,7 +192,7 @@ export default function TrackCard({ track, queue, bare }: { track: Track; queue?
           {track.artist}{track.featuredArtists && ` feat. ${track.featuredArtists}`}
         </p>
       )}
-      {track.duration && (
+      {track.duration && !minimal && (
         <p className="text-[8px] md:text-[10px] text-[var(--muted)]/60 tabular-nums mt-0.5">
           {Math.floor(track.duration / 60)}:{String(Math.floor(track.duration % 60)).padStart(2, "0")}
         </p>

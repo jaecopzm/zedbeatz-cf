@@ -1,6 +1,8 @@
-import { supabase } from "@/lib/db";
+import { db } from "@/lib/db/drizzle";
+import { comments } from "@/lib/db/schema";
 import { NextRequest, NextResponse } from "next/server";
 import { auth, currentUser } from "@clerk/nextjs/server";
+import { eq, and, desc } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -13,18 +15,20 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Missing track_id" }, { status: 400 });
   }
 
-  const { data, error } = await supabase
-    .from("comments")
-    .select("id, user_id, user_name, content, created_at")
-    .eq("track_id", parseInt(track_id))
-    .order("created_at", { ascending: false })
+  const data = await db
+    .select({
+      id: comments.id,
+      userId: comments.userId,
+      userName: comments.userName,
+      content: comments.content,
+      createdAt: comments.createdAt,
+    })
+    .from(comments)
+    .where(eq(comments.trackId, parseInt(track_id)))
+    .orderBy(desc(comments.createdAt))
     .limit(50);
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-
-  return NextResponse.json({ comments: data ?? [] });
+  return NextResponse.json({ comments: data });
 }
 
 export async function POST(req: NextRequest) {
@@ -34,7 +38,7 @@ export async function POST(req: NextRequest) {
   }
 
   const user = await currentUser();
-  const user_name =
+  const userName =
     user?.firstName
       ? `${user.firstName}${user.lastName ? " " + user.lastName : ""}`
       : user?.username ?? "Anonymous";
@@ -49,15 +53,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Comment too long (max 500 chars)" }, { status: 400 });
   }
 
-  const { data, error } = await supabase
-    .from("comments")
-    .insert({ track_id, user_id: userId, user_name, content: content.trim() })
-    .select()
-    .single();
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
+  const [data] = await db
+    .insert(comments)
+    .values({ trackId: track_id, userId, userName, content: content.trim() })
+    .returning();
 
   return NextResponse.json({ comment: data });
 }
@@ -71,15 +70,9 @@ export async function DELETE(req: NextRequest) {
   const { id } = await req.json();
   if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 
-  const { error } = await supabase
-    .from("comments")
-    .delete()
-    .eq("id", id)
-    .eq("user_id", userId);
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
+  await db
+    .delete(comments)
+    .where(and(eq(comments.id, id), eq(comments.userId, userId)));
 
   return NextResponse.json({ ok: true });
 }

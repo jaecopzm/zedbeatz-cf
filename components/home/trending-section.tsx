@@ -1,14 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { Flame, Music } from "lucide-react";
+import { Play, Pause, Flame, MoreHorizontal } from "lucide-react";
 import { usePlayer, type Track } from "@/lib/player-store";
-
-const RANK_STYLE: Record<number, string> = {
-  0: "bg-yellow-400 text-black",
-  1: "bg-slate-300 text-black", 
-  2: "bg-amber-700 text-white",
-};
+import { TrackMenu } from "@/components/track-menu";
 
 export default function TrendingSection({ tracks }: { tracks: Track[] }) {
   const { queue: pQueue, currentIndex, playing, setQueue, toggle } = usePlayer();
@@ -26,61 +21,72 @@ export default function TrendingSection({ tracks }: { tracks: Track[] }) {
   }
 
   return (
-    <div className="grid grid-cols-3 md:grid-cols-4 gap-2 md:gap-3">
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1.5 md:gap-3">
       {tracks.map((track, i) => (
-        <div key={track.id} className={i >= 6 ? "hidden md:block" : ""}>
-          <TrendingCard track={track} index={i} tracks={tracks}
-            pQueue={pQueue} pIndex={currentIndex} playing={playing} setQueue={setQueue} toggle={toggle} />
-        </div>
+        <TrendingCard key={track.id} track={track} index={i} tracks={tracks} />
       ))}
     </div>
   );
 }
 
-function TrendingCard({ track, index, tracks, pQueue, pIndex, playing, setQueue, toggle }: {
+function TrendingCard({ track, index, tracks }: {
   track: Track; index: number; tracks: Track[];
-  pQueue: Track[]; pIndex: number; playing: boolean;
-  setQueue: (q: Track[], i: number) => void; toggle: () => void;
 }) {
-  const isActive = pQueue[pIndex]?.id === track.id;
+  const { queue, currentIndex, playing, setQueue, toggle } = usePlayer();
+  const isActive = queue[currentIndex]?.id === track.id;
 
   return (
     <div
-      className="group relative overflow-hidden cursor-pointer transition-all duration-200 hover:scale-[1.02] bg-[var(--surface)] hover:bg-[var(--surface-2)] aspect-square"
+      className="group relative flex items-center gap-2 md:gap-2.5 p-2 rounded-xl cursor-pointer transition-all duration-200 border-t border-[var(--border)]"
       onClick={() => isActive ? toggle() : setQueue(tracks, index)}
     >
-      {/* Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[var(--surface-3)] to-[var(--surface-2)] flex items-center justify-center">
-        <Music size={24} className="opacity-20 text-white" />
-      </div>
+      {/* Artwork */}
+      <div className="relative w-10 h-10 md:w-12 md:h-12 shrink-0 rounded-lg overflow-hidden bg-[var(--surface-3)] ring-1 ring-white/[0.04]">
+        {track.coverUrl ? (
+          <Image src={track.coverUrl} alt={track.title} fill className="object-cover" sizes="48px" />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-[var(--surface-3)] to-[var(--surface-2)]" />
+        )}
 
-      {track.coverUrl && (
-        <Image src={track.coverUrl} alt={track.title} fill
-          className="object-cover transition-transform duration-300 group-hover:scale-105" />
-      )}
-      
-      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-
-      {/* Rank */}
-      <div className={`absolute top-2 left-2 w-6 h-6 flex items-center justify-center text-[10px] font-black ${
-        RANK_STYLE[index] ?? "bg-black/70 text-white"
-      }`}>
-        {index + 1}
-      </div>
-
-      {/* Play indicator */}
-      {isActive && playing && (
-        <div className="absolute top-2 right-2 w-4 h-4 bg-[var(--primary)] flex items-center justify-center">
-          <div className="w-1 h-1 bg-black animate-pulse" />
+        {/* Hover play */}
+        <div className={`absolute inset-0 bg-black/50 flex items-center justify-center transition-all duration-200 ${
+          isActive && playing ? "opacity-0" : "opacity-0 group-hover:opacity-100"
+        }`}>
+          {isActive && playing ? (
+            <Pause size={12} className="text-white fill-white" />
+          ) : (
+            <Play size={12} className="text-white fill-white ml-0.5" />
+          )}
         </div>
-      )}
+
+        {/* Now playing eq */}
+        {isActive && playing && (
+          <div className="absolute bottom-0.5 right-0.5 flex items-end gap-[1.5px] h-2.5">
+            {[1,2,3].map((i) => (
+              <span key={i} className="eq-bar eq-bar--active" style={{ animationDelay: `${i * 0.15}s`, height: `${3 + i * 2}px`, width: '2px' }} />
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Info */}
-      <div className="absolute bottom-0 left-0 right-0 p-1.5 md:p-2">
-        <p className={`text-[10px] md:text-xs font-bold truncate ${isActive ? "text-[var(--primary)]" : "text-white"}`}>
+      <div className="min-w-0 flex-1">
+        <p className={`text-xs md:text-sm font-semibold line-clamp-2 leading-tight ${isActive ? "text-[var(--primary)]" : "text-white"}`}>
           {track.title}
         </p>
-        <p className="text-[8px] md:text-[10px] text-white/60 truncate">{track.artist}</p>
+        <p className="text-[11px] md:text-xs text-white/40 truncate mt-0.5">{track.artist}</p>
+      </div>
+
+      {/* Duration */}
+      {track.duration && (
+        <span className="text-[10px] text-white/25 tabular-nums hidden md:block shrink-0">
+          {Math.floor(track.duration / 60)}:{String(Math.floor(track.duration % 60)).padStart(2, '0')}
+        </span>
+      )}
+
+      {/* Menu */}
+      <div className="-mr-1">
+        <TrackMenu track={track} />
       </div>
     </div>
   );

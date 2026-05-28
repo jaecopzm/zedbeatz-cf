@@ -238,11 +238,7 @@ export function TrackMenu({ track, onNavigate }: { track: Track; onNavigate?: ()
     >
       <button
         ref={buttonRef}
-        className={`flex items-center justify-center w-10 h-10 rounded-full transition-all active:scale-90 ${
-          open 
-            ? "bg-white/15 text-white" 
-            : "bg-white/8 text-white/75 hover:text-white"
-        }`}
+        className="flex items-center justify-center w-8 h-8 rounded-full transition-all active:scale-90 text-white/40 hover:text-white"
         onClick={(e) => {
           e.stopPropagation();
           if (!open && buttonRef.current) {

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/db/index";
+import { db } from "@/lib/db/drizzle";
+import { tracks, artists } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -9,16 +11,18 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  
-  const { data, error } = await supabase
-    .from("tracks")
-    .select("id, title, lyrics, synced_lyrics, artists(name)")
-    .eq("id", Number(id))
-    .single();
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
+  const [data] = await db
+    .select({
+      id: tracks.id,
+      title: tracks.title,
+      lyrics: tracks.lyrics,
+      syncedLyrics: tracks.syncedLyrics,
+      artistName: artists.name,
+    })
+    .from(tracks)
+    .leftJoin(artists, eq(tracks.artistId, artists.id))
+    .where(eq(tracks.id, Number(id)))
+    .limit(1);
 
   if (!data) {
     return NextResponse.json({ error: "Track not found" }, { status: 404 });
@@ -27,9 +31,9 @@ export async function GET(
   return NextResponse.json({
     id: data.id,
     title: data.title,
-    artist: (data.artists as any)?.name || "Unknown",
+    artist: data.artistName || "Unknown",
     lyrics: data.lyrics,
-    synced_lyrics: data.synced_lyrics,
-    has_lyrics: !!data.lyrics || !!data.synced_lyrics
+    synced_lyrics: data.syncedLyrics,
+    has_lyrics: !!data.lyrics || !!data.syncedLyrics,
   });
 }

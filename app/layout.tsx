@@ -25,21 +25,33 @@ export const metadata: Metadata = {
   },
   description: "Download and stream latest Zambian music MP3. Yo Maps, Chile One, Kell Kay new songs. Free Zambian music download, aweah mp3, latest hits 2026.",
   keywords: [
-    "Zambian music", "Zambian music download", "mp3 download", "aweah mp3 download",
+    "Zambian music", "Zambian music download", "Zambian music 2026",
+    "mp3 download", "aweah mp3 download", "latest Zambian songs",
     "Yo Maps", "Yo Maps new songs", "Yo Maps ft", "Yo Maps mp3 download",
     "Chile One", "Chile One new songs", "Kell Kay", "Kell Kay mp3",
-    "Zambian artists", "Zambia music 2026", "latest Zambian songs",
+    "Macky 2", "Chef 187", "Slapdee",
+    "Zambian artists", "Zambia music 2026", "Zambia mp3 download",
     "free music download", "stream Zambian music", "African music",
-    "ZedBeatz", "Zambia streaming", "new Zambian music"
+    "ZedBeatz", "Zambia streaming", "new Zambian music", "Zambia songs 2026",
+    "Zambian music streaming", "free Zambian music", "Zambia songs download",
+    "listen to Zambian music online", "new Zambian songs today", "Zambian music 2026 hits",
+    "top Zambian songs", "Zambian music charts", "Kopala music", "Zambian artists list",
+    "Kalindula music", "Zamdancehall", "Zambian hip hop", "Zambian gospel music",
+    "Zambian Afrobeat", "Lusaka music", "Copperbelt music", "Ndola music",
+    "Zambian music platform", "best Zambian music site", "Zambia mp3 streaming",
+    "Zambian music online", "Zambian songs mp3", "Zambia urban music",
+    "Zambian dancehall", "Zambian R&B", "Zambian traditional music",
+    "Zambian music video", "Zambian music 2026 playlist", "ZedBeatz Zambian music"
   ],
   authors: [{ name: "ZedBeatz" }],
   creator: "ZedBeatz",
+  publisher: "ZedBeatz",
   openGraph: {
     type: "website",
     locale: "en_ZM",
     url: siteUrl,
     title: "ZedBeatz - Download Latest Zambian Music MP3",
-    description: "Stream & download latest Zambian music. Yo Maps, Chile One, Kell Kay new songs. Free MP3 download.",
+    description: "Stream & download latest Zambian music. Yo Maps, Chile One, Kell Kay new songs. Free MP3 download. #1 Zambian music platform 2026.",
     siteName: "ZedBeatz",
     images: [
       {
@@ -49,17 +61,40 @@ export const metadata: Metadata = {
         alt: "ZedBeatz logo",
       },
     ],
+    countryName: "Zambia",
   },
   twitter: {
     card: "summary_large_image",
     title: "ZedBeatz - Zambian Music MP3 Download",
     description: "Download latest Zambian music MP3. Yo Maps, Chile One new songs & more.",
     images: [ogImage],
+    site: "@ZedBeatz",
+    creator: "@ZedBeatz",
   },
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
   },
+  alternates: {
+    canonical: siteUrl,
+    languages: {
+      "en-ZM": siteUrl,
+    },
+  },
+  verification: {
+    google: "V_Nv319pvwRw4RfeNjIu6Lc2nSoFEaNQUCpjysr0rgQ",
+  },
+  other: {
+    "google-site-verification": "V_Nv319pvwRw4RfeNjIu6Lc2nSoFEaNQUCpjysr0rgQ",
+  },
+  category: "music",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -68,6 +103,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <html lang="en" className={`${geist.variable} min-h-full`}>
         <head>
           <meta name="google-adsense-account" content="ca-pub-2560191456415218" />
+          <meta name="theme-color" content="#0a0a0f" />
+          <meta name="apple-mobile-web-app-capable" content="yes" />
+          <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+          <meta name="application-name" content="ZedBeatz" />
+          <meta name="msapplication-TileColor" content="#0a0a0f" />
+          <meta name="p:domain_verify" content="f175e6724de13902cbcb3012011d9799" />
           <link rel="preconnect" href="https://fonts.googleapis.com" />
           <link rel="dns-prefetch" href="https://cdn.zedbeatz.com" />
         </head>

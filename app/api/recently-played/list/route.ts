@@ -1,8 +1,10 @@
-import { supabase } from "@/lib/db";
+import { db } from "@/lib/db/drizzle";
+import { recentlyPlayed, tracks, artists } from "@/lib/db/schema";
 import { getPublicUrl } from "@/lib/r2";
 import { sanitizeFeaturedArtists } from "@/lib/featured-artists";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
+import { eq, desc } from "drizzle-orm";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -13,40 +15,49 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ tracks: [] });
   }
 
-  const { data } = await supabase
-    .from("recently_played")
-    .select("track_id, played_at, tracks(id, title, audio_key, cover_key, duration, artist_id, slug, featured_artists, artists(name, slug))")
-    .eq("user_id", userId)
-    .order("played_at", { ascending: false })
+  const data = await db
+    .select({
+      trackId: recentlyPlayed.trackId,
+      playedAt: recentlyPlayed.playedAt,
+      trackId2: tracks.id,
+      trackTitle: tracks.title,
+      audioKey: tracks.audioKey,
+      coverKey: tracks.coverKey,
+      duration: tracks.duration,
+      trackSlug: tracks.slug,
+      featuredArtists: tracks.featuredArtists,
+      artistId: tracks.artistId,
+      artistName: artists.name,
+      artistSlug: artists.slug,
+    })
+    .from(recentlyPlayed)
+    .leftJoin(tracks, eq(recentlyPlayed.trackId, tracks.id))
+    .leftJoin(artists, eq(tracks.artistId, artists.id))
+    .where(eq(recentlyPlayed.userId, userId))
+    .orderBy(desc(recentlyPlayed.playedAt))
     .limit(50);
 
-  if (!data) return NextResponse.json({ tracks: [] });
-
-  // Deduplicate by track_id, keep most recent
   const seen = new Set<number>();
-  const tracks = data
-    .filter((r: any) => {
-      if (!r.tracks || seen.has(r.track_id)) return false;
-      seen.add(r.track_id);
+  const tracks_result = data
+    .filter((r) => {
+      if (!r.trackId2 || !r.trackId || seen.has(r.trackId)) return false;
+      seen.add(r.trackId);
       return true;
     })
     .slice(0, 12)
-    .map((r: any) => {
-    const t = r.tracks;
-    return {
-      id: t.id,
-      title: t.title,
-      artistId: t.artist_id,
-      artist: t.artists?.name ?? "Unknown",
-      artistSlug: t.artists?.slug,
-      featuredArtists: sanitizeFeaturedArtists(t.featured_artists),
-      audioUrl: getPublicUrl(t.audio_key),
-      coverUrl: t.cover_key ? getPublicUrl(t.cover_key) : null,
-      duration: t.duration,
-      slug: t.slug,
-      playedAt: r.played_at,
-    };
-  });
+    .map((r) => ({
+      id: r.trackId2,
+      title: r.trackTitle,
+      artistId: r.artistId,
+      artist: r.artistName ?? "Unknown",
+      artistSlug: r.artistSlug,
+      featuredArtists: sanitizeFeaturedArtists(r.featuredArtists),
+      audioUrl: r.audioKey ? getPublicUrl(r.audioKey) : "",
+      coverUrl: r.coverKey ? getPublicUrl(r.coverKey) : null,
+      duration: r.duration,
+      slug: r.trackSlug,
+      playedAt: r.playedAt,
+    }));
 
-  return NextResponse.json({ tracks });
+  return NextResponse.json({ tracks: tracks_result });
 }

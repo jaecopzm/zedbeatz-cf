@@ -1,44 +1,73 @@
-import { supabase } from "@/lib/db";
-import { getPublicUrl } from "@/lib/r2";
 import { NextRequest, NextResponse } from "next/server";
-import { sanitizeFeaturedArtists } from "@/lib/featured-artists";
+import { db } from "@/lib/db/drizzle";
+import { artists, tracks } from "@/lib/db/schema";
+import { getPublicUrl } from "@/lib/r2";
+import { eq, desc } from "drizzle-orm";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export async function GET(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   const { id } = await params;
+  const isNumeric = /^\d+$/.test(id);
 
-  // Try to get artist by ID or slug
-  let artistQuery = supabase.from("artists").select("id, name, bio, image_key, slug");
-  artistQuery = isNaN(Number(id)) 
-    ? artistQuery.eq("slug", id) 
-    : artistQuery.eq("id", Number(id));
-  
-  const { data: artist } = await artistQuery.single();
-  if (!artist) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  const [artist] = isNumeric
+    ? await db
+        .select({
+          id: artists.id,
+          name: artists.name,
+          slug: artists.slug,
+          bio: artists.bio,
+          imageKey: artists.imageKey,
+        })
+        .from(artists)
+        .where(eq(artists.id, Number(id)))
+        .limit(1)
+    : await db
+        .select({
+          id: artists.id,
+          name: artists.name,
+          slug: artists.slug,
+          bio: artists.bio,
+          imageKey: artists.imageKey,
+        })
+        .from(artists)
+        .where(eq(artists.slug, id))
+        .limit(1);
 
-  const { data: tracks } = await supabase
-    .from("tracks")
-    .select("id, title, audio_key, cover_key, duration, genre, plays, slug, featured_artists")
-    .eq("artist_id", artist.id)
-    .order("plays", { ascending: false });
+  if (!artist) {
+    return NextResponse.json({ error: "Artist not found" }, { status: 404 });
+  }
+
+  const trackList = await db
+    .select({
+      id: tracks.id,
+      title: tracks.title,
+      audioKey: tracks.audioKey,
+      coverKey: tracks.coverKey,
+      duration: tracks.duration,
+      artistId: tracks.artistId,
+      slug: tracks.slug,
+      featuredArtists: tracks.featuredArtists,
+      plays: tracks.plays,
+      createdAt: tracks.createdAt,
+    })
+    .from(tracks)
+    .where(eq(tracks.artistId, artist.id))
+    .orderBy(desc(tracks.plays));
 
   return NextResponse.json({
-    ...artist,
-    imageUrl: artist.image_key ? getPublicUrl(artist.image_key) : null,
-    tracks: (tracks ?? []).map((t) => ({
-      id: t.id,
-      title: t.title,
-      artist: artist.name,
-      artistSlug: artist.slug,
-      featuredArtists: sanitizeFeaturedArtists(t.featured_artists),
-      audioUrl: getPublicUrl(t.audio_key),
-      coverUrl: t.cover_key ? getPublicUrl(t.cover_key) : null,
-      duration: t.duration,
-      slug: t.slug,
-      genre: t.genre,
-      plays: t.plays,
+    artist: {
+      ...artist,
+      imageUrl: artist.imageKey ? getPublicUrl(artist.imageKey) : null,
+    },
+    tracks: trackList.map(t => ({
+      ...t,
+      coverUrl: t.coverKey ? getPublicUrl(t.coverKey) : null,
+      audioUrl: getPublicUrl(t.audioKey),
     })),
   });
 }

@@ -1,38 +1,73 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { supabase } from "@/lib/db";
+import { db } from "@/lib/db/drizzle";
+import { tracks, artists } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 import RadioClient from "./client";
 import { getPublicUrl } from "@/lib/r2";
 import { sanitizeFeaturedArtists } from "@/lib/featured-artists";
 
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const isNumeric = !isNaN(Number(id));
+
+  const [track] = await db
+    .select({ title: tracks.title, artistName: artists.name })
+    .from(tracks)
+    .leftJoin(artists, eq(tracks.artistId, artists.id))
+    .where(isNumeric ? eq(tracks.id, parseInt(id)) : eq(tracks.slug, id))
+    .limit(1);
+
+  if (!track) return { title: "Radio" };
+
+  return {
+    title: `${track.title} — ${track.artistName}`,
+    description: `Listen to ${track.title} by ${track.artistName} on ZedBeatz radio.`,
+  };
+}
+
 export default async function RadioPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const isNumeric = !isNaN(Number(id));
-  
-  const { data: track } = await supabase
-    .from("tracks")
-    .select("id, title, audio_key, cover_key, duration, artist_id, genre, slug, featured_artists, artists(name, slug)")
-    .eq(isNumeric ? "id" : "slug", isNumeric ? parseInt(id) : id)
-    .single();
 
-  if (!track || !track.artists) return notFound();
+  const [track] = await db
+    .select({
+      id: tracks.id,
+      title: tracks.title,
+      audioKey: tracks.audioKey,
+      coverKey: tracks.coverKey,
+      duration: tracks.duration,
+      artistId: tracks.artistId,
+      genre: tracks.genre,
+      slug: tracks.slug,
+      featuredArtists: tracks.featuredArtists,
+      artistName: artists.name,
+      artistSlug: artists.slug,
+    })
+    .from(tracks)
+    .leftJoin(artists, eq(tracks.artistId, artists.id))
+    .where(isNumeric ? eq(tracks.id, parseInt(id)) : eq(tracks.slug, id))
+    .limit(1);
 
-  const audioUrl = getPublicUrl(track.audio_key);
-  const coverUrl = track.cover_key ? getPublicUrl(track.cover_key) : "/placeholder.png";
+  if (!track || !track.artistName) return notFound();
+
+  const audioUrl = getPublicUrl(track.audioKey);
+  const coverUrl = track.coverKey ? getPublicUrl(track.coverKey) : "/placeholder.png";
 
   return (
     <RadioClient
       seedTrack={{
         id: track.id,
         title: track.title,
-        artist: track.artists.name,
-        artistSlug: track.artists.slug ?? undefined,
+        artist: track.artistName,
+        artistSlug: track.artistSlug ?? undefined,
         audioUrl,
         coverUrl,
-        duration: track.duration ?? undefined,
+        duration: track.duration ? Number(track.duration) : undefined,
         slug: track.slug ?? undefined,
-        featuredArtists: sanitizeFeaturedArtists(track.featured_artists) ?? undefined,
+        featuredArtists: sanitizeFeaturedArtists(track.featuredArtists) ?? undefined,
         genre: track.genre ?? undefined,
-        artist_id: track.artist_id!,
+        artist_id: track.artistId!,
       }}
     />
   );

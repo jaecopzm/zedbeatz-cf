@@ -1,7 +1,10 @@
-import { supabase } from "@/lib/db";
+import { db } from "@/lib/db/drizzle";
+import { tracks } from "@/lib/db/schema/tracks";
+import { artists } from "@/lib/db/schema/artists";
 import { getPublicUrl } from "@/lib/r2";
 import { sanitizeFeaturedArtists } from "@/lib/featured-artists";
 import { NextRequest, NextResponse } from "next/server";
+import { ilike, desc, eq, and } from "drizzle-orm";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -11,37 +14,38 @@ export async function GET(req: NextRequest) {
   const search = req.nextUrl.searchParams.get("search");
   const sort = req.nextUrl.searchParams.get("sort");
 
-  let query = supabase
-    .from("tracks")
-    .select("id, title, audio_key, cover_key, duration, genre, featured_artists, plays, slug, artist_id, artists(name, slug)")
-    .limit(limit);
+  const conditions = [];
 
-  if (search) query = query.ilike("title", `%${search}%`);
-
-  // Sort by trending (plays) or created_at
-  if (sort === "trending") {
-    query = query.order("plays", { ascending: false });
-  } else {
-    query = query.order("created_at", { ascending: false });
+  if (search) {
+    conditions.push(ilike(tracks.title, `%${search}%`));
   }
 
-  const { data, error } = await query;
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  const orderBy = sort === "trending"
+    ? desc(tracks.plays)
+    : desc(tracks.createdAt);
 
-  const tracks = (data ?? []).map((r) => ({
-    id: r.id,
-    title: r.title,
-    artist: (r.artists as unknown as { name: string } | null)?.name ?? "Unknown",
-    artistId: r.artist_id,
-    artistSlug: (r.artists as unknown as { slug: string } | null)?.slug,
-    featuredArtists: sanitizeFeaturedArtists(r.featured_artists),
-    audioUrl: getPublicUrl(r.audio_key),
-    coverUrl: r.cover_key ? getPublicUrl(r.cover_key) : null,
-    duration: r.duration,
-    slug: r.slug,
-    plays: r.plays,
-    genre: r.genre,
+  const data = await db
+    .select()
+    .from(tracks)
+    .leftJoin(artists, eq(tracks.artistId, artists.id))
+    .where(conditions.length > 0 ? and(...conditions) : undefined)
+    .orderBy(orderBy)
+    .limit(limit);
+
+  const result = data.map(({ tracks: t, artists: a }) => ({
+    id: t.id,
+    title: t.title,
+    artist: a?.name ?? "Unknown",
+    artistId: t.artistId,
+    artistSlug: a?.slug,
+    featuredArtists: sanitizeFeaturedArtists(t.featuredArtists),
+    audioUrl: getPublicUrl(t.audioKey),
+    coverUrl: t.coverKey ? getPublicUrl(t.coverKey) : null,
+    duration: t.duration ? Number(t.duration) : null,
+    slug: t.slug,
+    plays: t.plays,
+    genre: t.genre,
   }));
 
-  return NextResponse.json(tracks);
+  return NextResponse.json(result);
 }

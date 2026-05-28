@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/db";
+import { db } from "@/lib/db/drizzle";
+import { albums, artists, tracks } from "@/lib/db/schema";
 import { getPublicUrl } from "@/lib/r2";
+import { eq, desc, sql } from "drizzle-orm";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -10,35 +12,36 @@ export async function GET(request: NextRequest) {
   const limit = parseInt(searchParams.get("limit") || "20");
   const offset = parseInt(searchParams.get("offset") || "0");
 
-  const { data, error } = await supabase
-    .from("albums")
-    .select(`
-      id,
-      title,
-      slug,
-      cover_key,
-      release_year,
-      artist_id,
-      artists(name, slug),
-      tracks(id)
-    `)
-    .order("release_year", { ascending: false })
-    .range(offset, offset + limit - 1);
+  const data = await db
+    .select({
+      id: albums.id,
+      title: albums.title,
+      slug: albums.slug,
+      coverKey: albums.coverKey,
+      releaseYear: albums.releaseYear,
+      artistId: albums.artistId,
+      artistName: artists.name,
+      artistSlug: artists.slug,
+      trackCount: sql<number>`count(${tracks.id})`.as("track_count"),
+    })
+    .from(albums)
+    .leftJoin(artists, eq(albums.artistId, artists.id))
+    .leftJoin(tracks, eq(tracks.albumId, albums.id))
+    .groupBy(albums.id, artists.name, artists.slug)
+    .orderBy(desc(albums.releaseYear))
+    .limit(limit)
+    .offset(offset);
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-
-  const albums = (data || []).map((album) => ({
+  const result = data.map((album) => ({
     id: album.id,
     title: album.title,
     slug: album.slug,
-    artist: (album.artists as unknown as { name: string } | null)?.name ?? "Unknown",
-    artistSlug: (album.artists as unknown as { slug: string } | null)?.slug,
-    coverUrl: album.cover_key ? getPublicUrl(album.cover_key) : null,
-    releaseYear: album.release_year,
-    trackCount: (album.tracks as unknown as any[])?.length ?? 0,
+    artist: album.artistName ?? "Unknown",
+    artistSlug: album.artistSlug,
+    coverUrl: album.coverKey ? getPublicUrl(album.coverKey) : null,
+    releaseYear: album.releaseYear,
+    trackCount: Number(album.trackCount),
   }));
 
-  return NextResponse.json(albums);
+  return NextResponse.json(result);
 }

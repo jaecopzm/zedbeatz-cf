@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/db/index";
+import { db } from "@/lib/db/drizzle";
+import { tracks } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -9,12 +11,12 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const { data, error } = await supabase
-    .from("tracks")
-    .select("id, plays")
-    .eq("id", Number(id))
-    .single();
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  const [data] = await db
+    .select({ id: tracks.id, plays: tracks.plays })
+    .from(tracks)
+    .where(eq(tracks.id, Number(id)))
+    .limit(1);
+  if (!data) return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json(data);
 }
 
@@ -24,15 +26,9 @@ export async function PATCH(
 ) {
   const { id } = await params;
   const body = await req.json();
-
-  const { error } = await supabase
-    .from("tracks")
-    .update({ featured_artists: body.featured_artists })
-    .eq("id", Number(id));
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-
+  await db
+    .update(tracks)
+    .set({ featuredArtists: body.featured_artists })
+    .where(eq(tracks.id, Number(id)));
   return NextResponse.json({ success: true });
 }

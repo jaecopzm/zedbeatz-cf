@@ -1,84 +1,64 @@
-export const runtime = 'edge';
-
 import { auth } from "@clerk/nextjs/server";
-import { supabase } from "@/lib/db";
+import { db } from "@/lib/db/drizzle";
+import { playlists, playlistTracks } from "@/lib/db/schema";
 import { NextRequest, NextResponse } from "next/server";
-
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+import { eq, and, asc } from "drizzle-orm";
 
 async function getFavouritesId(userId: string): Promise<number | null> {
-  // If duplicates already exist, always reuse the oldest one instead of creating more.
-  const { data: existing } = await supabase
-    .from("playlists")
-    .select("id")
-    .eq("user_id", userId)
-    .eq("name", "Favourites")
-    .order("id", { ascending: true })
+  const [existing] = await db
+    .select({ id: playlists.id })
+    .from(playlists)
+    .where(and(eq(playlists.userId, userId), eq(playlists.name, "Favourites")))
+    .orderBy(asc(playlists.id))
     .limit(1);
 
-  if (existing && existing.length > 0) return existing[0].id;
+  if (existing) return existing.id;
 
-  // Create new Favourites playlist only if not found
-  const { data: created, error } = await supabase
-    .from("playlists")
-    .insert({ name: "Favourites", user_id: userId })
-    .select("id")
-    .single();
+  try {
+    const [created] = await db
+      .insert(playlists)
+      .values({ name: "Favourites", userId })
+      .returning({ id: playlists.id });
 
-  // If insert failed due to duplicate, try to fetch again
-  if (error) {
-    const { data: retry } = await supabase
-      .from("playlists")
-      .select("id")
-      .eq("user_id", userId)
-      .eq("name", "Favourites")
-      .order("id", { ascending: true })
+    return created?.id ?? null;
+  } catch {
+    const [retry] = await db
+      .select({ id: playlists.id })
+      .from(playlists)
+      .where(and(eq(playlists.userId, userId), eq(playlists.name, "Favourites")))
+      .orderBy(asc(playlists.id))
       .limit(1);
-    
-    if (retry && retry.length > 0) return retry[0].id;
-    return null;
-  }
 
-  return created?.id ?? null;
+    return retry?.id ?? null;
+  }
 }
 
-// GET /api/likes?track_id=123 — check if liked
-// GET /api/likes — get all liked track IDs
 export async function GET(req: NextRequest) {
   const { userId } = await auth();
   if (!userId) return NextResponse.json({ liked: false, likedIds: [] });
 
   const trackId = req.nextUrl.searchParams.get("track_id");
-  
-  // Batch: return all liked track IDs
+  const favId = await getFavouritesId(userId);
+  if (!favId) return NextResponse.json({ liked: false, likedIds: [] });
+
   if (!trackId) {
-    const favId = await getFavouritesId(userId);
-    if (!favId) return NextResponse.json({ likedIds: [] });
+    const data = await db
+      .select({ trackId: playlistTracks.trackId })
+      .from(playlistTracks)
+      .where(eq(playlistTracks.playlistId, favId));
 
-    const { data } = await supabase
-      .from("playlist_tracks")
-      .select("track_id")
-      .eq("playlist_id", favId);
-
-    return NextResponse.json({ likedIds: (data || []).map(d => d.track_id) });
+    return NextResponse.json({ likedIds: data.map((d) => d.trackId) });
   }
 
-  // Single track check
-  const favId = await getFavouritesId(userId);
-  if (!favId) return NextResponse.json({ liked: false });
-
-  const { data } = await supabase
-    .from("playlist_tracks")
-    .select("id")
-    .eq("playlist_id", favId)
-    .eq("track_id", Number(trackId))
-    .maybeSingle();
+  const [data] = await db
+    .select({ id: playlistTracks.trackId })
+    .from(playlistTracks)
+    .where(and(eq(playlistTracks.playlistId, favId), eq(playlistTracks.trackId, Number(trackId))))
+    .limit(1);
 
   return NextResponse.json({ liked: !!data });
 }
 
-// POST /api/likes — toggle like
 export async function POST(req: NextRequest) {
   const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -89,31 +69,24 @@ export async function POST(req: NextRequest) {
   const favId = await getFavouritesId(userId);
   if (!favId) return NextResponse.json({ error: "Could not create Favourites playlist" }, { status: 500 });
 
-  // Check if already liked
-  const { data: existing } = await supabase
-    .from("playlist_tracks")
-    .select("track_id")
-    .eq("playlist_id", favId)
-    .eq("track_id", track_id)
-    .maybeSingle();
+  const [existing] = await db
+    .select({ trackId: playlistTracks.trackId })
+    .from(playlistTracks)
+    .where(and(eq(playlistTracks.playlistId, favId), eq(playlistTracks.trackId, track_id)))
+    .limit(1);
 
   if (existing) {
-    // Unlike
-    await supabase.from("playlist_tracks").delete().eq("playlist_id", favId).eq("track_id", track_id);
+    await db
+      .delete(playlistTracks)
+      .where(and(eq(playlistTracks.playlistId, favId), eq(playlistTracks.trackId, track_id)));
     return NextResponse.json({ liked: false });
   }
 
-  // Like - add to end
-  const { error } = await supabase.from("playlist_tracks").insert({
-    playlist_id: favId,
-    track_id,
-    position: Math.floor(Date.now() / 1000), // Unix timestamp in seconds (fits in int)
+  await db.insert(playlistTracks).values({
+    playlistId: favId,
+    trackId: track_id,
+    position: Math.floor(Date.now() / 1000),
   });
-
-  if (error) {
-    console.error("Failed to like track:", error);
-    return NextResponse.json({ error: "Failed to like track" }, { status: 500 });
-  }
 
   return NextResponse.json({ liked: true });
 }

@@ -1,7 +1,9 @@
-import { supabase } from "@/lib/db";
+import { db } from "@/lib/db/drizzle";
+import { tracks, artists } from "@/lib/db/schema";
 import { getPublicUrl } from "@/lib/r2";
 import { sanitizeFeaturedArtists } from "@/lib/featured-artists";
 import { NextRequest, NextResponse } from "next/server";
+import { eq, ne, and, isNotNull, desc } from "drizzle-orm";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -27,6 +29,30 @@ function parseIdList(value: string | null): number[] {
     .filter((n) => Number.isFinite(n));
 }
 
+const trackFields = {
+  id: tracks.id,
+  title: tracks.title,
+  audioKey: tracks.audioKey,
+  coverKey: tracks.coverKey,
+  duration: tracks.duration,
+  artistId: tracks.artistId,
+  slug: tracks.slug,
+  featuredArtists: tracks.featuredArtists,
+  plays: tracks.plays,
+  artistName: artists.name,
+  artistSlug: artists.slug,
+};
+
+async function fetchTracks(where: any, limit: number) {
+  return db
+    .select(trackFields)
+    .from(tracks)
+    .leftJoin(artists, eq(tracks.artistId, artists.id))
+    .where(and(isNotNull(tracks.audioKey), where))
+    .orderBy(desc(tracks.plays))
+    .limit(limit);
+}
+
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const trackId = searchParams.get("trackId");
@@ -39,72 +65,41 @@ export async function GET(req: NextRequest) {
 
   const take = Math.max(1, Math.min(50, takeParam ? Number(takeParam) : 25));
 
-  // Get the seed track
-  const { data: seedTrack } = await supabase
-    .from("tracks")
-    .select("id, artist_id, genre")
-    .eq("id", parseInt(trackId))
-    .single();
+  const [seedTrack] = await db
+    .select({ id: tracks.id, artistId: tracks.artistId, genre: tracks.genre })
+    .from(tracks)
+    .where(eq(tracks.id, parseInt(trackId)))
+    .limit(1);
 
   if (!seedTrack) {
     return NextResponse.json({ error: "Track not found" }, { status: 404 });
   }
 
-  if (typeof seedTrack.artist_id !== "number") {
+  if (typeof seedTrack.artistId !== "number") {
     return NextResponse.json({ error: "Seed track missing artist" }, { status: 400 });
   }
 
   exclude.add(seedTrack.id);
 
-  // Spotify-ish shape:
-  // - start with more from the same artist
-  // - then mix in same-genre tracks from other artists
-  // - if genre is empty or results are thin, fallback to popular tracks
-
   const artistLimit = Math.min(20, Math.max(6, Math.ceil(take * 0.4)));
   const otherLimit = Math.min(40, Math.max(10, take * 2));
 
-  const { data: artistTracks } = await supabase
-    .from("tracks")
-    .select(
-      "id, title, audio_key, cover_key, duration, artist_id, slug, featured_artists, plays, artists(name, slug)"
-    )
-    .eq("artist_id", seedTrack.artist_id)
-    .not("audio_key", "is", null)
-    .neq("id", seedTrack.id)
-    .order("plays", { ascending: false })
-    .limit(artistLimit);
-
-  // Fetch genre tracks (different artists)
-  let genreTracks: any[] = [];
-  if (seedTrack.genre) {
-    const result = await supabase
-      .from("tracks")
-      .select(
-        "id, title, audio_key, cover_key, duration, artist_id, slug, featured_artists, plays, artists(name, slug)"
-      )
-      .eq("genre", seedTrack.genre)
-      .not("audio_key", "is", null)
-      .neq("artist_id", seedTrack.artist_id)
-      .order("plays", { ascending: false })
-      .limit(otherLimit);
-    genreTracks = result.data ?? [];
-  }
-
-  // Fallback: popular tracks across the catalog if we don't have enough.
-  let fallbackTracks: any[] = [];
-  if ((artistTracks?.length ?? 0) + (genreTracks?.length ?? 0) < take) {
-    const result = await supabase
-      .from("tracks")
-      .select(
-        "id, title, audio_key, cover_key, duration, artist_id, slug, featured_artists, plays, artists(name, slug)"
-      )
-      .not("audio_key", "is", null)
-      .neq("artist_id", seedTrack.artist_id)
-      .order("plays", { ascending: false })
-      .limit(otherLimit);
-    fallbackTracks = result.data ?? [];
-  }
+  const [artistTracks, genreTracks, fallbackTracks] = await Promise.all([
+    fetchTracks(
+      and(eq(tracks.artistId, seedTrack.artistId), ne(tracks.id, seedTrack.id)),
+      artistLimit
+    ),
+    seedTrack.genre
+      ? fetchTracks(
+          and(eq(tracks.genre, seedTrack.genre), ne(tracks.artistId, seedTrack.artistId)),
+          otherLimit
+        )
+      : Promise.resolve([]),
+    fetchTracks(
+      ne(tracks.artistId, seedTrack.artistId),
+      otherLimit
+    ),
+  ]);
 
   const pickUnique = (rows: any[]) => {
     const out: any[] = [];
@@ -117,22 +112,21 @@ export async function GET(req: NextRequest) {
     return out;
   };
 
-  // Keep "more from artist" first, then genre mix, then fallback.
   const ordered = [
-    ...pickUnique(artistTracks ?? []),
-    ...pickUnique(genreTracks ?? []),
-    ...pickUnique(fallbackTracks ?? []),
+    ...pickUnique(artistTracks),
+    ...pickUnique(genreTracks),
+    ...pickUnique(fallbackTracks),
   ].slice(0, take);
 
   const radioTracks: RadioTrack[] = ordered.map((t: any) => ({
     id: t.id,
     title: t.title,
-    artistId: t.artist_id ?? undefined,
-    artist: t.artists?.name ?? "Unknown",
-    artistSlug: t.artists?.slug,
-    featuredArtists: sanitizeFeaturedArtists(t.featured_artists),
-    audioUrl: getPublicUrl(t.audio_key),
-    coverUrl: t.cover_key ? getPublicUrl(t.cover_key) : null,
+    artistId: t.artistId ?? undefined,
+    artist: t.artistName ?? "Unknown",
+    artistSlug: t.artistSlug,
+    featuredArtists: sanitizeFeaturedArtists(t.featuredArtists),
+    audioUrl: getPublicUrl(t.audioKey),
+    coverUrl: t.coverKey ? getPublicUrl(t.coverKey) : null,
     duration: t.duration ?? undefined,
     slug: t.slug,
   }));
@@ -140,11 +134,11 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     tracks: radioTracks,
     meta: {
-      seed: { id: seedTrack.id, artistId: seedTrack.artist_id, genre: seedTrack.genre ?? null },
+      seed: { id: seedTrack.id, artistId: seedTrack.artistId, genre: seedTrack.genre ?? null },
       counts: {
-        artist: artistTracks?.length ?? 0,
-        genre: genreTracks?.length ?? 0,
-        fallback: fallbackTracks?.length ?? 0,
+        artist: artistTracks.length,
+        genre: genreTracks.length,
+        fallback: fallbackTracks.length,
         returned: radioTracks.length,
       },
     },

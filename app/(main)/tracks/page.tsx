@@ -1,4 +1,7 @@
-import { supabase } from "@/lib/db";
+import type { Metadata } from "next";
+import { db } from "@/lib/db/drizzle";
+import { tracks, artists } from "@/lib/db/schema";
+import { eq, desc, sql } from "drizzle-orm";
 import { getPublicUrl } from "@/lib/r2";
 import { sanitizeFeaturedArtists } from "@/lib/featured-artists";
 import TrackCard from "@/components/track-card";
@@ -7,6 +10,11 @@ import type { Track } from "@/lib/player-store";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
+export const metadata: Metadata = {
+  title: "All Tracks",
+  description: "Browse all Zambian music tracks on ZedBeatz. Download and stream latest Zambian songs MP3.",
+};
+
 const TRACKS_PER_PAGE = 24;
 
 export default async function AllTracksPage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
@@ -14,32 +22,48 @@ export default async function AllTracksPage({ searchParams }: { searchParams: Pr
   const page = parseInt(params.page || "1");
   const offset = (page - 1) * TRACKS_PER_PAGE;
 
-  const { data: rawTracks, count } = await supabase
-    .from("tracks")
-    .select("id, title, audio_key, cover_key, duration, artist_id, slug, featured_artists, artists(name, slug)", { count: "exact" })
-    .order("created_at", { ascending: false })
-    .range(offset, offset + TRACKS_PER_PAGE - 1);
+  const [countResult] = await db.select({ count: sql<number>`count(*)::int` }).from(tracks);
+  const total = countResult?.count ?? 0;
 
-  const trackList: Track[] = (rawTracks ?? []).map((r): Track => ({
+  const rawTracks = await db
+    .select({
+      id: tracks.id,
+      title: tracks.title,
+      audioKey: tracks.audioKey,
+      coverKey: tracks.coverKey,
+      duration: tracks.duration,
+      artistId: tracks.artistId,
+      slug: tracks.slug,
+      featuredArtists: tracks.featuredArtists,
+      artistName: artists.name,
+      artistSlug: artists.slug,
+    })
+    .from(tracks)
+    .leftJoin(artists, eq(tracks.artistId, artists.id))
+    .orderBy(desc(tracks.createdAt))
+    .limit(TRACKS_PER_PAGE)
+    .offset(offset);
+
+  const trackList: Track[] = rawTracks.map((r): Track => ({
     id: r.id,
     title: r.title,
-    artistId: r.artist_id ?? undefined,
-    artist: (r.artists as unknown as { name: string } | null)?.name ?? "Unknown",
-    artistSlug: (r.artists as unknown as { slug: string } | null)?.slug,
-    featuredArtists: sanitizeFeaturedArtists(r.featured_artists),
-    audioUrl: getPublicUrl(r.audio_key),
-    coverUrl: r.cover_key ? getPublicUrl(r.cover_key) : undefined,
-    duration: r.duration ?? undefined,
+    artistId: r.artistId ?? undefined,
+    artist: r.artistName ?? "Unknown",
+    artistSlug: r.artistSlug ?? undefined,
+    featuredArtists: sanitizeFeaturedArtists(r.featuredArtists),
+    audioUrl: getPublicUrl(r.audioKey),
+    coverUrl: r.coverKey ? getPublicUrl(r.coverKey) : undefined,
+    duration: r.duration ? Number(r.duration) : undefined,
     slug: r.slug ?? undefined,
   }));
 
-  const totalPages = Math.ceil((count || 0) / TRACKS_PER_PAGE);
+  const totalPages = Math.ceil(total / TRACKS_PER_PAGE);
 
   return (
     <div className="space-y-6 pb-20 px-4 md:px-8">
       <div className="pt-4">
         <h1 className="text-2xl md:text-4xl font-bold mb-1">All Tracks</h1>
-        <p className="text-xs md:text-sm text-[var(--muted)] mb-3">{count || 0} tracks available</p>
+        <p className="text-xs md:text-sm text-[var(--muted)] mb-3">{total} tracks available</p>
         <TracksSearch tracks={trackList} />
       </div>
 
@@ -62,7 +86,7 @@ export default async function AllTracksPage({ searchParams }: { searchParams: Pr
               <span className="hidden sm:inline">Previous</span>
             </Link>
           )}
-          
+
           <div className="flex items-center gap-1 md:gap-2">
             {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
               let pageNum;
