@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     .where(eq(playlists.id, Number(id)))
     .limit(1);
   if (!playlist) return {};
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zedbeatz.vercel.app";
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zedbeatz.com";
   const category = playlist.category || "Zambian Music";
   return {
     title: `${playlist.name} - ${category} Playlist | ZedBeatz`,
@@ -25,16 +25,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     keywords: [
       playlist.name, category, `${playlist.name} playlist`, `${playlist.name} Zambian music`,
       `${category} playlist`, "Zambian music playlist",
-      "Zambian music streaming", "free Zambian music", "Zambia songs download",
-      "listen to Zambian music online", "new Zambian songs today", "Zambian music 2026 hits",
-      "top Zambian songs", "Zambian music charts", "Kopala music", "Zambian artists list",
-      "Kalindula music", "Zamdancehall", "Zambian hip hop", "Zambian gospel music",
-      "Zambian Afrobeat", "Lusaka music", "Copperbelt music", "Ndola music",
-      "Zambian music platform", "best Zambian music site", "Zambia mp3 streaming",
-      "Zambian music online", "Zambian songs mp3", "Zambia urban music",
-      "Zambian dancehall", "Zambian R&B", "Zambian traditional music",
-      "Zambian music video", "Zambian music 2026 playlist", "ZedBeatz Zambian music",
-      "Zambian music download mp3 2026", "Zambian music audio", "listen to Zambian music",
+      "Zambian music streaming", "free Zambian music download", "ZedBeatz Zambian music"
     ],
     openGraph: {
       title: `${playlist.name} - ${category} Playlist`,
@@ -133,7 +124,7 @@ export default async function PlaylistPage({ params }: { params: Promise<{ id: s
 
   const firstCover = tracksMapped.find(t => t.coverUrl)?.coverUrl ?? null;
   const coverUrl = playlist.cover_key ? getPublicUrl(playlist.cover_key) : firstCover;
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zedbeatz.vercel.app";
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zedbeatz.com";
 
   const jsonLd = {
     "@context": "https://schema.org",

@@ -6,20 +6,12 @@ export const metadata: Metadata = {
   title: "DMCA Policy - ZedBeatz Zambian Music",
   description: "ZedBeatz DMCA compliance and copyright infringement policy for Zambian music content. Report copyright claims.",
   keywords: [
-    "Zambian music streaming", "free Zambian music", "Zambia songs download",
-    "listen to Zambian music online", "new Zambian songs today", "Zambian music 2026 hits",
-    "top Zambian songs", "Zambian music charts", "Kopala music", "Zambian artists list",
-    "Kalindula music", "Zamdancehall", "Zambian hip hop", "Zambian gospel music",
-    "Zambian Afrobeat", "Lusaka music", "Copperbelt music", "Ndola music",
-    "Zambian music platform", "best Zambian music site", "Zambia mp3 streaming",
-    "Zambian music online", "Zambian songs mp3", "Zambia urban music",
-    "Zambian dancehall", "Zambian R&B", "Zambian traditional music",
-    "ZedBeatz Zambian music", "Zambian music download mp3 2026",
+    "DMCA ZedBeatz", "Zambian music copyright", "ZedBeatz copyright report"
   ],
   openGraph: {
     title: "DMCA Policy - ZedBeatz Zambian Music | ZedBeatz",
     description: "ZedBeatz DMCA compliance and copyright infringement policy for Zambian music content. Report copyright claims.",
-    url: `${siteUrl}/dmca`,
+    url: "https://zedbeatz.com/dmca",
     siteName: "ZedBeatz",
     locale: "en_ZM",
     countryName: "Zambia",

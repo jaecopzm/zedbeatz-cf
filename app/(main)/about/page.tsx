@@ -8,20 +8,13 @@ export const metadata: Metadata = {
   title: "About ZedBeatz - Zambian Music Streaming Platform",
   description: "ZedBeatz is the #1 platform for streaming and downloading latest Zambian music. Discover Yo Maps, Chile One, Kell Kay, Macky 2 and more Zambian artists. Free MP3 downloads.",
   keywords: [
-    "Zambian music streaming", "free Zambian music", "Zambia songs download",
-    "listen to Zambian music online", "new Zambian songs today", "Zambian music 2026 hits",
-    "top Zambian songs", "Zambian music charts", "Kopala music", "Zambian artists list",
-    "Kalindula music", "Zamdancehall", "Zambian hip hop", "Zambian gospel music",
-    "Zambian Afrobeat", "Lusaka music", "Copperbelt music", "Ndola music",
-    "Zambian music platform", "best Zambian music site", "Zambia mp3 streaming",
-    "Zambian music online", "Zambian songs mp3", "Zambia urban music",
-    "Zambian dancehall", "Zambian R&B", "Zambian traditional music",
-    "ZedBeatz Zambian music", "Zambian music download mp3 2026",
+    "About ZedBeatz", "Zambian music streaming", "free Zambian music download",
+    "ZedBeatz support", "Zambian music platform"
   ],
   openGraph: {
     title: "About ZedBeatz - Zambian Music Streaming Platform | ZedBeatz",
     description: "ZedBeatz is the #1 platform for streaming and downloading latest Zambian music. Discover Yo Maps, Chile One, Kell Kay, Macky 2 and more Zambian artists. Free MP3 downloads.",
-    url: `${siteUrl}/about`,
+    url: "https://zedbeatz.com/about",
     siteName: "ZedBeatz",
     locale: "en_ZM",
     countryName: "Zambia",
@@ -34,8 +27,44 @@ export const metadata: Metadata = {
 };
 
 export default function AboutPage() {
+  const faqLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is ZedBeatz?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "ZedBeatz is Zambia's premier music streaming and download platform, dedicated to promoting and distributing Zambian music to the world."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How do I download Zambian music MP3s on ZedBeatz?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "You can search for your favorite Zambian songs or browse through the latest tracks and click the download button to save the high-quality MP3 directly to your device."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How can Zambian artists upload their music on ZedBeatz?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Zambian artists looking to distribute and promote their music on ZedBeatz can get in touch with our team via WhatsApp at +260 971 185807."
+        }
+      }
+    ]
+  };
+
   return (
-    <div className="min-h-screen pb-32 px-4 md:px-8 py-8">
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
+      />
+      <div className="min-h-screen pb-32 px-4 md:px-8 py-8">
       <div className="max-w-3xl mx-auto">
         <h1 className="text-2xl md:text-5xl font-bold mb-6">About ZedBeatz</h1>
         
@@ -72,5 +101,6 @@ export default function AboutPage() {
         </div>
       </div>
     </div>
-  );
+  </>
+);
 }

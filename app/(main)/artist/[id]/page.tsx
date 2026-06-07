@@ -61,7 +61,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   if (!result) return {};
   const { artist, rawTracks } = result;
 
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zedbeatz.vercel.app";
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zedbeatz.com";
   const artistUrl = `${baseUrl}/artist/${artist.slug || artist.id}`;
   const imageUrl = artist.imageKey ? getPublicUrl(artist.imageKey) : undefined;
   const trackTitles = rawTracks.slice(0, 5).map((t: any) => t.title);
@@ -82,16 +82,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       ...trackTitles.map((t: string) => `${t} mp3 download`),
       "Zambian music", "Zambian artist", "Zambia music 2026", "ZedBeatz",
     ].concat([
-      "Zambian music streaming", "free Zambian music", "Zambia songs download",
-      "listen to Zambian music online", "new Zambian songs today", "Zambian music 2026 hits",
-      "top Zambian songs", "Zambian music charts", "Kopala music", "Zambian artists list",
-      "Kalindula music", "Zamdancehall", "Zambian hip hop", "Zambian gospel music",
-      "Zambian Afrobeat", "Lusaka music", "Copperbelt music", "Ndola music",
-      "Zambian music platform", "best Zambian music site", "Zambia mp3 streaming",
-      "Zambian music online", "Zambian songs mp3", "Zambia urban music",
-      "Zambian dancehall", "Zambian R&B", "Zambian traditional music",
-      "Zambian music video", "Zambian music 2026 playlist", "ZedBeatz Zambian music",
-      "Zambian music download mp3 2026", "Zambian music audio", "listen to Zambian music",
+      "Zambian music streaming", "free Zambian music download", "ZedBeatz Zambian music"
     ]),
     openGraph: {
       title: `${artist.name} - New Songs & Albums | Zambian Music`,
@@ -155,7 +146,7 @@ export default async function ArtistPage({ params }: { params: Promise<{ id: str
     totalPlays,
   };
 
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zedbeatz.vercel.app";
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zedbeatz.com";
   const artistUrl = `${baseUrl}/artist/${artist.slug || artist.id}`;
 
   const jsonLd = [

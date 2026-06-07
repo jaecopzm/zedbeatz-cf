@@ -24,17 +24,7 @@ export const metadata: Metadata = {
     "Zambian music download", "latest Zambian songs", "Yo Maps new songs",
     "Yo Maps mp3 download", "Chile One new songs", "Kell Kay mp3",
     "aweah mp3 download", "Zambian music 2026", "free mp3 download Zambia",
-    "Zambia music streaming", "Chef 187", "Macky 2", "Slapdee",
-    "Zambian artists", "ZedBeatz", "Zambian music mp3", "Zambia songs",
-    "Zambian music streaming", "free Zambian music", "Zambia songs download",
-    "listen to Zambian music online", "new Zambian songs today", "Zambian music 2026 hits",
-    "top Zambian songs", "Zambian music charts", "Kopala music", "Zambian artists list",
-    "Kalindula music", "Zamdancehall", "Zambian hip hop", "Zambian gospel music",
-    "Zambian Afrobeat", "Lusaka music", "Copperbelt music", "Ndola music",
-    "Zambian music platform", "best Zambian music site", "Zambia mp3 streaming",
-    "Zambian music online", "Zambian songs mp3", "Zambia urban music",
-    "Zambian dancehall", "Zambian R&B", "Zambian traditional music",
-    "Zambian music video", "Zambian music 2026 playlist", "ZedBeatz Zambian music"
+    "Zambia music streaming", "ZedBeatz"
   ],
   openGraph: {
     url: siteUrl,
@@ -44,8 +34,8 @@ export const metadata: Metadata = {
     images: [
       {
         url: ogImage,
-        width: 1800,
-        height: 400,
+        width: 1200,
+        height: 630,
         alt: "ZedBeatz - Zambian Music Streaming Platform",
       },
     ],
@@ -246,7 +236,7 @@ function SectionHeader({ title, href }: { title: string; href?: string }) {
 
 /* ─── Page ───────────────────────────────────────────────── */
 export default async function HomePage() {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zedbeatz.vercel.app";
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zedbeatz.com";
   const data = await getHomeData();
 
   const jsonLd = [
@@ -301,6 +291,7 @@ export default async function HomePage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
       <div className="relative pb-6">
+        <h1 className="sr-only">ZedBeatz - Zambian Music MP3 Download & Streaming</h1>
         <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
           <div className="animate-ambient absolute top-1/3 right-1/4 w-[600px] h-[600px] rounded-full blur-[160px] opacity-[0.04]"
             style={{ background: "radial-gradient(circle, #1ed760 0%, transparent 70%)", animationDelay: "2s" }} />

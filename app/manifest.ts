@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'ZedBeatz',
     short_name: 'ZedBeatz',
-    description: 'The Ultimate African Music Streaming Experience',
+    description: 'The Ultimate Zambian Music Streaming Experience',
     start_url: '/',
     display: 'standalone',
     background_color: '#0a0a0f',

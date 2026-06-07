@@ -109,7 +109,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const fullArtist = featuredArtists ? `${artist} feat. ${featuredArtists}` : artist;
   const genre = data.genre || "Music";
   const coverUrl = data.cover_key ? getPublicUrl(data.cover_key) : undefined;
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zedbeatz.vercel.app";
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zedbeatz.com";
   const trackUrl = `${baseUrl}/track/${data.slug || id}`;
 
   const year = data.created_at ? new Date(data.created_at).getFullYear() : new Date().getFullYear();
@@ -132,16 +132,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   }
 
   keywords.push(
-    "Zambian music streaming", "free Zambian music", "Zambia songs download",
-    "listen to Zambian music online", "new Zambian songs today", "Zambian music 2026 hits",
-    "top Zambian songs", "Zambian music charts", "Kopala music", "Zambian artists list",
-    "Kalindula music", "Zamdancehall", "Zambian hip hop", "Zambian gospel music",
-    "Zambian Afrobeat", "Lusaka music", "Copperbelt music", "Ndola music",
-    "Zambian music platform", "best Zambian music site", "Zambia mp3 streaming",
-    "Zambian music online", "Zambian songs mp3", "Zambia urban music",
-    "Zambian dancehall", "Zambian R&B", "Zambian traditional music",
-    "Zambian music video", "Zambian music 2026 playlist", "ZedBeatz Zambian music",
-    "Zambian music download mp3 2026", "Zambian music audio", "listen to Zambian music",
+    "Zambian music streaming", "free Zambian music download", "ZedBeatz Zambian music"
   );
 
   const descPrefix = featuredArtists
@@ -201,7 +192,7 @@ export default async function TrackPage({ params }: { params: Promise<{ id: stri
   const artistSlug = (data.artists as unknown as { slug: string } | null)?.slug;
   const rawFeat = data.featured_artists;
   const featuredArtists = typeof rawFeat === 'string' && rawFeat && rawFeat !== 'false' && rawFeat !== 'null' ? rawFeat : '';
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zedbeatz.vercel.app";
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zedbeatz.com";
   const trackUrl = `${baseUrl}/track/${data.slug || data.id}`;
   const coverUrl = data.cover_key ? getPublicUrl(data.cover_key) : undefined;
 

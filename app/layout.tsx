@@ -27,21 +27,8 @@ export const metadata: Metadata = {
   keywords: [
     "Zambian music", "Zambian music download", "Zambian music 2026",
     "mp3 download", "aweah mp3 download", "latest Zambian songs",
-    "Yo Maps", "Yo Maps new songs", "Yo Maps ft", "Yo Maps mp3 download",
-    "Chile One", "Chile One new songs", "Kell Kay", "Kell Kay mp3",
-    "Macky 2", "Chef 187", "Slapdee",
-    "Zambian artists", "Zambia music 2026", "Zambia mp3 download",
-    "free music download", "stream Zambian music", "African music",
-    "ZedBeatz", "Zambia streaming", "new Zambian music", "Zambia songs 2026",
-    "Zambian music streaming", "free Zambian music", "Zambia songs download",
-    "listen to Zambian music online", "new Zambian songs today", "Zambian music 2026 hits",
-    "top Zambian songs", "Zambian music charts", "Kopala music", "Zambian artists list",
-    "Kalindula music", "Zamdancehall", "Zambian hip hop", "Zambian gospel music",
-    "Zambian Afrobeat", "Lusaka music", "Copperbelt music", "Ndola music",
-    "Zambian music platform", "best Zambian music site", "Zambia mp3 streaming",
-    "Zambian music online", "Zambian songs mp3", "Zambia urban music",
-    "Zambian dancehall", "Zambian R&B", "Zambian traditional music",
-    "Zambian music video", "Zambian music 2026 playlist", "ZedBeatz Zambian music"
+    "Yo Maps new songs", "Chile One new songs", "Kell Kay mp3",
+    "free music download", "stream Zambian music", "ZedBeatz"
   ],
   authors: [{ name: "ZedBeatz" }],
   creator: "ZedBeatz",
@@ -56,9 +43,9 @@ export const metadata: Metadata = {
     images: [
       {
         url: ogImage,
-        width: 1800,
-        height: 400,
-        alt: "ZedBeatz logo",
+        width: 1200,
+        height: 630,
+        alt: "ZedBeatz - Zambian Music MP3 Download & Streaming",
       },
     ],
     countryName: "Zambia",

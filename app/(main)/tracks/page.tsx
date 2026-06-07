@@ -10,9 +10,21 @@ import type { Track } from "@/lib/player-store";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zedbeatz.com";
+
 export const metadata: Metadata = {
-  title: "All Tracks",
-  description: "Browse all Zambian music tracks on ZedBeatz. Download and stream latest Zambian songs MP3.",
+  title: "All Zambian Music Tracks & MP3 Downloads | ZedBeatz",
+  description: "Browse all Zambian music tracks on ZedBeatz. Download and stream the latest Zambian songs MP3. Chile One, Yo Maps, Kell Kay, and more.",
+  keywords: ["Zambian music list", "Zambian songs download", "Zambia mp3 tracks", "ZedBeatz tracks"],
+  alternates: {
+    canonical: `${siteUrl}/tracks`,
+  },
+  openGraph: {
+    title: "All Zambian Music Tracks & MP3 Downloads | ZedBeatz",
+    description: "Browse, stream and download latest Zambian music MP3 on ZedBeatz.",
+    url: `${siteUrl}/tracks`,
+    type: "website",
+  }
 };
 
 const TRACKS_PER_PAGE = 24;
@@ -59,9 +71,46 @@ export default async function AllTracksPage({ searchParams }: { searchParams: Pr
 
   const totalPages = Math.ceil(total / TRACKS_PER_PAGE);
 
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zedbeatz.com";
+
+  const itemListLd = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": "Zambian Music Songs List",
+    "description": "Latest Zambian music MP3 downloads and streams on ZedBeatz.",
+    "numberOfItems": trackList.length,
+    "itemListElement": trackList.map((track, i) => ({
+      "@type": "ListItem",
+      "position": i + 1 + offset,
+      "item": {
+        "@type": "MusicRecording",
+        "name": track.title,
+        "url": `${baseUrl}/track/${track.slug || track.id}`,
+        "byArtist": {
+          "@type": "MusicGroup",
+          "name": track.artist,
+        }
+      }
+    }))
+  };
+
+  const breadcrumbLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": baseUrl },
+      { "@type": "ListItem", "position": 2, "name": "Tracks", "item": `${baseUrl}/tracks` }
+    ]
+  };
+
   return (
-    <div className="space-y-6 pb-20 px-4 md:px-8">
-      <div className="pt-4">
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify([itemListLd, breadcrumbLd]) }}
+      />
+      <div className="space-y-6 pb-20 px-4 md:px-8">
+        <div className="pt-4">
         <h1 className="text-2xl md:text-4xl font-bold mb-1">All Tracks</h1>
         <p className="text-xs md:text-sm text-[var(--muted)] mb-3">{total} tracks available</p>
         <TracksSearch tracks={trackList} />
@@ -133,6 +182,7 @@ export default async function AllTracksPage({ searchParams }: { searchParams: Pr
           <p className="text-[var(--muted)] text-lg">No tracks found</p>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }
