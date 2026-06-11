@@ -12,6 +12,7 @@ export type Track = {
   duration?: number;
   slug?: string;
   createdAt?: string;
+  plays?: number | null;
 };
 
 export type PlayContext = {
