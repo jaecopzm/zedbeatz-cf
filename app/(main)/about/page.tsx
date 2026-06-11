@@ -77,12 +77,12 @@ export default function AboutPage() {
             We provide a platform for Zambian artists to share their music with fans, offering both streaming and download options for the latest hits, classic tracks, and emerging talent.
           </p>
           
-          <h2 className="text-2xl font-bold text-white mt-8 mb-4">Our Mission</h2>
+          <h2 className="text-2xl font-bold text-foreground mt-8 mb-4">Our Mission</h2>
           <p>
             To celebrate and amplify Zambian music culture by providing easy access to quality music content while supporting local artists and the music industry.
           </p>
           
-          <h2 className="text-2xl font-bold text-white mt-8 mb-4">What We Offer</h2>
+          <h2 className="text-2xl font-bold text-foreground mt-8 mb-4">What We Offer</h2>
           <ul className="list-disc list-inside space-y-2">
             <li>Stream unlimited Zambian music</li>
             <li>Download MP3 tracks</li>
@@ -91,7 +91,7 @@ export default function AboutPage() {
             <li>Artist profiles and albums</li>
           </ul>
           
-          <h2 className="text-2xl font-bold text-white mt-8 mb-4">For Artists</h2>
+          <h2 className="text-2xl font-bold text-foreground mt-8 mb-4">For Artists</h2>
           <p>
             Are you an artist looking to upload your music to ZedBeatz? Contact us via WhatsApp at{" "}
             <a href="https://wa.me/260971185807" className="text-[var(--primary)] hover:underline">

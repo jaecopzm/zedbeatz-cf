@@ -49,7 +49,7 @@ export default function KeyboardShortcutsModal() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            className="absolute inset-0 bg-background/80 backdrop-blur-sm"
             onClick={() => setOpen(false)}
           />
 
@@ -65,11 +65,11 @@ export default function KeyboardShortcutsModal() {
             <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--glass-border)]">
               <div className="flex items-center gap-2">
                 <Keyboard size={18} className="text-[var(--primary)]" />
-                <h2 className="font-bold text-white text-base">Keyboard Shortcuts</h2>
+                <h2 className="font-bold text-foreground text-base">Keyboard Shortcuts</h2>
               </div>
               <button
                 onClick={() => setOpen(false)}
-                className="text-[var(--muted)] hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10"
+                className="text-[var(--muted)] hover:text-foreground transition-colors p-1 rounded-lg hover:bg-[var(--glass-hover)]"
               >
                 <X size={16} />
               </button>
@@ -82,12 +82,12 @@ export default function KeyboardShortcutsModal() {
                 <div className="grid grid-cols-1 gap-1.5">
                   {shortcuts.map(({ keys, action }) => (
                     <div key={action} className="flex items-center justify-between py-1.5">
-                      <span className="text-sm text-white/70">{action}</span>
+                      <span className="text-sm text-foreground/70">{action}</span>
                       <div className="flex items-center gap-1">
                         {keys.map((k) => (
                           <kbd
                             key={k}
-                            className="px-2 py-0.5 rounded-md bg-[var(--surface-3)] border border-[var(--glass-border)] text-xs font-mono font-semibold text-white shadow-sm"
+                            className="px-2 py-0.5 rounded-md bg-[var(--surface-3)] border border-[var(--glass-border)] text-xs font-mono font-semibold text-foreground shadow-sm"
                           >
                             {k}
                           </kbd>
@@ -104,7 +104,7 @@ export default function KeyboardShortcutsModal() {
                 <div className="grid grid-cols-1 gap-1.5">
                   {mobileGestures.map(({ gesture, action }) => (
                     <div key={action} className="flex items-center justify-between py-1.5">
-                      <span className="text-sm text-white/70">{action}</span>
+                      <span className="text-sm text-foreground/70">{action}</span>
                       <span className="px-2 py-0.5 rounded-md bg-[var(--surface-3)] border border-[var(--glass-border)] text-xs font-semibold text-[var(--primary)]">
                         {gesture}
                       </span>

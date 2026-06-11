@@ -4,12 +4,10 @@ import { getPublicUrl } from "@/lib/r2";
 import type { Track } from "@/lib/player-store";
 import type { Metadata } from "next";
 import ArtistHeader from "@/components/artist/artist-header";
-import PopularTracks from "@/components/artist/popular-tracks";
-import ArtistAlbums from "@/components/artist/artist-albums";
-import ArtistTracks from "@/components/artist/artist-tracks";
+import ArtistPageClient from "./client";
 import { sanitizeFeaturedArtists } from "@/lib/featured-artists";
 import { artists, tracks, albums } from "@/lib/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and, ilike, isNotNull } from "drizzle-orm";
 
 async function getArtistData(id: string) {
   const [artist] = await db.select({
@@ -25,7 +23,7 @@ async function getArtistData(id: string) {
 
   if (!artist) return null;
 
-  const [rawTracks, rawAlbums] = await Promise.all([
+  const [rawTracks, rawAlbums, appearsOnTracks] = await Promise.all([
     db.select({
       id: tracks.id,
       title: tracks.title,
@@ -50,9 +48,47 @@ async function getArtistData(id: string) {
       .from(albums)
       .where(eq(albums.artistId, artist.id))
       .orderBy(desc(albums.releaseYear)),
+    db.select({
+      id: tracks.id,
+      title: tracks.title,
+      audioKey: tracks.audioKey,
+      coverKey: tracks.coverKey,
+      duration: tracks.duration,
+      artistId: tracks.artistId,
+      slug: tracks.slug,
+      featuredArtists: tracks.featuredArtists,
+      plays: tracks.plays,
+      artistName: artists.name,
+      artistSlug: artists.slug,
+    })
+      .from(tracks)
+      .leftJoin(artists, eq(tracks.artistId, artists.id))
+      .where(
+        and(
+          isNotNull(tracks.featuredArtists),
+          ilike(tracks.featuredArtists, `%${artist.name}%`)
+        )
+      )
+      .limit(20),
   ]);
 
-  return { artist, rawTracks: rawTracks ?? [], rawAlbums: rawAlbums ?? [] };
+  return { artist, rawTracks: rawTracks ?? [], rawAlbums: rawAlbums ?? [], appearsOnTracks: appearsOnTracks ?? [] };
+}
+
+function mapTrack(t: any, artistName: string, artistSlug?: string | null, featuredArtists?: string | null): Track & { plays?: number } {
+  return {
+    id: t.id,
+    title: t.title,
+    artistId: t.artistId ?? undefined,
+    artist: t.artistName ?? artistName,
+    artistSlug: t.artistSlug ?? artistSlug ?? undefined,
+    featuredArtists: sanitizeFeaturedArtists(t.featuredArtists ?? featuredArtists),
+    audioUrl: getPublicUrl(t.audioKey),
+    coverUrl: t.coverKey ? getPublicUrl(t.coverKey) : undefined,
+    duration: t.duration ? Number(t.duration) : undefined,
+    slug: t.slug ?? undefined,
+    plays: t.plays ?? 0,
+  };
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
@@ -109,23 +145,15 @@ export default async function ArtistPage({ params }: { params: Promise<{ id: str
   const { id } = await params;
   const result = await getArtistData(id);
   if (!result) notFound();
-  const { artist, rawTracks, rawAlbums } = result;
+  const { artist, rawTracks, rawAlbums, appearsOnTracks } = result;
 
-  const tracksList: (Track & { plays?: number })[] = (rawTracks ?? []).map((t) => ({
-    id: t.id,
-    title: t.title,
-    artistId: t.artistId ?? undefined,
-    artist: artist.name,
-    artistSlug: artist.slug ?? undefined,
-    featuredArtists: sanitizeFeaturedArtists(t.featuredArtists),
-    audioUrl: getPublicUrl(t.audioKey),
-    coverUrl: t.coverKey ? getPublicUrl(t.coverKey) : undefined,
-    duration: t.duration ? Number(t.duration) : undefined,
-    slug: t.slug ?? undefined,
-    plays: t.plays ?? 0,
-  }));
+  const tracksList = rawTracks.map((t) => mapTrack(t, artist.name, artist.slug, t.featuredArtists));
 
   const totalPlays = tracksList.reduce((sum, t) => sum + (t.plays ?? 0), 0);
+
+  const appearsOnList: (Track & { plays?: number })[] = appearsOnTracks
+    .filter((t) => t.artistId !== artist.id)
+    .map((t) => mapTrack(t, t.artistName ?? "Unknown", t.artistSlug, t.featuredArtists));
 
   const albumsList = (rawAlbums ?? []).map((a) => ({
     id: a.id,
@@ -200,11 +228,12 @@ export default async function ArtistPage({ params }: { params: Promise<{ id: str
           <p className="text-[var(--muted)] text-sm">No tracks available yet.</p>
         </div>
       ) : (
-        <>
-          <PopularTracks tracks={tracksList.slice(0, 5)} allTracks={tracksList} />
-          {albumsList.length > 0 && <ArtistAlbums albums={albumsList} />}
-          <ArtistTracks tracks={tracksList} />
-        </>
+        <ArtistPageClient
+          tracks={tracksList}
+          albums={albumsList}
+          appearsOn={appearsOnList}
+          artist={artistData}
+        />
       )}
     </div>
   );

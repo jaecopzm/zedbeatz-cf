@@ -255,21 +255,21 @@ export default function RadioClient({ seedTrack }: { seedTrack: SeedTrack }) {
 
   if (loading) {
     return (
-      <div className="relative min-h-screen bg-black overflow-hidden pb-6">
+      <div className="relative min-h-screen bg-background overflow-hidden pb-6">
         <div className="pointer-events-none absolute inset-0">
-          <div className="absolute inset-0 bg-gradient-to-b from-purple-900/25 via-black to-black" />
+          <div className="absolute inset-0 bg-gradient-to-b from-purple-900/25 via-background/80 to-background" />
         </div>
 
         <section className="relative px-4 sm:px-6 md:px-8 pt-4 sm:pt-6 pb-4 sm:pb-6 md:pb-8 max-w-6xl mx-auto">
           <div className="flex items-start gap-3 sm:gap-5 md:gap-6">
-            <div className="relative w-24 h-24 sm:w-36 sm:h-36 md:w-44 md:h-44 shrink-0 rounded-lg sm:rounded-2xl overflow-hidden bg-white/5 animate-pulse" />
+            <div className="relative w-24 h-24 sm:w-36 sm:h-36 md:w-44 md:h-44 shrink-0 rounded-lg sm:rounded-2xl overflow-hidden bg-[var(--glass-hover)] animate-pulse" />
             <div className="min-w-0 flex-1 space-y-3">
-              <div className="h-3 w-16 bg-white/5 rounded animate-pulse" />
-              <div className="h-8 w-48 bg-white/5 rounded animate-pulse" />
-              <div className="h-4 w-32 bg-white/5 rounded animate-pulse" />
+              <div className="h-3 w-16 bg-[var(--glass-hover)] rounded animate-pulse" />
+              <div className="h-8 w-48 bg-[var(--glass-hover)] rounded animate-pulse" />
+              <div className="h-4 w-32 bg-[var(--glass-hover)] rounded animate-pulse" />
               <div className="flex gap-2 mt-4">
-                <div className="h-10 w-24 bg-white/5 rounded-full animate-pulse" />
-                <div className="h-10 w-24 bg-white/5 rounded-full animate-pulse" />
+                <div className="h-10 w-24 bg-[var(--glass-hover)] rounded-full animate-pulse" />
+                <div className="h-10 w-24 bg-[var(--glass-hover)] rounded-full animate-pulse" />
               </div>
             </div>
           </div>
@@ -279,13 +279,13 @@ export default function RadioClient({ seedTrack }: { seedTrack: SeedTrack }) {
           <div className="space-y-1">
             {[...Array(8)].map((_, i) => (
               <div key={i} className="flex items-center gap-3 px-4 py-3 rounded-lg">
-                <div className="w-5 h-4 bg-white/5 rounded animate-pulse" />
-                <div className="w-10 h-10 bg-white/5 rounded animate-pulse" />
+                <div className="w-5 h-4 bg-[var(--glass-hover)] rounded animate-pulse" />
+                <div className="w-10 h-10 bg-[var(--glass-hover)] rounded animate-pulse" />
                 <div className="flex-1 space-y-2">
-                  <div className="h-4 w-40 bg-white/5 rounded animate-pulse" />
-                  <div className="h-3 w-24 bg-white/5 rounded animate-pulse" />
+                  <div className="h-4 w-40 bg-[var(--glass-hover)] rounded animate-pulse" />
+                  <div className="h-3 w-24 bg-[var(--glass-hover)] rounded animate-pulse" />
                 </div>
-                <div className="h-4 w-12 bg-white/5 rounded animate-pulse" />
+                <div className="h-4 w-12 bg-[var(--glass-hover)] rounded animate-pulse" />
               </div>
             ))}
           </div>
@@ -296,13 +296,13 @@ export default function RadioClient({ seedTrack }: { seedTrack: SeedTrack }) {
 
   if (error) {
     return (
-      <div className="min-h-[70vh] bg-gradient-to-b from-purple-900/20 via-black to-black flex items-center justify-center">
+      <div className="min-h-[70vh] bg-gradient-to-b from-purple-900/20 via-background/80 to-background flex items-center justify-center">
         <div className="text-center max-w-md px-6">
-          <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mx-auto mb-4">
-            <Radio className="w-7 h-7 text-white/70" />
+          <div className="w-16 h-16 rounded-full bg-[var(--glass-hover)] border border-[var(--border)] flex items-center justify-center mx-auto mb-4">
+            <Radio className="w-7 h-7 text-foreground/70" />
           </div>
-          <p className="text-white/80 text-lg font-semibold mb-2">Radio unavailable</p>
-          <p className="text-white/50 text-sm mb-6">{error}</p>
+          <p className="text-foreground/80 text-lg font-semibold mb-2">Radio unavailable</p>
+          <p className="text-foreground/50 text-sm mb-6">{error}</p>
           <div className="flex items-center justify-center gap-3">
             <button
               onClick={() => { setRadioTracks([]); setLoading(true); }}
@@ -313,7 +313,7 @@ export default function RadioClient({ seedTrack }: { seedTrack: SeedTrack }) {
             </button>
             <button
               onClick={() => router.back()}
-              className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold transition-all"
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[var(--glass-hover)] hover:bg-[var(--glass-hover)] border border-[var(--border)] text-foreground font-bold transition-all"
             >
               <X className="w-4 h-4" />
               Close
@@ -327,10 +327,10 @@ export default function RadioClient({ seedTrack }: { seedTrack: SeedTrack }) {
   const displayTracks = isRadioQueue ? queue : radioTracks;
 
   return (
-    <div className="relative min-h-screen bg-black overflow-hidden pb-6">
+    <div className="relative min-h-screen bg-background overflow-hidden pb-6">
       {/* Ambient background */}
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute inset-0 bg-gradient-to-b from-purple-900/25 via-black to-black" />
+        <div className="absolute inset-0 bg-gradient-to-b from-purple-900/25 via-background/80 to-background" />
         {currentTrack?.coverUrl && (
           <div
             key={currentTrack.id}
@@ -363,24 +363,24 @@ export default function RadioClient({ seedTrack }: { seedTrack: SeedTrack }) {
       {/* Spotify-like playlist header */}
       <section ref={heroRef} className="relative px-4 sm:px-6 md:px-8 pt-4 sm:pt-6 pb-4 sm:pb-6 md:pb-8 max-w-6xl mx-auto">
         <div className="flex items-start gap-3 sm:gap-5 md:gap-6">
-          <div className="relative w-24 h-24 sm:w-36 sm:h-36 md:w-44 md:h-44 shrink-0 rounded-lg sm:rounded-2xl overflow-hidden bg-white/5 ring-1 ring-white/10 shadow-2xl">
+          <div className="relative w-24 h-24 sm:w-36 sm:h-36 md:w-44 md:h-44 shrink-0 rounded-lg sm:rounded-2xl overflow-hidden bg-[var(--glass-hover)] ring-1 ring-[var(--border)] shadow-2xl">
             {seedTrack.coverUrl ? (
               <Image src={seedTrack.coverUrl} alt={seedTrack.title} fill className="object-cover" priority />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
-                <Music2 className="w-8 h-8 sm:w-10 sm:h-10 text-white/15" />
+                <Music2 className="w-8 h-8 sm:w-10 sm:h-10 text-foreground/15" />
               </div>
             )}
           </div>
 
           <div className="min-w-0 flex-1">
-            <p className="text-[9px] sm:text-xs font-black uppercase tracking-widest text-white/50 mb-1 sm:mb-2">
+            <p className="text-[9px] sm:text-xs font-black uppercase tracking-widest text-foreground/50 mb-1 sm:mb-2">
               Playlist
             </p>
-            <h1 className="text-xl sm:text-3xl md:text-4xl font-black tracking-tight text-white leading-tight">
+            <h1 className="text-xl sm:text-3xl md:text-4xl font-black tracking-tight text-foreground leading-tight">
               {seedTrack.artist} Radio
             </h1>
-            <p className="text-xs sm:text-sm md:text-base text-white/50 mt-1 sm:mt-2">
+            <p className="text-xs sm:text-sm md:text-base text-foreground/50 mt-1 sm:mt-2">
               {stationSubtitle}
             </p>
             <div className="flex items-center gap-2 sm:gap-3 mt-3 sm:mt-5">
@@ -411,7 +411,7 @@ export default function RadioClient({ seedTrack }: { seedTrack: SeedTrack }) {
               </button>
               <button
                 onClick={next}
-                className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 sm:py-3 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs sm:text-sm font-black transition-all"
+                className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 sm:py-3 rounded-full bg-[var(--glass-hover)] hover:bg-[var(--glass-hover)] border border-[var(--border)] text-foreground text-xs sm:text-sm font-black transition-all"
               >
                 <SkipForward className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 <span className="hidden sm:inline">Next</span>
@@ -425,7 +425,7 @@ export default function RadioClient({ seedTrack }: { seedTrack: SeedTrack }) {
                     navigator.clipboard.writeText(url);
                   }
                 }}
-                className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+                className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[var(--glass-hover)] hover:bg-[var(--surface-2)] flex items-center justify-center transition-colors"
                 title="Share radio"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -434,7 +434,7 @@ export default function RadioClient({ seedTrack }: { seedTrack: SeedTrack }) {
               </button>
               <button
                 onClick={() => router.back()}
-                className="ml-auto inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-3 rounded-full bg-white/0 hover:bg-white/5 text-white/70 hover:text-white text-xs sm:text-sm transition-all"
+                className="ml-auto inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-3 rounded-full bg-transparent hover:bg-[var(--glass-hover)] text-foreground/70 hover:text-foreground text-xs sm:text-sm transition-all"
               >
                 <X className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 <span className="hidden sm:inline">Close</span>

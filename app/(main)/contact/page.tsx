@@ -84,7 +84,7 @@ export default function ContactPage() {
           {/* Response Time */}
           <div className="bg-[var(--surface)] p-4 rounded-xl border border-[var(--border)]">
             <p className="text-sm text-[var(--muted)]">
-              <strong className="text-white">Response Time:</strong> We typically respond within 24-48 hours during business days.
+              <strong className="text-foreground">Response Time:</strong> We typically respond within 24-48 hours during business days.
             </p>
           </div>
         </div>

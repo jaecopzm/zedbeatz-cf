@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { slugify } from "@/lib/slugify";
 
 const colors = [
   "from-red-600 to-red-400",
@@ -23,10 +24,10 @@ export default function GenreGrid({ genres }: { genres: string[] }) {
       {genres.map((genre, i) => (
         <Link
           key={genre}
-          href={`/search?q=${encodeURIComponent(genre)}`}
+          href={`/genre/${slugify(genre)}`}
           className={`aspect-[3/2] rounded-xl bg-gradient-to-br ${colors[i % colors.length]} p-3 md:p-4 flex items-end transition-all duration-300 hover:scale-[1.02] hover:shadow-lg`}
         >
-          <span className="text-sm md:text-base font-bold text-white drop-shadow-sm leading-tight">{genre}</span>
+          <span className="text-sm md:text-base font-bold text-foreground drop-shadow-sm leading-tight">{genre}</span>
         </Link>
       ))}
     </div>

@@ -1,20 +1,20 @@
 export function HeroSkeleton() {
   return (
     <div className="relative overflow-hidden mb-6 md:mb-10 rounded-xl bg-gradient-to-br from-indigo-600/20 via-purple-600/20 to-pink-600/20">
-      <div className="absolute inset-0 bg-black/40" />
+      <div className="absolute inset-0 bg-background/40" />
       
       <div className="relative z-10 flex flex-col md:flex-row items-center gap-4 md:gap-6 p-4 md:p-8">
         {/* Album Art */}
-        <div className="relative w-48 h-48 md:w-64 md:h-64 shrink-0 rounded-lg overflow-hidden bg-white/10 shimmer-wave" />
+        <div className="relative w-48 h-48 md:w-64 md:h-64 shrink-0 rounded-lg overflow-hidden bg-[var(--glass-hover)] shimmer-wave" />
 
         {/* Info */}
         <div className="flex-1 text-center md:text-left space-y-3">
-          <div className="h-3 w-20 bg-white/20 mx-auto md:mx-0" />
-          <div className="h-8 md:h-12 bg-white/20 w-3/4 mx-auto md:mx-0" />
-          <div className="h-5 bg-white/20 w-1/2 mx-auto md:mx-0" />
+          <div className="h-3 w-20 bg-[var(--surface-2)] mx-auto md:mx-0" />
+          <div className="h-8 md:h-12 bg-[var(--surface-2)] w-3/4 mx-auto md:mx-0" />
+          <div className="h-5 bg-[var(--surface-2)] w-1/2 mx-auto md:mx-0" />
           <div className="flex items-center gap-2 justify-center md:justify-start">
-            <div className="h-12 w-32 bg-white/30 rounded-full" />
-            <div className="h-12 w-28 bg-white/10 rounded-full" />
+            <div className="h-12 w-32 bg-[var(--surface-3)] rounded-full" />
+            <div className="h-12 w-28 bg-[var(--glass-hover)] rounded-full" />
           </div>
         </div>
       </div>

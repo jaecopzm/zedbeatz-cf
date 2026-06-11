@@ -56,7 +56,7 @@ export default function AddToPlaylist({ trackId }: { trackId: number }) {
 
   if (!isSignedIn) return (
     <SignInButton mode="modal">
-      <button className="w-6 h-6 rounded-full bg-black/60 flex items-center justify-center text-white hover:bg-[var(--primary)] hover:text-black transition-colors">
+      <button className="w-6 h-6 rounded-full bg-background/60 flex items-center justify-center text-foreground hover:bg-[var(--primary)] hover:text-black transition-colors">
         <Plus size={13} />
       </button>
     </SignInButton>
@@ -66,7 +66,7 @@ export default function AddToPlaylist({ trackId }: { trackId: number }) {
     <div className="relative" ref={ref} onClick={e => e.stopPropagation()}>
       <button
         onClick={() => setOpen(o => !o)}
-        className="w-6 h-6 rounded-full bg-black/60 flex items-center justify-center text-white hover:bg-[var(--primary)] hover:text-black transition-colors"
+        className="w-6 h-6 rounded-full bg-background/60 flex items-center justify-center text-foreground hover:bg-[var(--primary)] hover:text-black transition-colors"
       >
         <Plus size={13} />
       </button>
@@ -75,14 +75,14 @@ export default function AddToPlaylist({ trackId }: { trackId: number }) {
         <>
           {/* ── Mobile bottom sheet ── */}
           <div className="sm:hidden fixed inset-0 z-[200]" onClick={() => setOpen(false)}>
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+            <div className="absolute inset-0 bg-background/60 backdrop-blur-sm" />
             <div
               className="absolute bottom-0 left-0 right-0 bg-[var(--surface)] rounded-t-2xl pb-safe"
               onClick={e => e.stopPropagation()}
             >
               {/* Handle */}
               <div className="flex justify-center pt-3 pb-1">
-                <div className="w-10 h-1 rounded-full bg-white/20" />
+                <div className="w-10 h-1 rounded-full bg-[var(--surface-2)]" />
               </div>
               <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)]">
                 <h3 className="font-semibold text-sm">Add to playlist</h3>

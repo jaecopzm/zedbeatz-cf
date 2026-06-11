@@ -1,21 +1,15 @@
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
+
 import { ClerkProvider } from "@clerk/nextjs";
 import Script from "next/script";
 import PwaManager from "@/components/pwa-manager";
 import ToastContainer from "@/components/toast";
 import KeyboardShortcutsModal from "@/components/keyboard-shortcuts-modal";
+import ThemeProvider from "@/components/theme-provider";
 import "./globals.css";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zedbeatz.com";
 const ogImage = new URL("/og-image.png", siteUrl).toString();
-
-const geist = Geist({ 
-  variable: "--font-geist-sans", 
-  subsets: ["latin"],
-  display: "swap",
-  preload: true
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -87,7 +81,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <ClerkProvider>
-      <html lang="en" className={`${geist.variable} min-h-full`}>
+      <html lang="en" className="min-h-full">
         <head>
           <meta name="google-adsense-account" content="ca-pub-2560191456415218" />
           <meta name="theme-color" content="#0a0a0f" />
@@ -116,7 +110,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <PwaManager />
           <ToastContainer />
           <KeyboardShortcutsModal />
-          {children}
+          <ThemeProvider>
+            {children}
+          </ThemeProvider>
         </body>
       </html>
     </ClerkProvider>

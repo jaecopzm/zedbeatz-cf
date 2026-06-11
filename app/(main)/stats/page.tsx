@@ -27,11 +27,11 @@ function fmt(s: number) {
 
 function StatCard({ label, value, sub, color, icon: Icon }: { label: string; value: string; sub: string; color: string; icon: React.ElementType }) {
   return (
-    <div className="bg-[var(--surface)] border border-white/8 p-4 relative overflow-hidden">
+    <div className="bg-[var(--surface)] border border-[var(--border)] p-4 relative overflow-hidden">
       <Icon size={48} className="absolute top-2 right-2 opacity-[0.06]" />
       <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color }}>{label}</p>
       <div className="text-2xl md:text-3xl font-black tabular-nums mb-0.5">{value}</div>
-      <p className="text-[10px] text-white/30">{sub}</p>
+      <p className="text-[10px] text-foreground/30">{sub}</p>
     </div>
   );
 }
@@ -104,9 +104,9 @@ export default function StatsPage() {
   if (!isSignedIn) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4 gap-4">
-        <BarChart3 size={48} className="text-white/10" />
+        <BarChart3 size={48} className="text-foreground/10" />
         <h2 className="text-xl font-black">Sign in to see your stats</h2>
-        <p className="text-sm text-white/40 max-w-xs">Track your listening history, top tracks and artists.</p>
+        <p className="text-sm text-foreground/40 max-w-xs">Track your listening history, top tracks and artists.</p>
         <SignInButton mode="modal">
           <button className="px-6 py-2.5 bg-[var(--primary)] text-black font-bold text-sm hover:opacity-90 transition-opacity">
             Sign In
@@ -119,9 +119,9 @@ export default function StatsPage() {
   if (!stats || stats.totalPlays === 0) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4 gap-3">
-        <Headphones size={48} className="text-white/10" />
+        <Headphones size={48} className="text-foreground/10" />
         <h2 className="text-xl font-black">No stats yet</h2>
-        <p className="text-sm text-white/40">Start listening to build your history.</p>
+        <p className="text-sm text-foreground/40">Start listening to build your history.</p>
       </div>
     );
   }
@@ -151,10 +151,10 @@ export default function StatsPage() {
             <Disc3 size={16} className="text-[#FF4500]" />
             <h2 className="font-black text-base">Top Tracks</h2>
           </div>
-          <div className="border border-white/8">
+          <div className="border border-[var(--border)]">
             {stats.topTracks.map((track, i) => (
-              <div key={track.id} className="relative flex items-center border-b border-white/5 last:border-0">
-                <span className="w-7 text-center text-xs text-white/30 shrink-0">{i + 1}</span>
+              <div key={track.id} className="relative flex items-center border-b border-[var(--border)] last:border-0">
+                <span className="w-7 text-center text-xs text-foreground/30 shrink-0">{i + 1}</span>
                 <div className="flex-1 min-w-0">
                   <TrackRow track={track} queue={stats.topTracks} index={undefined} className="pr-16" />
                 </div>
@@ -174,7 +174,7 @@ export default function StatsPage() {
           </div>
 
           <ChartContainer
-            className="bg-[var(--surface)] border border-white/8 p-3 mb-3 h-[180px] w-full"
+            className="bg-[var(--surface)] border border-[var(--border)] p-3 mb-3 h-[180px] w-full"
             config={{ plays: { label: "Plays", color: "var(--primary)" } }}
             initialDimension={{ width: 400, height: 180 }}
           >
@@ -183,7 +183,7 @@ export default function StatsPage() {
               <YAxis stroke="rgba(255,255,255,0.3)" fontSize={9} tickLine={false} axisLine={false} allowDecimals={false} />
               <Tooltip cursor={{ fill: "rgba(255,255,255,0.04)" }} content={({ active, payload }) =>
                 active && payload?.length ? (
-                  <div className="bg-[#111] border border-white/10 px-2.5 py-1.5 text-xs">
+                  <div className="bg-surface border border-[var(--border)] px-2.5 py-1.5 text-xs">
                     <p className="font-bold mb-0.5">{payload[0].payload.name}</p>
                     <p className="text-[var(--primary)]">{payload[0].value} plays</p>
                   </div>
@@ -200,7 +200,7 @@ export default function StatsPage() {
           <div className="grid grid-cols-2 gap-2">
             {stats.topArtists.map((artist, i) => (
               <Link key={artist.id} href={`/artist/${artist.slug || artist.id}`}
-                className="flex items-center gap-2.5 p-2.5 bg-[var(--surface)] border border-white/8 hover:bg-[var(--surface-2)] transition-colors">
+                className="flex items-center gap-2.5 p-2.5 bg-[var(--surface)] border border-[var(--border)] hover:bg-[var(--surface-2)] transition-colors">
                 <div className="relative w-10 h-10 rounded-full overflow-hidden shrink-0 bg-[var(--surface-2)]">
                   {artist.imageUrl && <Image src={artist.imageUrl} alt={artist.name} fill className="object-cover" unoptimized />}
                   <div className="absolute top-0 left-0 w-4 h-4 bg-[var(--primary)] text-black text-[9px] font-black flex items-center justify-center">
@@ -209,7 +209,7 @@ export default function StatsPage() {
                 </div>
                 <div className="min-w-0">
                   <p className="text-xs font-bold truncate">{artist.name}</p>
-                  <p className="text-[10px] text-white/30">{artist.plays} plays</p>
+                  <p className="text-[10px] text-foreground/30">{artist.plays} plays</p>
                 </div>
               </Link>
             ))}

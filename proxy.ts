@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 const isLibraryRoute = createRouteMatcher(["/library(.*)"]);
 const isAdminRoute = createRouteMatcher(["/admin(.*)"]);
 
-export default clerkMiddleware(async (auth, req) => {
+export const proxy = clerkMiddleware(async (auth, req) => {
   if (isLibraryRoute(req)) {
     await auth.protect();
   }

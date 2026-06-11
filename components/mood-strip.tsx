@@ -20,10 +20,10 @@ export default function MoodStrip() {
         return (
           <Link
             key={mood.id}
-            href={`/mood/${mood.id}`}
+            href={`/genre/${mood.id}`}
             className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-[var(--surface-2)] hover:bg-[var(--surface-hover)] transition-all border border-[var(--border)] whitespace-nowrap group"
           >
-            <Icon size={16} className="text-[var(--muted)] group-hover:text-white transition-colors" />
+            <Icon size={16} className="text-[var(--muted)] group-hover:text-foreground transition-colors" />
             <span className="text-sm font-medium">{mood.name}</span>
           </Link>
         );

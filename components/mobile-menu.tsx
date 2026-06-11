@@ -25,11 +25,11 @@ export default function MobileMenu() {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <button className="p-2 text-[var(--muted)] hover:text-white transition-colors" aria-label="Menu">
+        <button className="p-2 text-[var(--muted)] hover:text-foreground transition-colors" aria-label="Menu">
           <Menu size={22} />
         </button>
       </SheetTrigger>
-      <SheetContent side="left" className="w-72 bg-black/90 border-r border-[var(--glass-border)] p-0 flex flex-col">
+      <SheetContent side="left" className="w-72 bg-background/90 border-r border-[var(--glass-border)] p-0 flex flex-col">
         <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
         {/* Header */}
         <div className="flex items-center px-5 py-5 border-b border-[var(--glass-border)]">
@@ -38,7 +38,7 @@ export default function MobileMenu() {
 
         {/* Nav links */}
         <nav className="flex flex-col gap-0.5 px-3 py-4 flex-1">
-          <p className="text-[11px] font-bold text-white/20 uppercase tracking-[0.12em] px-3 mb-3">
+          <p className="text-[11px] font-bold text-foreground/20 uppercase tracking-[0.12em] px-3 mb-3">
             Menu
           </p>
           {links.map(({ href, label, icon: Icon }) => {
@@ -51,8 +51,8 @@ export default function MobileMenu() {
                 className={cn(
                   "relative flex items-center gap-3.5 px-3 py-2.5 rounded-lg text-sm transition-all duration-200",
                   isActive
-                    ? "text-white font-semibold bg-white/[0.07]"
-                    : "text-white/35 font-medium hover:text-white/70 hover:bg-white/[0.04]"
+                    ? "text-foreground font-semibold bg-[var(--glass-hover)]"
+                    : "text-foreground/35 font-medium hover:text-foreground/70 hover:bg-[var(--glass-hover)]"
                 )}
               >
                 {isActive && (
@@ -65,7 +65,7 @@ export default function MobileMenu() {
                     "shrink-0 transition-colors duration-200",
                     isActive
                       ? "text-[var(--primary)]"
-                      : "text-white/30"
+                      : "text-foreground/30"
                   )}
                 />
                 {label}
@@ -78,12 +78,12 @@ export default function MobileMenu() {
         <div className="px-4 py-5 border-t border-[var(--glass-border)]">
           {isSignedIn ? (
             <div className="flex flex-col gap-3">
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-[var(--glass-hover)] border border-[var(--border)]">
                 <div className="w-8 h-8 rounded-full bg-[var(--primary-dim)] flex items-center justify-center text-[var(--primary)] text-sm font-bold shrink-0">
                   {(user.firstName ?? user.username ?? "U")[0].toUpperCase()}
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xs font-semibold text-white truncate">{user.firstName ?? user.username}</p>
+                  <p className="text-xs font-semibold text-foreground truncate">{user.firstName ?? user.username}</p>
                   <p className="text-[10px] text-[var(--muted)] truncate">{user.primaryEmailAddress?.emailAddress}</p>
                 </div>
               </div>

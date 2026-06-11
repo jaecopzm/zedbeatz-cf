@@ -21,8 +21,8 @@ export function QuickCard({
       </div>
       <div className="relative z-10">
         <div className="mb-3">{icon}</div>
-        <p className="font-bold text-sm text-white leading-tight">{label}</p>
-        <p className="text-white/60 text-xs mt-0.5">{count} tracks</p>
+        <p className="font-bold text-sm text-foreground leading-tight">{label}</p>
+        <p className="text-foreground/60 text-xs mt-0.5">{count} tracks</p>
       </div>
     </button>
   );

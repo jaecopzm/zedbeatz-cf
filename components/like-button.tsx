@@ -35,7 +35,7 @@ export default function LikeButton({ trackId, size = 18 }: { trackId: number; si
       className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 ${
         liked
           ? "text-[var(--primary)] bg-[var(--primary-dim)]"
-          : "text-[var(--muted)] hover:text-white bg-transparent hover:bg-[var(--glass-hover)]"
+          : "text-[var(--muted)] hover:text-foreground bg-transparent hover:bg-[var(--glass-hover)]"
       } ${popping ? "animate-heart-pop" : ""}`}
     >
       <Heart size={size} fill={liked ? "currentColor" : "none"} strokeWidth={liked ? 0 : 1.8} className="transition-all duration-200" />

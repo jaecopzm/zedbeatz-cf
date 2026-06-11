@@ -100,14 +100,14 @@ export default function PwaManager() {
           className="fixed top-4 left-4 right-4 z-[999] md:top-6 md:left-1/2 md:right-auto md:-translate-x-1/2 md:w-[400px] bg-[var(--surface)] border border-[var(--glass-border)] shadow-2xl rounded-xl p-4 flex items-center gap-4"
         >
           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[var(--primary)] to-[#0d732f] flex items-center justify-center shrink-0">
-            <Download className="text-white" size={24} />
+            <Download className="text-foreground" size={24} />
           </div>
           
           <div className="flex-1 min-w-0">
-            <h4 className="text-sm font-bold text-white mb-0.5">Install ZedBeatz</h4>
+            <h4 className="text-sm font-bold text-foreground mb-0.5">Install ZedBeatz</h4>
             {isIOS ? (
               <p className="text-xs text-[var(--muted)] leading-tight">
-                Tap <span className="inline-block mx-0.5 border border-white/20 rounded px-1">Share</span> then <strong>Add to Home Screen</strong> for a full-screen experience.
+                Tap <span className="inline-block mx-0.5 border border-[var(--border-strong)] rounded px-1">Share</span> then <strong>Add to Home Screen</strong> for a full-screen experience.
               </p>
             ) : (
               <p className="text-xs text-[var(--muted)] leading-tight">
@@ -127,7 +127,7 @@ export default function PwaManager() {
             )}
             <button 
               onClick={handleDismiss}
-              className="text-[var(--muted)] hover:text-white transition-colors"
+              className="text-[var(--muted)] hover:text-foreground transition-colors"
             >
               <X size={16} />
             </button>

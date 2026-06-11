@@ -14,7 +14,7 @@ export default function WhatsAppBanner({ className = "" }: { className?: string 
       </svg>
       <div className="flex-1 min-w-0">
         <p className="text-xs font-bold text-[#25D366]">Follow our WhatsApp Channel</p>
-        <p className="text-[11px] text-white/50 truncate">Get the latest Zambian music updates</p>
+        <p className="text-[11px] text-foreground/50 truncate">Get the latest Zambian music updates</p>
       </div>
       <span className="text-[10px] font-bold text-[#25D366] shrink-0">Follow →</span>
     </Link>

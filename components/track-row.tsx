@@ -71,7 +71,7 @@ export default function TrackRow({ track, queue, index, className }: { track: Tr
         <Link
           href={track.slug ? `/track/${track.slug}` : `/track/${track.id}`}
           onClick={(e) => e.stopPropagation()}
-          className={`text-sm font-semibold truncate transition-colors hover:underline ${isActive ? "text-[var(--primary)]" : "text-white"}`}
+          className={`text-sm font-semibold truncate transition-colors hover:underline ${isActive ? "text-[var(--primary)]" : "text-foreground"}`}
         >
           {track.title}
         </Link>
@@ -81,7 +81,7 @@ export default function TrackRow({ track, queue, index, className }: { track: Tr
               <Link
                 href={track.artistSlug ? `/artist/${track.artistSlug}` : `/artist/${track.artistId}`}
                 onClick={(e) => e.stopPropagation()}
-                className="hover:text-white hover:underline transition-colors"
+                className="hover:text-foreground hover:underline transition-colors"
               >
                 {track.artist}
               </Link>

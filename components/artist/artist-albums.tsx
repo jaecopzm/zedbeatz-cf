@@ -36,11 +36,11 @@ export default function ArtistAlbums({ albums }: { albums: Album[] }) {
                 </div>
               )}
               {album.releaseYear && (
-                <div className="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded-full bg-black/70 text-[10px] font-semibold text-white/80">
+                <div className="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded-full bg-background/70 text-[10px] font-semibold text-foreground/80">
                   {album.releaseYear}
                 </div>
               )}
-              <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-[2px]">
+              <div className="absolute inset-0 bg-background/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-[2px]">
                 <div className="w-9 h-9 rounded-full bg-[var(--primary)] flex items-center justify-center shadow-xl shadow-[var(--primary-glow)] scale-90 group-hover:scale-100 transition-transform duration-300">
                   <Play fill="currentColor" size={14} className="text-black ml-0.5" />
                 </div>

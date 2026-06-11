@@ -45,10 +45,10 @@ export default function HeroCard({
       
       <div className="absolute bottom-0 left-0 right-0 p-5 flex items-end justify-between gap-4">
         <div className="min-w-0 flex-1">
-          <p className={`font-bold ${large ? 'text-3xl mb-2' : 'text-xl'} text-white truncate leading-tight`}>
+          <p className={`font-bold ${large ? 'text-3xl mb-2' : 'text-xl'} text-foreground truncate leading-tight`}>
             {track.title}
           </p>
-          <p className={`text-white/80 ${large ? 'text-base' : 'text-sm'} truncate`}>{track.artist}</p>
+          <p className={`text-foreground/80 ${large ? 'text-base' : 'text-sm'} truncate`}>{track.artist}</p>
         </div>
         
         <div className={`flex-shrink-0 w-14 h-14 rounded-full bg-[var(--primary)] flex items-center justify-center shadow-2xl transition-all duration-300 hover:scale-110 hover:bg-[var(--primary-hover)] active:scale-95 ${isActive && playing ? 'scale-100 opacity-100' : 'scale-90 opacity-0 group-hover:scale-100 group-hover:opacity-100'}`}>

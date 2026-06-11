@@ -4,11 +4,11 @@ import { tracks, artists } from "@/lib/db/schema";
 import { eq, desc, sql } from "drizzle-orm";
 import { getPublicUrl } from "@/lib/r2";
 import { sanitizeFeaturedArtists } from "@/lib/featured-artists";
-import TrackCard from "@/components/track-card";
 import TracksSearch from "@/components/tracks-search";
 import type { Track } from "@/lib/player-store";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import TracksListClient from "@/components/tracks-list-client";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zedbeatz.com";
 
@@ -105,83 +105,59 @@ export default async function AllTracksPage({ searchParams }: { searchParams: Pr
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify([itemListLd, breadcrumbLd]) }}
-      />
-      <div className="space-y-6 pb-20 px-4 md:px-8">
-        <div className="pt-4">
-        <h1 className="text-2xl md:text-4xl font-bold mb-1">All Tracks</h1>
-        <p className="text-xs md:text-sm text-[var(--muted)] mb-3">{total} tracks available</p>
-        <TracksSearch tracks={trackList} />
-      </div>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify([itemListLd, breadcrumbLd]) }} />
+      <div className="pb-20">
+        {/* Header */}
+        <div className="px-4 md:px-8 pt-6 pb-4 border-b border-[var(--border)]">
+          <h1 className="text-2xl md:text-3xl font-black tracking-tight mb-0.5">All Tracks</h1>
+          <p className="text-xs text-[var(--muted)]">{total.toLocaleString()} songs</p>
+        </div>
 
-      {/* Tracks Grid */}
-      <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 xl:grid-cols-8 gap-2 md:gap-3">
-        {trackList.map((track) => (
-          <TrackCard key={track.id} track={track} queue={trackList} bare />
-        ))}
-      </div>
+        {/* Search + suggestions */}
+        <div className="px-4 md:px-8 py-4 border-b border-[var(--border)]">
+          <TracksSearch tracks={trackList} />
+        </div>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-1.5 pt-6 pb-24">
-          {page > 1 && (
-            <Link
-              href={`/tracks?page=${page - 1}`}
-              className="flex items-center gap-1 px-3 py-1.5 md:px-4 md:py-2 rounded-lg bg-[var(--surface)] hover:bg-[var(--surface-2)] transition-colors text-sm"
-            >
-              <ChevronLeft size={15} />
-              <span className="hidden sm:inline">Previous</span>
-            </Link>
-          )}
+        {/* Column headers */}
+        <div className="hidden md:grid grid-cols-[32px_1fr_1fr_80px_48px] gap-4 px-4 md:px-8 py-2 border-b border-[var(--border)]">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--muted-2)] text-center">#</span>
+          <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--muted-2)]">Title</span>
+          <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--muted-2)]">Artist</span>
+          <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--muted-2)] text-right">Time</span>
+          <span />
+        </div>
 
-          <div className="flex items-center gap-1 md:gap-2">
-            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-              let pageNum;
-              if (totalPages <= 5) {
-                pageNum = i + 1;
-              } else if (page <= 3) {
-                pageNum = i + 1;
-              } else if (page >= totalPages - 2) {
-                pageNum = totalPages - 4 + i;
-              } else {
-                pageNum = page - 2 + i;
-              }
+        {/* Track rows */}
+        <TracksListClient tracks={trackList} offset={offset} />
 
-              return (
-                <Link
-                  key={pageNum}
-                  href={`/tracks?page=${pageNum}`}
-                  className={`w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-lg text-sm transition-colors ${
-                    page === pageNum
-                      ? "bg-[var(--primary)] text-black font-semibold"
-                      : "bg-[var(--surface)] hover:bg-[var(--surface-2)]"
-                  }`}
-                >
-                  {pageNum}
-                </Link>
-              );
-            })}
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-1.5 pt-8 px-4">
+            {page > 1 && (
+              <Link href={`/tracks?page=${page - 1}`}
+                className="flex items-center gap-1 px-4 py-2 rounded-lg bg-[var(--surface-2)] hover:bg-[var(--surface-3)] transition-colors text-sm font-medium">
+                <ChevronLeft size={15} /> Prev
+              </Link>
+            )}
+            <div className="flex items-center gap-1">
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                let p = totalPages <= 5 ? i + 1 : page <= 3 ? i + 1 : page >= totalPages - 2 ? totalPages - 4 + i : page - 2 + i;
+                return (
+                  <Link key={p} href={`/tracks?page=${p}`}
+                    className={`w-9 h-9 flex items-center justify-center rounded-lg text-sm font-medium transition-colors ${p === page ? "bg-[var(--primary)] text-black" : "bg-[var(--surface-2)] hover:bg-[var(--surface-3)]"}`}>
+                    {p}
+                  </Link>
+                );
+              })}
+            </div>
+            {page < totalPages && (
+              <Link href={`/tracks?page=${page + 1}`}
+                className="flex items-center gap-1 px-4 py-2 rounded-lg bg-[var(--surface-2)] hover:bg-[var(--surface-3)] transition-colors text-sm font-medium">
+                Next <ChevronRight size={15} />
+              </Link>
+            )}
           </div>
-
-          {page < totalPages && (
-            <Link
-              href={`/tracks?page=${page + 1}`}
-              className="flex items-center gap-1 px-3 py-1.5 md:px-4 md:py-2 rounded-lg bg-[var(--surface)] hover:bg-[var(--surface-2)] transition-colors text-sm"
-            >
-              <span className="hidden sm:inline">Next</span>
-              <ChevronRight size={15} />
-            </Link>
-          )}
-        </div>
-      )}
-
-      {trackList.length === 0 && (
-        <div className="text-center py-20">
-          <p className="text-[var(--muted)] text-lg">No tracks found</p>
-        </div>
-      )}
+        )}
       </div>
     </>
   );

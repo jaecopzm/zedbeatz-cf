@@ -76,7 +76,7 @@ export default function TrackComments({ trackId }: { trackId: number }) {
     <section className="mt-10">
       <div className="flex items-center gap-2 mb-6">
         <MessageCircle className="text-[var(--primary)]" size={20} />
-        <h2 className="text-lg font-bold text-white">Comments</h2>
+        <h2 className="text-lg font-bold text-foreground">Comments</h2>
         {!loading && (
           <span className="text-xs text-[var(--muted)] bg-[var(--surface-2)] px-2 py-0.5 rounded-full">
             {comments.length}
@@ -99,7 +99,7 @@ export default function TrackComments({ trackId }: { trackId: number }) {
               placeholder="Share your thoughts on this track..."
               maxLength={500}
               rows={2}
-              className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm text-white placeholder:text-[var(--muted)] outline-none focus:border-[var(--primary)]/60 focus:bg-[var(--surface-3)] resize-none transition-all"
+              className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-[var(--muted)] outline-none focus:border-[var(--primary)]/60 focus:bg-[var(--surface-3)] resize-none transition-all"
             />
             <div className="flex items-center justify-between mt-2">
               <span className="text-[10px] text-[var(--muted)]">{input.length}/500</span>
@@ -160,12 +160,12 @@ export default function TrackComments({ trackId }: { trackId: number }) {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-baseline gap-2 mb-1">
-                    <span className="text-xs font-semibold text-white">{comment.user_name}</span>
+                    <span className="text-xs font-semibold text-foreground">{comment.user_name}</span>
                     <span className="text-[10px] text-[var(--muted)]">
                       {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
                     </span>
                   </div>
-                  <p className="text-sm text-white/80 leading-relaxed break-words">{comment.content}</p>
+                  <p className="text-sm text-foreground/80 leading-relaxed break-words">{comment.content}</p>
                 </div>
                 {user && comment.user_id === user.id && (
                   <button

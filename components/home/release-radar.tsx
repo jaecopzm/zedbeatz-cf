@@ -30,7 +30,7 @@ export default function ReleaseRadar() {
     <section className="mb-8 md:mb-10">
       <div className="px-4 md:px-8 mb-3 md:mb-4 flex items-center gap-2">
         <h2 className="text-xl md:text-[26px] font-black tracking-tight">Release Radar</h2>
-        <span className="px-2 py-0.5 bg-white/10 text-[10px] font-bold text-white/60 rounded">
+        <span className="px-2 py-0.5 bg-[var(--glass-hover)] text-[10px] font-bold text-foreground/60 rounded">
           {tracks.length}
         </span>
       </div>
@@ -47,7 +47,7 @@ export default function ReleaseRadar() {
                   {t.coverUrl && (
                     <Image src={t.coverUrl} alt={t.title} fill loading="lazy" className="object-cover transition-transform duration-500 group-hover:scale-105" unoptimized />
                   )}
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                  <div className="absolute inset-0 bg-background/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                     <div className="w-9 h-9 md:w-12 md:h-12 rounded-full bg-[var(--primary)] flex items-center justify-center shadow-xl shadow-[var(--primary-glow)] scale-90 group-hover:scale-100 transition-transform duration-200">
                       {isActive && playing ? (
                         <Pause size={14} className="text-black fill-black md:w-5 md:h-5" />
@@ -57,7 +57,7 @@ export default function ReleaseRadar() {
                     </div>
                   </div>
                 </div>
-                <p className={`text-[10px] md:text-sm font-semibold truncate ${isActive ? "text-[var(--primary)]" : "text-white"}`}>{t.title}</p>
+                <p className={`text-[10px] md:text-sm font-semibold truncate ${isActive ? "text-[var(--primary)]" : "text-foreground"}`}>{t.title}</p>
                 <p className="text-[9px] md:text-xs text-[var(--muted)] truncate">{t.artist}</p>
               </div>
             </div>

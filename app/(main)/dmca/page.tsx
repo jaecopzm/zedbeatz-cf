@@ -32,14 +32,14 @@ export default function DMCAPage() {
         
         <div className="space-y-6 text-[var(--muted)] leading-relaxed text-sm md:text-base">
           <section>
-            <h2 className="text-lg md:text-lg md:text-2xl font-bold text-white mb-3">Copyright Infringement Notice</h2>
+            <h2 className="text-lg md:text-lg md:text-2xl font-bold text-foreground mb-3">Copyright Infringement Notice</h2>
             <p>
               ZedBeatz respects the intellectual property rights of others and expects our users to do the same. We respond to notices of alleged copyright infringement that comply with the Digital Millennium Copyright Act (DMCA).
             </p>
           </section>
           
           <section>
-            <h2 className="text-lg md:text-2xl font-bold text-white mb-3">Filing a DMCA Notice</h2>
+            <h2 className="text-lg md:text-2xl font-bold text-foreground mb-3">Filing a DMCA Notice</h2>
             <p>
               If you believe that your copyrighted work has been uploaded to ZedBeatz without authorization, please send a written notice to our designated copyright agent with the following information:
             </p>
@@ -54,12 +54,12 @@ export default function DMCAPage() {
           </section>
           
           <section>
-            <h2 className="text-lg md:text-2xl font-bold text-white mb-3">Contact Information</h2>
+            <h2 className="text-lg md:text-2xl font-bold text-foreground mb-3">Contact Information</h2>
             <p>
               Send DMCA notices to:
             </p>
             <div className="bg-[var(--surface)] p-4 rounded-xl border border-[var(--border)] mt-3">
-              <p className="font-semibold text-white">Email:</p>
+              <p className="font-semibold text-foreground">Email:</p>
               <a href="mailto:support@zedbeatz.com" className="text-[var(--primary)] hover:underline">
                 support@zedbeatz.com
               </a>
@@ -68,7 +68,7 @@ export default function DMCAPage() {
           </section>
           
           <section>
-            <h2 className="text-lg md:text-2xl font-bold text-white mb-3">Counter-Notification</h2>
+            <h2 className="text-lg md:text-2xl font-bold text-foreground mb-3">Counter-Notification</h2>
             <p>
               If you believe that your content was removed by mistake or misidentification, you may file a counter-notification with our copyright agent. The counter-notification must include:
             </p>
@@ -81,14 +81,14 @@ export default function DMCAPage() {
           </section>
           
           <section>
-            <h2 className="text-lg md:text-2xl font-bold text-white mb-3">Repeat Infringers</h2>
+            <h2 className="text-lg md:text-2xl font-bold text-foreground mb-3">Repeat Infringers</h2>
             <p>
               ZedBeatz will terminate the accounts of users who are repeat infringers of copyright in appropriate circumstances.
             </p>
           </section>
           
           <section>
-            <h2 className="text-lg md:text-2xl font-bold text-white mb-3">Processing Time</h2>
+            <h2 className="text-lg md:text-2xl font-bold text-foreground mb-3">Processing Time</h2>
             <p>
               We will review and process valid DMCA notices within 48-72 hours. Upon receipt of a valid notice, we will remove or disable access to the allegedly infringing material.
             </p>

@@ -23,7 +23,7 @@ export default function QuickPlaySection({ tracks }: { tracks: Track[] }) {
             className={`group relative overflow-hidden border transition-all duration-300 cursor-pointer hover:-translate-y-0.5 hover:shadow-[var(--shadow-card)] ${
               isActive
                 ? "border-[var(--primary)]/40 bg-[var(--surface-2)] shadow-[0_0_15px_rgba(30,215,96,0.1)]"
-                : "border-[var(--glass-border)] glass-card hover:bg-white/[0.03] hover:border-white/10"
+                : "border-[var(--glass-border)] glass-card hover:bg-[var(--glass-hover)] hover:border-[var(--border)]"
             }`}
           >
             {/* Active animated border */}
@@ -52,7 +52,7 @@ export default function QuickPlaySection({ tracks }: { tracks: Track[] }) {
 
               {/* Info */}
               <div className="flex-1 min-w-0">
-                <p className={`text-xs md:text-sm font-semibold truncate leading-tight ${isActive ? "text-[var(--primary)]" : "text-white"}`}>
+                <p className={`text-xs md:text-sm font-semibold truncate leading-tight ${isActive ? "text-[var(--primary)]" : "text-foreground"}`}>
                   {track.title}
                 </p>
                 <p className="text-[10px] md:text-xs text-[var(--muted)] truncate mt-0.5">{track.artist}</p>
@@ -62,7 +62,7 @@ export default function QuickPlaySection({ tracks }: { tracks: Track[] }) {
               <div className={`w-8 h-8 md:w-9 md:h-9 rounded-full flex items-center justify-center transition-all duration-300 shadow-md shrink-0 ${
                 isActive && playing
                   ? "bg-[var(--primary)] text-black shadow-[var(--glow-primary)] scale-105"
-                  : "bg-white/10 text-white backdrop-blur-md border border-white/10 group-hover:bg-white group-hover:text-black group-hover:scale-110 group-hover:border-transparent"
+                  : "bg-[var(--glass-hover)] text-foreground backdrop-blur-md border border-[var(--border)] group-hover:bg-white group-hover:text-black group-hover:scale-110 group-hover:border-transparent"
               }`}>
                 {isActive && playing
                   ? <Pause size={14} className="md:w-4 md:h-4" fill="currentColor" />

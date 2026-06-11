@@ -68,7 +68,7 @@ export default function FeaturedPlaylists() {
                     <ListMusic size={24} />
                   </div>
                 )}
-                <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-[2px]">
+                <div className="absolute inset-0 bg-background/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-[2px]">
                   <button onClick={(e) => handlePlayPause(e, playlist.id)}
                     className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-[var(--primary)] text-black flex items-center justify-center shadow-xl shadow-[var(--primary-glow)] scale-90 group-hover:scale-100 transition-transform duration-300">
                     {isCurrentlyPlaying ? (

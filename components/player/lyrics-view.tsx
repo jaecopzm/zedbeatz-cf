@@ -86,8 +86,8 @@ export default function LyricsView({ trackId, progress, className = "" }: Lyrics
 
   if (loading) {
     return (
-      <div className={`flex flex-col items-center justify-center h-full text-white/50 ${className}`}>
-        <div className="w-6 h-6 border-2 border-white/20 border-t-white/80 rounded-full animate-spin mb-4" />
+      <div className={`flex flex-col items-center justify-center h-full text-foreground/50 ${className}`}>
+        <div className="w-6 h-6 border-2 border-[var(--border-strong)] border-t-white/80 rounded-full animate-spin mb-4" />
         <p className="text-sm font-medium">Loading lyrics...</p>
       </div>
     );
@@ -95,9 +95,9 @@ export default function LyricsView({ trackId, progress, className = "" }: Lyrics
 
   if (!data?.has_lyrics || lines.length === 0) {
     return (
-      <div className={`flex flex-col items-center justify-center h-full text-white/40 px-6 text-center ${className}`}>
+      <div className={`flex flex-col items-center justify-center h-full text-foreground/40 px-6 text-center ${className}`}>
         <Mic2 size={48} strokeWidth={1} className="mb-4 opacity-50" />
-        <h3 className="text-lg font-bold text-white/70 mb-2">No Lyrics Available</h3>
+        <h3 className="text-lg font-bold text-foreground/70 mb-2">No Lyrics Available</h3>
         <p className="text-sm">We don't have lyrics for this track yet.</p>
       </div>
     );
@@ -126,11 +126,11 @@ export default function LyricsView({ trackId, progress, className = "" }: Lyrics
               className={`transition-all duration-500 ease-out origin-left ${
                 isSynced 
                   ? isActive 
-                    ? "text-white text-3xl lg:text-4xl font-black scale-100 opacity-100 drop-shadow-lg" 
+                    ? "text-foreground text-3xl lg:text-4xl font-black scale-100 opacity-100 drop-shadow-lg" 
                     : isPast
-                      ? "text-white text-3xl lg:text-4xl font-bold opacity-30 scale-95"
-                      : "text-white text-3xl lg:text-4xl font-bold opacity-50 scale-95 hover:opacity-70 transition-opacity"
-                  : "text-white/80 text-2xl lg:text-3xl font-bold mb-2" // Non-synced style
+                      ? "text-foreground text-3xl lg:text-4xl font-bold opacity-30 scale-95"
+                      : "text-foreground text-3xl lg:text-4xl font-bold opacity-50 scale-95 hover:opacity-70 transition-opacity"
+                  : "text-foreground/80 text-2xl lg:text-3xl font-bold mb-2" // Non-synced style
               }`}
             >
               {line.text}

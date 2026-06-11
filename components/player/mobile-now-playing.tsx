@@ -183,7 +183,7 @@ export default function MobileNowPlaying({
           className="flex items-center justify-center w-10 h-10 rounded-full transition-all active:scale-90"
           style={{ background: "rgba(255,255,255,0.08)" }}
         >
-          <ChevronDown size={22} className="text-white" strokeWidth={2.5} />
+          <ChevronDown size={22} className="text-foreground" strokeWidth={2.5} />
         </button>
 
         {/* Center label with subtle pill */}
@@ -197,7 +197,7 @@ export default function MobileNowPlaying({
           >
             {showLyrics ? "Lyrics" : context ? (
               context.href ? (
-                <Link href={context.href} onClick={onClose} className="hover:text-white/80 transition-colors">
+                <Link href={context.href} onClick={onClose} className="hover:text-foreground/80 transition-colors">
                   Playing from {context.label}
                 </Link>
               ) : (
@@ -252,32 +252,32 @@ export default function MobileNowPlaying({
                   className="absolute inset-0 overflow-hidden flex flex-col"
                   style={{ background: "#111" }}
                 >
-                  <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between shrink-0">
-                    <span className="text-sm font-bold text-white">Up Next</span>
-                    <span className="text-xs text-white/40">{queue.length} tracks</span>
+                  <div className="px-4 py-3 border-b border-[var(--border)] flex items-center justify-between shrink-0">
+                    <span className="text-sm font-bold text-foreground">Up Next</span>
+                    <span className="text-xs text-foreground/40">{queue.length} tracks</span>
                   </div>
                   <div className="flex-1 overflow-y-auto">
                     {queue.map((t, i) => (
                       <button
                         key={`${t.id}-${i}`}
                         onClick={() => onSelectTrack(i)}
-                        className={`w-full flex items-center gap-3 px-4 py-3 transition-colors border-b border-white/5 ${
-                          i === currentIndex ? "bg-white/10" : "active:bg-white/5"
+                        className={`w-full flex items-center gap-3 px-4 py-3 transition-colors border-b border-[var(--border)] ${
+                          i === currentIndex ? "bg-[var(--glass-hover)]" : "active:bg-[var(--glass-hover)]"
                         }`}
                       >
-                        <span className={`text-xs w-5 text-center shrink-0 tabular-nums ${i === currentIndex ? "text-[#1ed760]" : "text-white/30"}`}>
+                        <span className={`text-xs w-5 text-center shrink-0 tabular-nums ${i === currentIndex ? "text-[#1ed760]" : "text-foreground/30"}`}>
                           {i + 1}
                         </span>
-                        <div className="relative w-10 h-10 shrink-0 bg-white/5">
+                        <div className="relative w-10 h-10 shrink-0 bg-[var(--glass-hover)]">
                           {t.coverUrl && (
                             <Image src={t.coverUrl} alt="" fill className="object-cover" unoptimized />
                           )}
                         </div>
                         <div className="flex-1 min-w-0 text-left">
-                          <p className={`text-sm font-semibold truncate ${i === currentIndex ? "text-[#1ed760]" : "text-white"}`}>
+                          <p className={`text-sm font-semibold truncate ${i === currentIndex ? "text-[#1ed760]" : "text-foreground"}`}>
                             {t.title}
                           </p>
-                          <p className="text-xs text-white/50 truncate">{t.artist}</p>
+                          <p className="text-xs text-foreground/50 truncate">{t.artist}</p>
                         </div>
                         {i === currentIndex && playing && (
                           <span className="eq-container shrink-0" aria-hidden>
@@ -329,7 +329,7 @@ export default function MobileNowPlaying({
           <div className="w-full flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
               <h1
-                className="font-bold text-white leading-tight truncate"
+                className="font-bold text-foreground leading-tight truncate"
                 style={{ fontSize: "clamp(1.15rem, 5vw, 1.4rem)" }}
               >
                 {track.title}

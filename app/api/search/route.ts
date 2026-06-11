@@ -3,7 +3,7 @@ import { tracks, artists, albums } from "@/lib/db/schema";
 import { getPublicUrl } from "@/lib/r2";
 import { NextRequest, NextResponse } from "next/server";
 import { sanitizeFeaturedArtists } from "@/lib/featured-artists";
-import { ilike, eq, inArray, desc, and, isNotNull } from "drizzle-orm";
+import { ilike, eq, inArray, desc, and, isNotNull, sql } from "drizzle-orm";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -12,8 +12,11 @@ export async function GET(req: NextRequest) {
   const q = req.nextUrl.searchParams.get("q")?.trim();
   if (!q) return NextResponse.json({ tracks: [], artists: [], albums: [], genres: [] });
 
-  const words = q.toLowerCase().split(/\s+/).filter(w => w.length > 0);
+  const words = q.toLowerCase().split(/\s+/).filter(w => w.length > 1);
   const searchPattern = `%${words.join('%')}%`;
+
+  // Per-word patterns for cross-field matching
+  const wordPatterns = words.map(w => `%${w}%`);
 
   const [tracksByTitle, artistsResult, albumsResult, genreTracks, tracksByGenre] = await Promise.all([
     db
@@ -31,7 +34,20 @@ export async function GET(req: NextRequest) {
       })
       .from(tracks)
       .leftJoin(artists, eq(tracks.artistId, artists.id))
-      .where(ilike(tracks.title, searchPattern))
+      .where(
+        // Match if ANY word appears in title, artist name, or featured artists
+        sql`(
+          ${ilike(tracks.title, searchPattern)}
+          OR ${ilike(artists.name, searchPattern)}
+          OR ${ilike(tracks.featuredArtists, searchPattern)}
+          OR (${wordPatterns.map(p => sql`(
+            ${ilike(tracks.title, p)}
+            OR ${ilike(artists.name, p)}
+            OR ${ilike(tracks.featuredArtists, p)}
+          )`).reduce((a, b) => sql`${a} AND ${b}`)})
+        )`
+      )
+      .orderBy(desc(tracks.plays))
       .limit(20),
     db
       .select({
@@ -105,7 +121,7 @@ export async function GET(req: NextRequest) {
   }
 
   const seen = new Set<number>();
-  const allTracks = [...tracksByGenre, ...tracksByTitle, ...tracksByArtist].filter((t) => {
+  const allTracks = [...tracksByArtist, ...tracksByTitle, ...tracksByGenre].filter((t) => {
     if (!t.id || seen.has(t.id)) return false;
     seen.add(t.id);
     return true;

@@ -86,7 +86,7 @@ export default function FollowButton({ artistId }: { artistId: number }) {
   if (!isSignedIn) {
     return (
       <SignInButton mode="modal">
-        <button className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-white/5 border border-white/20 hover:bg-white/10 text-white font-semibold transition-all text-xs">
+        <button className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-[var(--glass-hover)] border border-[var(--border-strong)] hover:bg-[var(--glass-hover)] text-foreground font-semibold transition-all text-xs">
           <UserPlus size={13} /> Follow · {formatCount(count)}
         </button>
       </SignInButton>
@@ -99,7 +99,7 @@ export default function FollowButton({ artistId }: { artistId: number }) {
       disabled={loading}
       className={`flex items-center gap-1.5 px-3 py-2 rounded-full font-semibold border transition-all text-xs ${
         following
-          ? "bg-white/5 border-white/20 hover:bg-white/10 text-white"
+          ? "bg-[var(--glass-hover)] border-[var(--border-strong)] hover:bg-[var(--glass-hover)] text-foreground"
           : "bg-[var(--primary)] border-transparent hover:bg-[var(--primary-hover)] text-black"
       }`}
     >

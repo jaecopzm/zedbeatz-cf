@@ -10,7 +10,7 @@ export default function AlbumLoading() {
 
         <div className="px-4 md:px-8 pt-16 md:pt-20 pb-6 flex flex-col sm:flex-row items-start sm:items-end gap-4 md:gap-5">
           <Skeleton className="w-36 h-36 md:w-48 md:h-48 shrink-0 flex items-center justify-center">
-            <Disc3 size={32} className="text-white/10" />
+            <Disc3 size={32} className="text-foreground/10" />
           </Skeleton>
 
           <div className="min-w-0 flex-1 space-y-3">
@@ -37,7 +37,7 @@ export default function AlbumLoading() {
               style={{ animationDelay: `${i * 50}ms` }}
             >
               <Skeleton className="w-8 h-8 flex items-center justify-center shrink-0">
-                <span className="text-xs text-white/10">{i + 1}</span>
+                <span className="text-xs text-foreground/10">{i + 1}</span>
               </Skeleton>
               <Skeleton className="w-10 h-10 shrink-0" />
               <div className="flex-1 min-w-0 space-y-2">

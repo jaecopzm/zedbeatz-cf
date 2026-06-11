@@ -57,10 +57,10 @@ export default function ToastContainer() {
             className="pointer-events-auto flex items-center gap-3 glass-card rounded-xl px-4 py-3 shadow-2xl min-w-[260px] max-w-[340px] animate-toast-in"
           >
             <Icon size={18} className={`${color} shrink-0`} />
-            <p className="text-sm flex-1 text-white/90 font-medium leading-snug">{toast.message}</p>
+            <p className="text-sm flex-1 text-foreground/90 font-medium leading-snug">{toast.message}</p>
             <button
               onClick={() => remove(toast.id)}
-              className="text-[var(--muted)] hover:text-white transition-colors shrink-0 p-0.5"
+              className="text-[var(--muted)] hover:text-foreground transition-colors shrink-0 p-0.5"
             >
               <X size={14} />
             </button>

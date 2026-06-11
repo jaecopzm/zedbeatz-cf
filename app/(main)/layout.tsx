@@ -14,37 +14,36 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     <LikesProvider>
       <div className="flex h-screen flex-col bg-[var(--background)] relative">
         {/* Mobile Header */}
-        <header className="lg:hidden fixed top-0 left-0 right-0 h-14 z-40 flex items-center px-4 border-b border-white/[0.07] bg-[rgba(10,10,15,0.55)] backdrop-blur-xl [-webkit-backdrop-filter:blur(24px)] supports-[backdrop-filter]:bg-[rgba(10,10,15,0.45)]">
+        <header className="lg:hidden fixed top-0 left-0 right-0 h-14 z-40 flex items-center px-4 border-b border-[var(--border)] bg-[var(--glass)] backdrop-blur-xl [-webkit-backdrop-filter:blur(24px)] supports-[backdrop-filter]:bg-[var(--glass)]">
           <MobileMenu />
-          <Link href="/" className="flex-1 flex items-center justify-center"><img src="/Logo.png" alt="ZedBeatz" className="h-6 w-auto" /></Link>
+          <Link href="/" className="flex-1 flex items-center justify-center">
+            <img src="/Logo.png" alt="ZedBeatz" className="h-6 w-auto" />
+          </Link>
           <div className="w-9" />
         </header>
 
-        <div className="flex flex-1 flex-col lg:flex-row lg:overflow-hidden pt-14 lg:pt-0">
-          {/* Sidebar — desktop only */}
-          <div className="hidden lg:block shrink-0 z-20">
+        {/* Desktop: panels row with gap and padding */}
+        <div className="flex flex-1 flex-col lg:flex-row lg:overflow-hidden pt-14 lg:pt-2 lg:px-2 lg:gap-2 lg:pb-0">
+          {/* Sidebar panel — elevated, rounded */}
+          <div className="hidden lg:flex shrink-0 z-20 rounded-xl overflow-hidden bg-[var(--surface)]">
             <Sidebar />
           </div>
 
-          <main className="flex-1 lg:min-h-0 lg:overflow-y-auto scrollbar-hide">
+          {/* Main content panel — elevated, rounded, scrollable */}
+          <main className="flex-1 lg:min-h-0 lg:overflow-y-auto scrollbar-hide lg:rounded-xl lg:bg-[var(--surface)]">
             {children}
             <Footer />
           </main>
         </div>
 
-        {/* Player bar — sits at bottom on desktop */}
+        {/* Player bar */}
         <Player />
 
         {/* Mobile bottom nav */}
         <BottomNav />
 
-        {/* Scroll to top button */}
         <ScrollToTop />
-        
-        {/* Scroll restoration */}
         <ScrollRestoration />
-
-        {/* Toast notifications */}
         <ToastContainer />
       </div>
     </LikesProvider>

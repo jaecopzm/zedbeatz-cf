@@ -276,7 +276,7 @@ function ListView({ isSignedIn, isLoaded, searchQuery, setSearchQuery, showCreat
                 <button onClick={createPlaylist} className="flex-1 py-2.5 bg-[var(--primary)] text-black text-sm font-bold rounded-xl active:scale-95 transition-transform">
                   Create
                 </button>
-                <button onClick={() => { setShowCreate(false); setNewName(""); }} className="px-4 py-2.5 text-sm text-[var(--muted)] hover:text-white transition-colors">
+                <button onClick={() => { setShowCreate(false); setNewName(""); }} className="px-4 py-2.5 text-sm text-[var(--muted)] hover:text-foreground transition-colors">
                   Cancel
                 </button>
               </div>
@@ -291,7 +291,7 @@ function ListView({ isSignedIn, isLoaded, searchQuery, setSearchQuery, showCreat
           <p className="text-[10px] font-black uppercase tracking-widest text-[var(--muted)] mb-2">Quick Access</p>
           <div className="grid grid-cols-2 gap-2">
             <QuickCard
-              icon={<Heart size={18} className="text-white fill-white" />}
+              icon={<Heart size={18} className="text-foreground fill-white" />}
               gradient="from-rose-500 to-pink-600"
               label="Liked Songs"
               count={likedPlaylist?.playlist_tracks?.[0]?.count ?? 0}
@@ -299,7 +299,7 @@ function ListView({ isSignedIn, isLoaded, searchQuery, setSearchQuery, showCreat
             />
             {recentlyPlayed.length > 0 && (
               <QuickCard
-                icon={<Clock size={18} className="text-white" />}
+                icon={<Clock size={18} className="text-foreground" />}
                 gradient="from-blue-500 to-violet-600"
                 label="Recently Played"
                 count={recentlyPlayed.length}
@@ -399,7 +399,7 @@ function PlaylistRow({ p, i, selected, selectPlaylist, editingId, editName, setE
           />
         ) : (
           <>
-            <p className={`font-semibold text-sm truncate ${selected === p.id ? "text-[var(--primary)]" : "text-white"}`}>{p.name}</p>
+            <p className={`font-semibold text-sm truncate ${selected === p.id ? "text-[var(--primary)]" : "text-foreground"}`}>{p.name}</p>
             <div className="flex items-center gap-1.5 mt-0.5">
               {p.isAdmin && <span className="text-[8px] bg-[var(--primary)]/20 text-[var(--primary)] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">Curated</span>}
               <p className="text-xs text-[var(--muted)]">{p.playlist_tracks?.[0]?.count ?? 0} tracks</p>
@@ -413,7 +413,7 @@ function PlaylistRow({ p, i, selected, selectPlaylist, editingId, editName, setE
         {isSignedIn && !p.isAdmin && (
           <button
             onClick={() => { setEditingId(p.id); setEditName(p.name); }}
-            className="p-1.5 rounded-lg text-[var(--muted)] hover:text-white hover:bg-white/10 transition-all"
+            className="p-1.5 rounded-lg text-[var(--muted)] hover:text-foreground hover:bg-[var(--glass-hover)] transition-all"
           >
             <Edit2 size={13} />
           </button>
@@ -422,7 +422,7 @@ function PlaylistRow({ p, i, selected, selectPlaylist, editingId, editName, setE
           confirmDelete ? (
             <div className="flex items-center gap-1">
               <button onClick={() => { onDelete(); setConfirmDelete(false); }} className="px-2 py-1 text-xs font-bold bg-rose-500/20 text-rose-400 rounded-lg">Yes</button>
-              <button onClick={() => setConfirmDelete(false)} className="px-2 py-1 text-xs font-bold bg-white/10 text-white/60 rounded-lg">No</button>
+              <button onClick={() => setConfirmDelete(false)} className="px-2 py-1 text-xs font-bold bg-[var(--glass-hover)] text-foreground/60 rounded-lg">No</button>
             </div>
           ) : (
             <button onClick={() => setConfirmDelete(true)} className="p-1.5 rounded-lg text-[var(--muted)] hover:text-rose-400 hover:bg-rose-500/10 transition-all">

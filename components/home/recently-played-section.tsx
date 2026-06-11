@@ -6,6 +6,7 @@ import { Clock, Play, LogIn } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePlayer, type Track } from "@/lib/player-store";
+import { TrackMenu } from "@/components/track-menu";
 
 export default function RecentlyPlayedSection() {
   const { isSignedIn, isLoaded } = useUser();
@@ -40,7 +41,7 @@ export default function RecentlyPlayedSection() {
 
   if (!isSignedIn) {
     return (
-      <div className="flex items-center gap-3 md:gap-4 p-3 md:p-5 glass-card border border-white/5">
+      <div className="flex items-center gap-3 md:gap-4 p-3 md:p-5 glass-card border border-[var(--border)]">
         <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-[var(--accent-blue-dim)] flex items-center justify-center shrink-0">
           <LogIn size={18} className="text-[var(--accent-blue)] md:w-5 md:h-5" />
         </div>
@@ -57,9 +58,9 @@ export default function RecentlyPlayedSection() {
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center p-8 glass-card border border-white/5 text-center">
+      <div className="flex flex-col items-center justify-center p-8 glass-card border border-[var(--border)] text-center">
         <Clock size={24} className="text-[var(--muted)] mb-3 opacity-50" />
-        <p className="text-sm font-bold text-white mb-1">Couldn't load history</p>
+        <p className="text-sm font-bold text-foreground mb-1">Couldn't load history</p>
         <p className="text-xs text-[var(--muted)] max-w-xs">
           You appear to be offline. Please check your connection to sync your listening history.
         </p>
@@ -69,12 +70,13 @@ export default function RecentlyPlayedSection() {
 
   if (tracks.length === 0) {
     return (
-      <div className="flex items-center gap-4 p-5 glass-card border border-white/5">
-        <div className="w-12 h-12 rounded-full bg-[var(--surface-3)] flex items-center justify-center shrink-0">
-          <Clock size={20} className="text-[var(--muted)]" />
+      <div className="flex items-center gap-4 p-5 glass-card rounded-xl border border-[var(--border)]">
+        <div className="w-12 h-12 rounded-full flex items-center justify-center shrink-0"
+          style={{ background: "linear-gradient(135deg, var(--accent-purple), var(--accent-blue))" }}>
+          <Clock size={20} className="text-white" />
         </div>
         <div>
-          <p className="text-sm font-semibold text-white">No tracks played yet</p>
+          <p className="text-sm font-semibold text-foreground">No tracks played yet</p>
           <p className="text-xs text-[var(--muted)] mt-0.5">Start listening to build your history</p>
         </div>
       </div>
@@ -82,42 +84,34 @@ export default function RecentlyPlayedSection() {
   }
 
   return (
-    <div className="flex flex-col">
+    <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
       {tracks.slice(0, 6).map((track, i) => {
         const isActive = pQueue[currentIndex]?.id === track.id;
         return (
           <div
             key={track.id}
             onClick={() => isActive ? toggle() : setQueue(tracks, i, { label: "Recently Played" })}
-            className={`group flex items-center gap-2.5 px-2 py-1.5 cursor-pointer transition-colors ${
-              isActive ? "bg-[var(--surface-2)]" : "hover:bg-[var(--surface-2)]"
-            }`}
+            className="group flex items-center gap-2.5 px-2.5 py-2 rounded-lg cursor-pointer hover:bg-[var(--surface-2)] transition-colors"
           >
-            <span className="text-xs text-[var(--muted-2)] w-4 text-center shrink-0 tabular-nums">{i + 1}</span>
-
-            <div className="relative w-9 h-9 shrink-0 bg-[var(--surface-3)]">
+            <div className="relative w-10 h-10 shrink-0 rounded-md overflow-hidden bg-[var(--surface-3)]">
               {track.coverUrl && <Image src={track.coverUrl} alt={track.title} fill className="object-cover" unoptimized />}
               {isActive && (
-                <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                <div className="absolute inset-0 bg-background/40 flex items-center justify-center">
                   {playing ? (
                     <div className="flex items-end gap-[2px] h-3">
                       {[1,2,3].map(n => <span key={n} className="eq-bar eq-bar--active" style={{ animationDelay: `${n * 0.15}s` }} />)}
                     </div>
-                  ) : <Play size={14} className="text-white ml-0.5" fill="currentColor" />}
+                  ) : <Play size={14} className="text-foreground ml-0.5" fill="currentColor" />}
                 </div>
               )}
             </div>
-
-            <div className="flex-1 min-w-0">
-              <p className={`text-xs font-semibold truncate ${isActive ? "text-[var(--primary)]" : "text-white"}`}>{track.title}</p>
+            <div className="min-w-0 flex-1">
+              <p className={`text-xs font-semibold truncate ${isActive ? "text-[var(--primary)]" : "text-foreground"}`}>{track.title}</p>
               <p className="text-[10px] text-[var(--muted)] truncate">{track.artist}</p>
             </div>
-
-            {track.duration && (
-              <span className="text-[10px] text-[var(--muted)] tabular-nums shrink-0">
-                {Math.floor(track.duration / 60)}:{String(Math.floor(track.duration % 60)).padStart(2, "0")}
-              </span>
-            )}
+            <div onClick={e => e.stopPropagation()}>
+              <TrackMenu track={track} />
+            </div>
           </div>
         );
       })}

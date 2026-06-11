@@ -11,7 +11,11 @@ import ScrollRow from "@/components/home/scroll-row";
 import HomeGreeting from "@/components/home/home-greeting";
 import { Suspense } from "react";
 import { RecentlyPlayedSkeleton } from "@/components/home/home-skeletons";
+import ContinueListening from "@/components/home/continue-listening";
+import GenresMoods from "@/components/home/genres-moods";
 import ReleaseRadar from "@/components/home/release-radar";
+import RadioStations from "@/components/home/radio-stations";
+import type { RadioStation } from "@/components/home/radio-stations";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zedbeatz.com";
 const ogImage = new URL("/Logo.png", siteUrl).toString();
@@ -59,7 +63,7 @@ import { db } from "@/lib/db/drizzle";
 import { tracks, artists, albums, playlists, heroTracks } from "@/lib/db/schema";
 import { getPublicUrl } from "@/lib/r2";
 import { sanitizeFeaturedArtists } from "@/lib/featured-artists";
-import { eq, desc, asc } from "drizzle-orm";
+import { eq, desc, asc, and, isNotNull, ne } from "drizzle-orm";
 
 function mapTrack(r: any): Track {
   return {
@@ -75,7 +79,7 @@ function mapTrack(r: any): Track {
 }
 
 async function getHomeData() {
-  const [heroRes, trendingRes, latestRes, artistsRes, albumsRes, playlistsRes, featuredAlbumRes] = await Promise.all([
+  const [heroRes, trendingRes, latestRes, artistsRes, albumsRes, playlistsRes, featuredAlbumRes, popularRes, radioRes, genreRows] = await Promise.all([
     db
       .select({
         position: heroTracks.position,
@@ -176,6 +180,42 @@ async function getHomeData() {
       .leftJoin(artists, eq(albums.artistId, artists.id))
       .where(eq(albums.isFeatured, true))
       .limit(1),
+    db
+      .select({
+        id: tracks.id,
+        title: tracks.title,
+        audioKey: tracks.audioKey,
+        coverKey: tracks.coverKey,
+        duration: tracks.duration,
+        slug: tracks.slug,
+        featuredArtists: tracks.featuredArtists,
+        artistId: tracks.artistId,
+        artistName: artists.name,
+        artistSlug: artists.slug,
+      })
+      .from(tracks)
+      .leftJoin(artists, eq(tracks.artistId, artists.id))
+      .orderBy(desc(tracks.plays))
+      .limit(20),
+    db
+      .select({
+        id: tracks.id,
+        title: tracks.title,
+        audioKey: tracks.audioKey,
+        coverKey: tracks.coverKey,
+        slug: tracks.slug,
+        artistId: tracks.artistId,
+        artistName: artists.name,
+        artistSlug: artists.slug,
+      })
+      .from(tracks)
+      .leftJoin(artists, eq(tracks.artistId, artists.id))
+      .orderBy(desc(tracks.plays))
+      .limit(200),
+    db
+      .select({ genre: tracks.genre })
+      .from(tracks)
+      .where(and(isNotNull(tracks.genre), ne(tracks.genre, ""), ne(tracks.genre, "null"), ne(tracks.genre, "false"))),
   ]);
 
   const heroTracksMapped = heroRes.map((r) => mapTrack(r));
@@ -216,7 +256,41 @@ async function getHomeData() {
     coverUrl: fa.coverKey ? getPublicUrl(fa.coverKey) : null,
   } : null;
 
-  return { heroTracks: heroTracksMapped, trending, latest, artists: artistsMapped, albums: albumsMapped, playlists: playlistsMapped, featuredAlbum };
+  const seenArtists = new Set<number>();
+  const radioStations: RadioStation[] = [];
+  for (const t of radioRes) {
+    if (!t.artistId || seenArtists.has(t.artistId)) continue;
+    seenArtists.add(t.artistId);
+    radioStations.push({
+      id: t.id,
+      title: t.title,
+      artist: t.artistName ?? "Unknown",
+      artistSlug: t.artistSlug,
+      coverUrl: t.coverKey ? getPublicUrl(t.coverKey) : null,
+      slug: t.slug,
+      name: t.artistName ?? "Unknown",
+    });
+    if (radioStations.length >= 10) break;
+  }
+
+  const genreCounts = new Map<string, { count: number; label: string }>();
+  for (const r of genreRows) {
+    const g = r.genre?.trim();
+    if (!g || g === "" || g === "null" || g === "false") continue;
+    const key = g.toLowerCase().replace(/[\s-]+/g, "");
+    const existing = genreCounts.get(key);
+    if (existing) {
+      existing.count++;
+    } else {
+      genreCounts.set(key, { count: 1, label: g });
+    }
+  }
+  const homeGenres = Array.from(genreCounts.values())
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 10)
+    .map((g) => g.label);
+
+  return { heroTracks: heroTracksMapped, trending, latest, artists: artistsMapped, albums: albumsMapped, playlists: playlistsMapped, featuredAlbum, popularInZambia: popularRes.map(mapTrack), radioStations, homeGenres };
 }
 
 /* ─── Section Header ─────────────────────────────────────── */
@@ -225,7 +299,7 @@ function SectionHeader({ title, href }: { title: string; href?: string }) {
     <div className="flex items-center justify-between mb-3 md:mb-4">
       <h2 className="text-xl md:text-[26px] font-black tracking-tight">{title}</h2>
       {href && (
-        <Link href={href} className="flex items-center gap-1 text-[11px] font-bold text-white/35 hover:text-white transition-colors tracking-wider group">
+        <Link href={href} className="flex items-center gap-1 text-[11px] font-bold text-foreground/35 hover:text-foreground transition-colors tracking-wider group">
           See All
           <ChevronRight size={12} className="group-hover:translate-x-0.5 transition-transform" />
         </Link>
@@ -285,6 +359,9 @@ export default async function HomePage() {
   const albums: any[] = data?.albums ?? [];
   const playlists: any[] = data?.playlists ?? [];
   const featuredAlbum = data?.featuredAlbum ?? null;
+  const popularInZambia: Track[] = data?.popularInZambia ?? [];
+  const radioStations: RadioStation[] = data?.radioStations ?? [];
+  const homeGenres: string[] = data?.homeGenres ?? [];
 
   return (
     <>
@@ -301,9 +378,15 @@ export default async function HomePage() {
 
         <HomeGreeting />
 
+        {/* Continue Listening */}
         {/* Hero */}
         <div className="mt-4">
           <HeroSection tracks={heroTracks} featuredAlbum={featuredAlbum} />
+        </div>
+
+        {/* Continue Listening */}
+        <div className="px-4 md:px-8">
+          <ContinueListening />
         </div>
 
         {/* Trending */}
@@ -322,6 +405,22 @@ export default async function HomePage() {
           </Suspense>
         </section>
 
+        {/* Popular in Zambia */}
+        {popularInZambia.length > 0 && (
+          <section className="mb-8 md:mb-10">
+            <div className="px-4 md:px-8">
+              <SectionHeader title="Popular in Zambia" href="/tracks" />
+            </div>
+            <ScrollRow>
+              {popularInZambia.map((t) => (
+                <div key={t.id} className="flex-shrink-0 w-[120px] md:w-[140px] snap-start">
+                  <TrackCard track={t} queue={popularInZambia} bare minimal />
+                </div>
+              ))}
+            </ScrollRow>
+          </section>
+        )}
+
         {/* Release Radar */}
         <ReleaseRadar />
 
@@ -337,6 +436,24 @@ export default async function HomePage() {
                   <TrackCard track={t} queue={latest} bare minimal />
                 </div>
               ))}
+            </ScrollRow>
+          </section>
+        )}
+
+        {/* Genres & Moods */}
+        <section className="px-4 md:px-8 mb-8 md:mb-10">
+          <SectionHeader title="Genres & Moods" />
+          <GenresMoods genres={homeGenres} />
+        </section>
+
+        {/* Radio Stations */}
+        {radioStations.length > 0 && (
+          <section className="mb-8 md:mb-10">
+            <div className="px-4 md:px-8">
+              <SectionHeader title="Radio Stations" />
+            </div>
+            <ScrollRow>
+              <RadioStations stations={radioStations} />
             </ScrollRow>
           </section>
         )}
@@ -377,7 +494,7 @@ export default async function HomePage() {
                     {album.coverUrl && <Image src={album.coverUrl} alt={album.title} fill loading="lazy" className="object-cover group-hover:scale-105 transition-transform duration-600" unoptimized />}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                     {album.releaseYear && (
-                      <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded-full bg-black/70 text-[10px] font-semibold text-white/80">{album.releaseYear}</div>
+                      <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded-full bg-background/70 text-[10px] font-semibold text-foreground/80">{album.releaseYear}</div>
                     )}
                   </div>
                   <p className="text-xs md:text-sm font-bold truncate group-hover:text-[var(--primary)] transition-colors">{album.title}</p>

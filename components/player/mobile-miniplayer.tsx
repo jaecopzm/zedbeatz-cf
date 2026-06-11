@@ -93,7 +93,7 @@ export default function MobileMiniplayer({
         className="relative rounded-lg shadow-2xl overflow-hidden cursor-pointer active:scale-[0.98]"
         style={{ background: `linear-gradient(135deg, rgb(${color}) 0%, rgba(${color},0.95) 100%)`, transition: "background 0.8s ease" }}
       >
-        <div className="absolute top-0 left-0 right-0 h-[2px] bg-white/10">
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-[var(--glass-hover)]">
           <div
             className="h-full bg-[var(--primary)] transition-all duration-300"
             style={{ 
@@ -105,7 +105,7 @@ export default function MobileMiniplayer({
         <div className="flex items-center gap-2 px-2 py-2.5 pt-3">
           {/* Album art */}
           <div className="relative shrink-0">
-            <div className="w-10 h-10 rounded-md overflow-hidden bg-[#181818] shadow-lg">
+            <div className="w-10 h-10 rounded-md overflow-hidden bg-surface-2 shadow-lg">
               {track.coverUrl ? (
                 <Image src={track.coverUrl} alt={track.title} width={40} height={40} className="object-cover" unoptimized />
               ) : (
@@ -116,11 +116,11 @@ export default function MobileMiniplayer({
 
           {/* Track info */}
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold text-white truncate leading-tight">{track.title}</p>
-            <p className="text-[10px] text-white/60 truncate mt-0.5">
+            <p className="text-xs font-semibold text-foreground truncate leading-tight">{track.title}</p>
+            <p className="text-[10px] text-foreground/60 truncate mt-0.5">
               {track.artist}
               {track.featuredArtists && (
-                <span className="text-white/50"> ft. {track.featuredArtists}</span>
+                <span className="text-foreground/50"> ft. {track.featuredArtists}</span>
               )}
             </p>
           </div>

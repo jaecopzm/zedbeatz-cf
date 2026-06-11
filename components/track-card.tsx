@@ -36,10 +36,10 @@ export default function TrackCard({ track, queue, bare, minimal }: { track: Trac
       {/* Long-press quick actions sheet (mobile) */}
       {showActions && (
         <div className="sm:hidden fixed inset-0 z-[200]" onClick={() => setShowActions(false)}>
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div className="absolute inset-0 bg-background/60 backdrop-blur-sm" />
           <div className="absolute bottom-0 left-0 right-0 bg-[var(--surface)] rounded-t-2xl p-4 pb-8" onClick={e => e.stopPropagation()}>
-            <div className="flex justify-center mb-3"><div className="w-10 h-1 rounded-full bg-white/20" /></div>
-            <div className="flex items-center gap-3 mb-4 pb-4 border-b border-white/10">
+            <div className="flex justify-center mb-3"><div className="w-10 h-1 rounded-full bg-[var(--surface-2)]" /></div>
+            <div className="flex items-center gap-3 mb-4 pb-4 border-b border-[var(--border)]">
               {track.coverUrl && <Image src={track.coverUrl} alt={track.title} width={44} height={44} className="rounded-lg object-cover" />}
               <div className="min-w-0">
                 <p className="font-semibold text-sm truncate">{track.title}</p>
@@ -79,7 +79,7 @@ export default function TrackCard({ track, queue, bare, minimal }: { track: Trac
       } transition-all duration-200 ${minimal ? "rounded-lg" : ""}`}>
         {/* Fallback background with Music icon */}
         <div className="absolute inset-0 bg-gradient-to-br from-[var(--surface-3)] to-[var(--surface-2)] flex items-center justify-center -z-10">
-          <Music size={24} className="opacity-20 text-white md:w-8 md:h-8" />
+          <Music size={24} className="opacity-20 text-foreground md:w-8 md:h-8" />
         </div>
 
         {track.coverUrl && (
@@ -101,7 +101,7 @@ export default function TrackCard({ track, queue, bare, minimal }: { track: Trac
 
         {/* Playing equalizer indicator */}
         {isActive && playing && (
-          <div className="absolute top-1.5 right-1.5 md:top-2 md:right-2 flex items-end gap-[2px] md:gap-[3px] h-3 md:h-4 bg-black/60 backdrop-blur-sm rounded-full px-1.5 py-0.5 md:px-2 md:py-1">
+          <div className="absolute top-1.5 right-1.5 md:top-2 md:right-2 flex items-end gap-[2px] md:gap-[3px] h-3 md:h-4 bg-background/60 backdrop-blur-sm rounded-full px-1.5 py-0.5 md:px-2 md:py-1">
             {[1, 2, 3].map((i) => (
               <span
                 key={i}
@@ -114,7 +114,7 @@ export default function TrackCard({ track, queue, bare, minimal }: { track: Trac
 
         {/* Duration badge */}
         {track.duration && !isActive && !minimal && (
-          <div className="absolute bottom-1.5 right-1.5 md:bottom-2 md:right-2 px-1.5 py-0.5 bg-black/70 backdrop-blur-sm text-[9px] md:text-[10px] font-medium text-white/90 tabular-nums">
+          <div className="absolute bottom-1.5 right-1.5 md:bottom-2 md:right-2 px-1.5 py-0.5 bg-background/70 backdrop-blur-sm text-[9px] md:text-[10px] font-medium text-foreground/90 tabular-nums">
             {Math.floor(track.duration / 60)}:{String(Math.floor(track.duration % 60)).padStart(2, '0')}
           </div>
         )}
@@ -126,7 +126,7 @@ export default function TrackCard({ track, queue, bare, minimal }: { track: Trac
 
         {/* Hover overlay with play button */}
         {!minimal && (
-          <div className={`absolute inset-0 bg-black/50 backdrop-blur-[2px] flex items-center justify-center transition-all duration-300 ${
+          <div className={`absolute inset-0 bg-background/50 backdrop-blur-[2px] flex items-center justify-center transition-all duration-300 ${
             isActive && playing ? "opacity-0 md:group-hover:opacity-100" : "opacity-0 md:group-hover:opacity-100"
           }`}>
             <div className="relative w-9 h-9 md:w-12 md:h-12 rounded-full bg-[var(--primary)] flex items-center justify-center shadow-xl shadow-[var(--primary-glow)] transition-all duration-200 scale-90 group-hover:scale-100 hover:bg-[var(--primary-hover)]">
@@ -141,7 +141,7 @@ export default function TrackCard({ track, queue, bare, minimal }: { track: Trac
 
         {/* Minimal play overlay */}
         {minimal && (
-          <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+          <div className="absolute inset-0 bg-background/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
             <div className="w-9 h-9 md:w-12 md:h-12 rounded-full bg-[var(--primary)] flex items-center justify-center shadow-xl shadow-[var(--primary-glow)] scale-90 group-hover:scale-100 transition-transform duration-200">
               {isActive && playing ? (
                 <Pause size={14} className="text-black fill-black md:w-5 md:h-5" />
@@ -168,7 +168,7 @@ export default function TrackCard({ track, queue, bare, minimal }: { track: Trac
       <Link
         href={track.slug ? `/track/${track.slug}` : `/track/${track.id}`}
         onClick={(e) => e.stopPropagation()}
-        className={`text-[10px] md:text-sm font-semibold truncate mb-0.5 transition-colors block hover:underline ${isActive ? "text-[var(--primary)]" : "text-white"}`}
+        className={`text-[10px] md:text-sm font-semibold truncate mb-0.5 transition-colors block hover:underline ${isActive ? "text-[var(--primary)]" : "text-foreground"}`}
       >
         {track.title}
       </Link>
@@ -177,7 +177,7 @@ export default function TrackCard({ track, queue, bare, minimal }: { track: Trac
           <Link
             href={track.artistSlug ? `/artist/${track.artistSlug}` : `/artist/${track.artistId}`}
             onClick={(e) => e.stopPropagation()}
-            className="hover:text-white hover:underline transition-colors"
+            className="hover:text-foreground hover:underline transition-colors"
           >
             {track.artist}
           </Link>

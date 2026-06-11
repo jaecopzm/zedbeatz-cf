@@ -37,7 +37,7 @@ export function LibraryDetailView({
   }, []);
 
   return (
-    <div className="relative min-h-screen bg-black overflow-hidden pb-6">
+    <div className="relative min-h-screen bg-background overflow-hidden pb-6">
       {/* Ambient background */}
       <div className="pointer-events-none absolute inset-0 z-0">
         <div className="absolute inset-0 bg-gradient-to-b from-purple-900/25 via-black to-black" />
@@ -62,11 +62,11 @@ export function LibraryDetailView({
             <img src={selectedFull.cover_url} alt={selectedName} />
           ) : selected === "liked" ? (
             <div className="w-full h-full bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center">
-              <Heart size={18} className="text-white" fill="white" />
+              <Heart size={18} className="text-foreground" fill="white" />
             </div>
           ) : selected === "recent" ? (
             <div className="w-full h-full bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center">
-              <Clock size={18} className="text-white" />
+              <Clock size={18} className="text-foreground" />
             </div>
           ) : null}
         </div>
@@ -85,9 +85,9 @@ export function LibraryDetailView({
       <div className="collection-hero relative" ref={heroRef}>
         <button 
           onClick={goBack} 
-          className="absolute top-4 left-4 z-20 w-8 h-8 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center cursor-pointer active:scale-95 transition-transform"
+          className="absolute top-4 left-4 z-20 w-8 h-8 rounded-full bg-background/40 backdrop-blur-md flex items-center justify-center cursor-pointer active:scale-95 transition-transform"
         >
-          <ChevronLeft size={18} className="text-white" />
+          <ChevronLeft size={18} className="text-foreground" />
         </button>
         <div className="collection-hero-bg" style={{ 
           background: selected === "liked" 
@@ -102,15 +102,15 @@ export function LibraryDetailView({
               <Image src={selectedFull.cover_url} alt={selectedName} width={232} height={232} unoptimized />
             ) : selected === "liked" ? (
               <div className="w-full h-full bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center">
-                <Heart size={56} className="text-white" fill="white" />
+                <Heart size={56} className="text-foreground" fill="white" />
               </div>
             ) : selected === "recent" ? (
               <div className="w-full h-full bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center">
-                <Clock size={56} className="text-white" />
+                <Clock size={56} className="text-foreground" />
               </div>
             ) : (
               <div className="w-full h-full flex items-center justify-center">
-                <Music size={56} className="text-white/20" />
+                <Music size={56} className="text-foreground/20" />
               </div>
             )}
           </div>
