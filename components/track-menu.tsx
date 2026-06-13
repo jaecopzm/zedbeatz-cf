@@ -15,6 +15,7 @@ import type { Track } from "@/lib/player-store";
 import { useLikes } from "@/lib/likes-context";
 import { showToast } from "@/components/toast";
 import DownloadButton from "@/components/download-button";
+import { Drawer, DrawerContent } from "@/components/ui/drawer";
 
 // ─── Hooks ────────────────────────────────────────────────────────────────────
 
@@ -52,8 +53,7 @@ function useDropdownPosition(
 
   useEffect(() => {
     if (!open || !buttonRef.current) return;
-    
-    // Calculate immediately to avoid flash
+
     const rect = buttonRef.current.getBoundingClientRect();
     const spaceBelow = window.innerHeight - rect.bottom;
     const openUpward = spaceBelow < menuHeight + 8;
@@ -107,15 +107,15 @@ function useMenuItems(track: Track, onClose: () => void, copied: boolean, setCop
       label: "Download",
       icon: Download,
       iconColor: "#fbbf24",
-      action: { 
-        type: "component" as const, 
+      action: {
+        type: "component" as const,
         component: () => (
-          <DownloadButton 
-            audioUrl={track.audioUrl} 
-            title={track.title} 
+          <DownloadButton
+            audioUrl={track.audioUrl}
+            title={track.title}
             artist={track.artist}
             featuredArtists={track.featuredArtists}
-            coverUrl={track.coverUrl} 
+            coverUrl={track.coverUrl}
           />
         )
       },
@@ -153,6 +153,99 @@ function useMenuItems(track: Track, onClose: () => void, copied: boolean, setCop
   ], [track, onClose, copied, setCopied, liked, toggleLike]);
 }
 
+// ─── Shared menu content ──────────────────────────────────────────────────────
+
+function MenuContent({
+  items,
+  track,
+  close,
+  closeAndNavigate,
+  setFocusedIndex,
+  itemRefs,
+  focusedIndex,
+}: {
+  items: MenuItem[];
+  track: Track;
+  close: () => void;
+  closeAndNavigate: () => void;
+  setFocusedIndex: (f: number) => void;
+  itemRefs: React.MutableRefObject<(HTMLElement | null)[]>;
+  focusedIndex: number;
+}) {
+  return (
+    <>
+      {/* Track info header */}
+      <div className="flex items-center gap-2.5 px-3 py-2.5 border-b border-[var(--border)]">
+        {track.coverUrl && (
+          <img src={track.coverUrl} alt={track.title} className="w-9 h-9 rounded-lg object-cover shrink-0" />
+        )}
+        <div className="min-w-0">
+          <p className="text-[12px] font-bold text-foreground truncate leading-tight">{track.title}</p>
+          <p className="text-[11px] text-[var(--muted)] truncate">{track.artist}</p>
+        </div>
+      </div>
+
+      {/* Items */}
+      <div className="py-1">
+        {items.map((item, index) => {
+          const Icon = item.icon;
+
+          const commonClass = `track-menu-item flex items-center gap-3 w-full px-3 py-2 text-[13px] font-medium text-foreground cursor-pointer`;
+
+          if (item.action.type === "component") {
+            const Component = item.action.component;
+            return (
+              <div key={item.id} className={commonClass} role="menuitem" tabIndex={-1}
+                ref={(el) => { itemRefs.current[index] = el; }}
+                onMouseEnter={() => setFocusedIndex(index)}
+                data-focused={focusedIndex === index}
+              >
+                <span className="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ background: `${item.iconColor}22` }}>
+                  <Icon size={16} style={{ color: item.iconColor }} />
+                </span>
+                <span className="flex-1 text-left">{item.label}</span>
+                <Component />
+              </div>
+            );
+          }
+
+          if (item.action.type === "link") {
+            return (
+              <Link key={item.id} href={item.action.href}
+                className={commonClass} role="menuitem" tabIndex={-1}
+                ref={(el) => { itemRefs.current[index] = el; }}
+                onMouseEnter={() => setFocusedIndex(index)}
+                data-focused={focusedIndex === index}
+                onClick={(e) => { e.stopPropagation(); closeAndNavigate(); }}
+              >
+                <span className="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ background: `${item.iconColor}22` }}>
+                  <Icon size={16} style={{ color: item.iconColor }} />
+                </span>
+                <span>{item.label}</span>
+              </Link>
+            );
+          }
+
+          return (
+            <button key={item.id}
+              className={commonClass} role="menuitem" tabIndex={-1}
+              ref={(el) => { itemRefs.current[index] = el; }}
+              onMouseEnter={() => setFocusedIndex(index)}
+              data-focused={focusedIndex === index}
+              onClick={(e) => { e.stopPropagation(); if (item.action.type === "button") item.action.onClick(); }}
+            >
+              <span className="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ background: `${item.iconColor}22` }}>
+                <Icon size={16} style={{ color: item.iconColor }} />
+              </span>
+              <span>{item.label}</span>
+            </button>
+          );
+        })}
+      </div>
+    </>
+  );
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function TrackMenu({ track, onNavigate }: { track: Track; onNavigate?: () => void }) {
@@ -180,7 +273,7 @@ export function TrackMenu({ track, onNavigate }: { track: Track; onNavigate?: ()
   useOutsideClick([containerRef, dropdownRef], close);
   const { top, right, openUpward, setPosition } = useDropdownPosition(buttonRef, open, items.length * 48 + 8);
 
-  // Close on scroll (delay to avoid closing on the scroll triggered by focus)
+  // Close on scroll (desktop only)
   useEffect(() => {
     if (!open) return;
     let active = false;
@@ -236,15 +329,11 @@ export function TrackMenu({ track, onNavigate }: { track: Track; onNavigate?: ()
 
   // Focus first item when menu opens
   useEffect(() => {
-    if (open) setFocusedIndex(0);
+    if (open) {
+      const id = setTimeout(() => setFocusedIndex(0), 0);
+      return () => clearTimeout(id);
+    }
   }, [open]);
-
-  const sharedItemProps = (item: MenuItem, index: number) => ({
-    className: `track-menu-item item-${index}`,
-    "data-focused": focusedIndex === index,
-    onMouseEnter: () => setFocusedIndex(index),
-    ref: (el: HTMLElement | null) => { itemRefs.current[index] = el; },
-  });
 
   return (
     <div
@@ -258,7 +347,6 @@ export function TrackMenu({ track, onNavigate }: { track: Track; onNavigate?: ()
         onClick={(e) => {
           e.stopPropagation();
           if (!open && buttonRef.current) {
-            // Calculate position immediately before opening
             const rect = buttonRef.current.getBoundingClientRect();
             const spaceBelow = window.innerHeight - rect.bottom;
             const openUpward = spaceBelow < 280;
@@ -277,6 +365,26 @@ export function TrackMenu({ track, onNavigate }: { track: Track; onNavigate?: ()
         <MoreHorizontal size={20} />
       </button>
 
+      {/* Mobile: Bottom Sheet Drawer */}
+      <div className="lg:hidden">
+        <Drawer open={open} onOpenChange={setOpen}>
+          <DrawerContent>
+            <div className="p-4 pb-8">
+              <MenuContent
+                items={items}
+                track={track}
+                close={close}
+                closeAndNavigate={closeAndNavigate}
+                setFocusedIndex={setFocusedIndex}
+                itemRefs={itemRefs}
+                focusedIndex={focusedIndex}
+              />
+            </div>
+          </DrawerContent>
+        </Drawer>
+      </div>
+
+      {/* Desktop: Floating dropdown portal */}
       {open && createPortal(
         <>
           <style>{`
@@ -294,7 +402,7 @@ export function TrackMenu({ track, onNavigate }: { track: Track; onNavigate?: ()
 
           <div
             ref={dropdownRef}
-            className={`track-menu-dropdown fixed z-[10000] w-[260px] overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.35)] border border-[var(--border)] ${openUpward ? "origin-bottom-right" : "origin-top-right"}`}
+            className={`track-menu-dropdown fixed z-[10000] w-[260px] overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.35)] border border-[var(--border)] hidden lg:block ${openUpward ? "origin-bottom-right" : "origin-top-right"}`}
             style={{
               top: `${top}px`,
               right: `${right}px`,
@@ -304,76 +412,15 @@ export function TrackMenu({ track, onNavigate }: { track: Track; onNavigate?: ()
             role="menu"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Track info header */}
-            <div className="flex items-center gap-2.5 px-3 py-2.5 border-b border-[var(--border)]">
-              {track.coverUrl && (
-                <img src={track.coverUrl} alt={track.title} className="w-9 h-9 rounded-lg object-cover shrink-0" />
-              )}
-              <div className="min-w-0">
-                <p className="text-[12px] font-bold text-foreground truncate leading-tight">{track.title}</p>
-                <p className="text-[11px] text-[var(--muted)] truncate">{track.artist}</p>
-              </div>
-            </div>
-
-            {/* Items */}
-            <div className="py-1">
-              {items.map((item, index) => {
-                const Icon = item.icon;
-                const isComponent = item.action.type === "component";
-                const isLink = item.action.type === "link";
-
-                const commonClass = `track-menu-item flex items-center gap-3 w-full px-3 py-2 text-[13px] font-medium text-foreground cursor-pointer`;
-
-                if (isComponent && item.action.type === "component") {
-                  const Component = item.action.component;
-                  return (
-                    <div key={item.id} className={commonClass} role="menuitem" tabIndex={-1}
-                      ref={(el) => { itemRefs.current[index] = el; }}
-                      onMouseEnter={() => setFocusedIndex(index)}
-                      data-focused={focusedIndex === index}
-                    >
-                      <span className="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ background: `${item.iconColor}22` }}>
-                        <Icon size={16} style={{ color: item.iconColor }} />
-                      </span>
-                      <span className="flex-1 text-left">{item.label}</span>
-                      <Component />
-                    </div>
-                  );
-                }
-
-                if (isLink) {
-                  return (
-                    <Link key={item.id} href={(item.action as any).href}
-                      className={commonClass} role="menuitem" tabIndex={-1}
-                      ref={(el) => { itemRefs.current[index] = el; }}
-                      onMouseEnter={() => setFocusedIndex(index)}
-                      data-focused={focusedIndex === index}
-                      onClick={(e) => { e.stopPropagation(); closeAndNavigate(); }}
-                    >
-                      <span className="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ background: `${item.iconColor}22` }}>
-                        <Icon size={16} style={{ color: item.iconColor }} />
-                      </span>
-                      <span>{item.label}</span>
-                    </Link>
-                  );
-                }
-
-                return (
-                  <button key={item.id}
-                    className={commonClass} role="menuitem" tabIndex={-1}
-                    ref={(el) => { itemRefs.current[index] = el; }}
-                    onMouseEnter={() => setFocusedIndex(index)}
-                    data-focused={focusedIndex === index}
-                    onClick={(e) => { e.stopPropagation(); (item.action as any).onClick(); }}
-                  >
-                    <span className="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ background: `${item.iconColor}22` }}>
-                      <Icon size={16} style={{ color: item.iconColor }} />
-                    </span>
-                    <span>{item.label}</span>
-                  </button>
-                );
-              })}
-            </div>
+            <MenuContent
+              items={items}
+              track={track}
+              close={close}
+              closeAndNavigate={closeAndNavigate}
+              setFocusedIndex={setFocusedIndex}
+              itemRefs={itemRefs}
+              focusedIndex={focusedIndex}
+            />
           </div>
         </>
       , document.body)}

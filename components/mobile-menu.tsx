@@ -3,9 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, Home, Search, Library, Compass, LogOut, BarChart3 } from "lucide-react";
+import { Menu, X, Home, Search, Library, Compass, LogOut, BarChart3, Sun, Moon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SignInButton, useUser, useClerk } from "@clerk/nextjs";
+import { useTheme } from "./theme-provider";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 
 const links = [
@@ -15,6 +16,19 @@ const links = [
   { href: "/library", label: "Library", icon: Library },
   { href: "/stats",   label: "Your Stats", icon: BarChart3 },
 ];
+
+function ThemeToggle() {
+  const { theme, toggle } = useTheme();
+  return (
+    <button
+      onClick={toggle}
+      className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--glass-hover)] transition-all duration-200"
+    >
+      {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+      {theme === "dark" ? "Light mode" : "Dark mode"}
+    </button>
+  );
+}
 
 export default function MobileMenu() {
   const [open, setOpen] = useState(false);
@@ -73,6 +87,11 @@ export default function MobileMenu() {
             );
           })}
         </nav>
+
+        {/* Theme toggle */}
+        <div className="px-4 py-3 border-t border-[var(--glass-border)]">
+          <ThemeToggle />
+        </div>
 
         {/* User section */}
         <div className="px-4 py-5 border-t border-[var(--glass-border)]">
