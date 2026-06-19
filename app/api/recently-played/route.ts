@@ -1,5 +1,6 @@
 import { db } from "@/lib/db/drizzle";
 import { recentlyPlayed } from "@/lib/db/schema";
+import { sql } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 
@@ -12,16 +13,18 @@ export async function POST(req: NextRequest) {
 
   if (!track_id) return NextResponse.json({ error: "Missing track_id" }, { status: 400 });
 
-  const values: { trackId: number; userId?: string; playedAt: Date } = {
-    trackId: track_id,
-    playedAt: new Date(),
-  };
+  const playedAt = new Date();
 
   if (userId) {
-    values.userId = userId;
+    await db.insert(recentlyPlayed)
+      .values({ trackId: track_id, userId, playedAt })
+      .onConflictDoUpdate({
+        target: [recentlyPlayed.userId, recentlyPlayed.trackId],
+        set: { playedAt },
+      });
+  } else {
+    await db.insert(recentlyPlayed).values({ trackId: track_id, playedAt });
   }
-
-  await db.insert(recentlyPlayed).values(values);
 
   return NextResponse.json({ ok: true });
 }
