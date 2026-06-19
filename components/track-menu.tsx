@@ -15,7 +15,9 @@ import type { Track } from "@/lib/player-store";
 import { useLikes } from "@/lib/likes-context";
 import { showToast } from "@/components/toast";
 import DownloadButton from "@/components/download-button";
-import { Drawer, DrawerContent } from "@/components/ui/drawer";
+import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
+import { VisuallyHidden } from "@/components/ui/visually-hidden";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // ─── Hooks ────────────────────────────────────────────────────────────────────
 
@@ -199,6 +201,7 @@ function MenuContent({
                 ref={(el) => { itemRefs.current[index] = el; }}
                 onMouseEnter={() => setFocusedIndex(index)}
                 data-focused={focusedIndex === index}
+                onClick={() => close()}
               >
                 <span className="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ background: `${item.iconColor}22` }}>
                   <Icon size={16} style={{ color: item.iconColor }} />
@@ -252,6 +255,7 @@ export function TrackMenu({ track, onNavigate }: { track: Track; onNavigate?: ()
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState(-1);
+  const isMobile = useIsMobile();
 
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -366,9 +370,12 @@ export function TrackMenu({ track, onNavigate }: { track: Track; onNavigate?: ()
       </button>
 
       {/* Mobile: Bottom Sheet Drawer */}
-      <div className="lg:hidden">
+      {isMobile && (
         <Drawer open={open} onOpenChange={setOpen}>
           <DrawerContent>
+            <DrawerTitle>
+              <VisuallyHidden>Track options</VisuallyHidden>
+            </DrawerTitle>
             <div className="p-4 pb-8">
               <MenuContent
                 items={items}
@@ -382,7 +389,7 @@ export function TrackMenu({ track, onNavigate }: { track: Track; onNavigate?: ()
             </div>
           </DrawerContent>
         </Drawer>
-      </div>
+      )}
 
       {/* Desktop: Floating dropdown portal */}
       {open && createPortal(
@@ -403,6 +410,7 @@ export function TrackMenu({ track, onNavigate }: { track: Track; onNavigate?: ()
           <div
             ref={dropdownRef}
             className={`track-menu-dropdown fixed z-[10000] w-[260px] overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.35)] border border-[var(--border)] hidden lg:block ${openUpward ? "origin-bottom-right" : "origin-top-right"}`}
+            aria-label="Track options"
             style={{
               top: `${top}px`,
               right: `${right}px`,

@@ -33,36 +33,29 @@ export default function DownloadButton({
           const { ID3Writer } = await import("browser-id3-writer");
           const writer = new ID3Writer(audioBuffer);
 
-          // Set metadata frames
-          writer.setFrame("TIT2", title);
+          writer.setFrame("TIT2", `${title} | ZedBeatz`);
           
           const fullArtist = featuredArtists ? `${artist} feat. ${featuredArtists}` : artist;
-          console.log("Setting artist metadata:", fullArtist); // Debug log
           if (fullArtist && fullArtist !== "Unknown") {
             writer.setFrame("TPE1", [fullArtist]);
           }
           
           writer.setFrame("TALB", "ZedBeatz");
           
-          // Fetch and embed cover art
-          console.log("Embedding cover from URL:", coverUrl); // Debug log
-          const coverRes = await fetch(coverUrl);
-          if (!coverRes.ok) {
-            console.error("Failed to fetch cover:", coverRes.status);
-            throw new Error(`Cover fetch failed: ${coverRes.status}`);
+          const proxyUrl = `/api/image-proxy?url=${encodeURIComponent(coverUrl)}`;
+          const coverRes = await fetch(proxyUrl, { signal: AbortSignal.timeout(5000) });
+          if (coverRes.ok) {
+            const coverBuffer = await coverRes.arrayBuffer();
+            writer.setFrame("APIC", {
+              type: 3,
+              data: coverBuffer,
+              description: "Cover",
+            });
           }
-          const coverBuffer = await coverRes.arrayBuffer();
-
-          writer.setFrame("APIC", {
-            type: 3,
-            data: coverBuffer,
-            description: "Cover",
-          });
           
           writer.addTag();
           finalBuffer = await writer.getBlob().arrayBuffer();
-        } catch (err) {
-          console.error("Failed to embed cover art:", err);
+        } catch {
           // Continue with download even if cover fails
         }
       }

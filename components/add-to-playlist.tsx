@@ -56,8 +56,8 @@ export default function AddToPlaylist({ trackId }: { trackId: number }) {
 
   if (!isSignedIn) return (
     <SignInButton mode="modal">
-      <button className="w-6 h-6 rounded-full bg-background/60 flex items-center justify-center text-foreground hover:bg-[var(--primary)] hover:text-black transition-colors">
-        <Plus size={13} />
+      <button className="w-7 h-7 rounded-full bg-background/60 flex items-center justify-center text-foreground hover:bg-[var(--primary)] hover:text-black transition-colors">
+        <Plus size={16} />
       </button>
     </SignInButton>
   );
@@ -66,9 +66,9 @@ export default function AddToPlaylist({ trackId }: { trackId: number }) {
     <div className="relative" ref={ref} onClick={e => e.stopPropagation()}>
       <button
         onClick={() => setOpen(o => !o)}
-        className="w-6 h-6 rounded-full bg-background/60 flex items-center justify-center text-foreground hover:bg-[var(--primary)] hover:text-black transition-colors"
+        className="w-7 h-7 rounded-full bg-background/60 flex items-center justify-center text-foreground hover:bg-[var(--primary)] hover:text-black transition-colors"
       >
-        <Plus size={13} />
+        <Plus size={16} />
       </button>
 
       {open && (

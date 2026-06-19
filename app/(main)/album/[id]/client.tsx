@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useMemo, useEffect, useRef, useState } from "react";
+import React, { useMemo, useEffect, useRef, useState, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePlayer, type Track } from "@/lib/player-store";
 import { useLikes } from "@/lib/likes-context";
-import { Pause, Play, Shuffle, Music2, Heart, MoreHorizontal, Headphones } from "lucide-react";
+import { Pause, Play, Shuffle, Music2, Heart, MoreHorizontal, Headphones, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import "@/app/styles/collection-page.css";
 import { TrackMenu } from "@/components/track-menu";
 
@@ -183,6 +183,40 @@ export default function AlbumClient({
     return tracks.some(t => t.id === currentTrack?.id);
   }, [tracks, currentTrack]);
 
+  type SortKey = "num" | "title" | "artist" | "duration";
+  type SortDir = "asc" | "desc";
+  const [sortKey, setSortKey] = useState<SortKey>("num");
+  const [sortDir, setSortDir] = useState<SortDir>("asc");
+
+  const toggleSort = useCallback((key: SortKey) => {
+    setSortKey(prev => {
+      if (prev === key) {
+        setSortDir(d => d === "asc" ? "desc" : "asc");
+        return prev;
+      }
+      setSortDir("asc");
+      return key;
+    });
+  }, []);
+
+  const sortedTracks = useMemo(() => {
+    const sorted = [...tracks];
+    sorted.sort((a, b) => {
+      let cmp = 0;
+      if (sortKey === "num") cmp = (tracks.indexOf(a) ?? 0) - (tracks.indexOf(b) ?? 0);
+      if (sortKey === "title") cmp = (a.title ?? "").localeCompare(b.title ?? "");
+      if (sortKey === "artist") cmp = (a.artist ?? "").localeCompare(b.artist ?? "");
+      if (sortKey === "duration") cmp = (a.duration ?? 0) - (b.duration ?? 0);
+      return sortDir === "desc" ? -cmp : cmp;
+    });
+    return sorted;
+  }, [tracks, sortKey, sortDir]);
+
+  function SortIcon({ column }: { column: SortKey }) {
+    if (sortKey !== column) return <ArrowUpDown size={12} className="opacity-30 group-hover:opacity-70 transition-opacity" />;
+    return sortDir === "asc" ? <ArrowUp size={12} /> : <ArrowDown size={12} />;
+  }
+
   // Keyboard shortcut: Space to play/pause
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -252,7 +286,7 @@ export default function AlbumClient({
             onClick={() => {
               const url = `${window.location.origin}/album/${album.slug || album.id}`;
               if (navigator.share) {
-                navigator.share({ title: album.title, text: `Check out ${album.title} by ${album.artistName}`, url });
+                navigator.share({ title: album.title, text: `Check out ${album.title} by ${album.artistName}`, url }).catch(() => {});
               } else {
                 navigator.clipboard.writeText(url);
               }
@@ -327,7 +361,7 @@ export default function AlbumClient({
           onClick={() => {
             const url = `${window.location.origin}/album/${album.slug || album.id}`;
             if (navigator.share) {
-              navigator.share({ title: album.title, text: `Check out ${album.title} by ${album.artistName}`, url });
+              navigator.share({ title: album.title, text: `Check out ${album.title} by ${album.artistName}`, url }).catch(() => {});
             } else {
               navigator.clipboard.writeText(url);
             }
@@ -344,29 +378,37 @@ export default function AlbumClient({
       <section className="collection-tracklist relative z-10">
         <div className="collection-tracklist-inner">
           <div className="collection-col-header">
-            <span className="col-num">#</span>
-            <span>Title</span>
-            <span className="col-artist">Artist</span>
-            <span className="col-dur" style={{ textAlign: "right" }}>
+            <button className="col-num group flex items-center gap-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => toggleSort("num")}>
+              <SortIcon column="num" />#
+            </button>
+            <button className="group flex items-center gap-1 cursor-pointer hover:opacity-80 transition-opacity text-left" onClick={() => toggleSort("title")}>
+              <SortIcon column="title" />Title
+            </button>
+            <button className="col-artist group flex items-center gap-1 cursor-pointer hover:opacity-80 transition-opacity text-left" onClick={() => toggleSort("artist")}>
+              <SortIcon column="artist" />Artist
+            </button>
+            <button className="col-dur group flex items-center justify-end gap-1 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => toggleSort("duration")} style={{ textAlign: "right" }}>
+              <SortIcon column="duration" />
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ display: "inline-block", verticalAlign: "middle", opacity: 0.5 }}>
                 <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5" />
                 <path d="M8 5v3.5l2 1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
               </svg>
-            </span>
+            </button>
           </div>
 
           {tracks.length ? (
             <div>
-              {tracks.map((t, i) => {
+              {sortedTracks.map((t, i) => {
+                const originalIndex = tracks.indexOf(t);
                 const isCurrent = currentTrack?.id === t.id;
                 return (
                   <TrackRow
                     key={`${t.id}-${i}`}
                     track={t}
-                    index={i}
+                    index={originalIndex}
                     isCurrent={isCurrent}
                     isPlaying={playing}
-                    onPlay={() => playAlbum(i)}
+                    onPlay={() => playAlbum(originalIndex)}
                   />
                 );
               })}

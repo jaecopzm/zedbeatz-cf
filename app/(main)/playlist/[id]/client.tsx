@@ -379,7 +379,7 @@ export default function PlaylistPageClient({
           onClick={() => {
             const url = `${window.location.origin}/playlist/${playlist.id}`;
             if (navigator.share) {
-              navigator.share({ title: playlist.name, text: `Check out ${playlist.name} playlist`, url });
+              navigator.share({ title: playlist.name, text: `Check out ${playlist.name} playlist`, url }).catch(() => {});
             } else {
               navigator.clipboard.writeText(url);
             }

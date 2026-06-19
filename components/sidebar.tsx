@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Search, Library, BarChart3, Sun, Moon } from "lucide-react";
+import { Home, Search, Library, Sun, MoonStar } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SignInButton, UserButton, useUser } from "@clerk/nextjs";
 import { useTheme } from "./theme-provider";
@@ -10,7 +10,6 @@ const links = [
   { href: "/", label: "Home", icon: Home },
   { href: "/search", label: "Search", icon: Search },
   { href: "/library", label: "Library", icon: Library },
-  { href: "/stats", label: "Your Stats", icon: BarChart3 },
 ];
 
 export default function Sidebar() {
@@ -73,7 +72,7 @@ export default function Sidebar() {
           onClick={toggle}
           className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--surface-hover)] transition-all duration-200"
         >
-          {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+          {theme === "dark" ? <Sun size={18} /> : <MoonStar size={18} />}
           {theme === "dark" ? "Light mode" : "Dark mode"}
         </button>
         {isSignedIn ? (

@@ -40,10 +40,10 @@ export default function ScrollToTop() {
   return (
     <button
       onClick={scrollToTop}
-      className="fixed bottom-24 right-4 z-30 w-10 h-10 rounded-full bg-[var(--surface)] border border-[var(--border)] shadow-lg flex items-center justify-center text-foreground hover:bg-[var(--surface-hover)] hover:scale-110 active:scale-95 transition-all animate-scale-in"
+      className="fixed bottom-24 right-4 z-30 w-10 h-12 rounded-xl bg-[var(--glass)] backdrop-blur-2xl border border-[var(--glass-border)] shadow-2xl flex items-center justify-center text-foreground hover:bg-[var(--glass-hover)] hover:scale-110 active:scale-95 transition-all animate-scale-in"
       aria-label="Scroll to top"
     >
-      <ChevronUp size={20} />
+      <ChevronUp size={22} strokeWidth={2} />
     </button>
   );
 }

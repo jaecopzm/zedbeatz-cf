@@ -10,6 +10,8 @@ interface Props {
   /** Number of bars to render */
   barCount?: number;
   className?: string;
+  /** Callback with a 0-1 fraction for seek position */
+  onSeek?: (fraction: number) => void;
 }
 
 export default function AudioVisualizer({
@@ -18,16 +20,26 @@ export default function AudioVisualizer({
   height = 48,
   barCount = BAR_COUNT,
   className = "",
+  onSeek,
 }: Props) {
   if (!playing) return null;
 
   const hasData = frequencyData.some((v) => v > 0);
 
+  function handleClick(e: React.MouseEvent<HTMLDivElement>) {
+    if (!onSeek) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const fraction = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    onSeek(fraction);
+  }
+
   return (
     <div
-      className={`flex items-end gap-[2px] ${className}`}
+      className={`flex items-end gap-[2px] ${onSeek ? "cursor-pointer" : ""}`}
       style={{ height: `${height}px` }}
-      aria-hidden="true"
+      role={onSeek ? "slider" : undefined}
+      aria-label={onSeek ? "Seek" : undefined}
+      onClick={handleClick}
     >
       {Array.from({ length: barCount }).map((_, i) => {
         const raw = frequencyData[i] ?? 0;

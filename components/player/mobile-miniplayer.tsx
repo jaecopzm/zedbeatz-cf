@@ -5,9 +5,11 @@ import Image from "next/image";
 import { Play, Pause } from "lucide-react";
 import { usePlayer } from "@/lib/player-store";
 import LikeButton from "@/components/like-button";
+import { useTheme } from "@/components/theme-provider";
 
 function useDominantColor(src: string | undefined) {
-  const [color, setColor] = useState("30,30,30");
+  const { theme } = useTheme();
+  const [color, setColor] = useState(theme === "light" ? "230,230,235" : "30,30,30");
   useEffect(() => {
     if (!src) return;
     const img = document.createElement("img");
@@ -93,6 +95,9 @@ export default function MobileMiniplayer({
         className="relative rounded-lg shadow-2xl overflow-hidden cursor-pointer active:scale-[0.98]"
         style={{ background: `linear-gradient(135deg, rgb(${color}) 0%, rgba(${color},0.95) 100%)`, transition: "background 0.8s ease" }}
       >
+        {/* Permanent dark scrim for contrast */}
+        <div className="absolute inset-0 bg-black/20" />
+
         <div className="absolute top-0 left-0 right-0 h-[2px] bg-[var(--glass-hover)]">
           <div
             className="h-full bg-[var(--primary)] transition-all duration-300"
@@ -102,14 +107,14 @@ export default function MobileMiniplayer({
           />
         </div>
         
-        <div className="flex items-center gap-2 px-2 py-2.5 pt-3">
+        <div className="relative flex items-center gap-2 px-2 py-2.5 pt-3">
           {/* Album art */}
           <div className="relative shrink-0">
             <div className="w-10 h-10 rounded-md overflow-hidden bg-surface-2 shadow-lg">
               {track.coverUrl ? (
                 <Image src={track.coverUrl} alt={track.title} width={40} height={40} className="object-cover" unoptimized />
               ) : (
-                <div className="w-full h-full bg-gradient-to-br from-[#333] to-[#181818]" />
+                <div className="w-full h-full bg-gradient-to-br from-[var(--surface-3)] to-[var(--surface-2)]" />
               )}
             </div>
           </div>
@@ -130,7 +135,8 @@ export default function MobileMiniplayer({
             <LikeButton trackId={track.id} size={16} />
             <button
               onClick={(e) => { e.stopPropagation(); haptic(); toggle(); }}
-              className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-black shadow-lg active:scale-95 transition-all hover:scale-105 relative"
+              className="w-8 h-8 rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-all hover:scale-105 relative"
+              style={{ background: "rgba(255,255,255,0.9)", color: "#000" }}
             >
               {playing ? (
                 <Pause size={16} fill="currentColor" />

@@ -7,6 +7,7 @@ export default function manifest(): MetadataRoute.Manifest {
     description: 'The Ultimate Zambian Music Streaming Experience',
     start_url: '/',
     display: 'standalone',
+    orientation: 'portrait',
     background_color: '#0a0a0f',
     theme_color: '#1ed760',
     icons: [

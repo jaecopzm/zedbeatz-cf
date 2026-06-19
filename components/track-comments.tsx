@@ -14,6 +14,60 @@ interface Comment {
   created_at: string;
 }
 
+function CommentItem({ comment, userId, onDelete }: { comment: Comment; userId?: string; onDelete: (id: number) => void }) {
+  const touchRef = useRef<{ x: number } | null>(null);
+  const [swiped, setSwiped] = useState(false);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, x: swiped ? -120 : -16 }}
+      className="flex gap-3 group/comment relative overflow-hidden"
+      onTouchStart={(e) => { touchRef.current = { x: e.touches[0].clientX }; }}
+      onTouchMove={(e) => {
+        if (!touchRef.current) return;
+        const dx = touchRef.current.x - e.touches[0].clientX;
+        if (dx > 50 && userId && comment.user_id === userId) setSwiped(true);
+        else if (dx < -20) setSwiped(false);
+      }}
+      onTouchEnd={() => { touchRef.current = null; }}
+    >
+      {/* Delete action revealed on swipe */}
+      {userId && comment.user_id === userId && (
+        <button
+          onClick={() => onDelete(comment.id)}
+          className={`absolute right-0 top-0 bottom-0 flex items-center justify-center w-20 bg-red-500/20 text-red-400 transition-all duration-200 ${
+            swiped ? "opacity-100" : "opacity-0 pointer-events-none"
+          }`}
+        >
+          <Trash2 size={16} />
+        </button>
+      )}
+      <div className="w-8 h-8 rounded-full bg-[var(--surface-2)] flex items-center justify-center text-[var(--primary)] text-xs font-bold shrink-0">
+        {comment.user_name[0].toUpperCase()}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-baseline gap-2 mb-1">
+          <span className="text-xs font-semibold text-foreground">{comment.user_name}</span>
+          <span className="text-[10px] text-[var(--muted)]">
+            {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
+          </span>
+        </div>
+        <p className="text-sm text-foreground/80 leading-relaxed break-words">{comment.content}</p>
+      </div>
+      {userId && comment.user_id === userId && (
+        <button
+          onClick={() => onDelete(comment.id)}
+          className="shrink-0 p-1.5 text-[var(--muted)] hover:text-red-400 opacity-0 group-hover/comment:opacity-100 transition-all hidden md:block"
+        >
+          <Trash2 size={13} />
+        </button>
+      )}
+    </motion.div>
+  );
+}
+
 export default function TrackComments({ trackId }: { trackId: number }) {
   const { isSignedIn, user } = useUser();
   const [comments, setComments] = useState<Comment[]>([]);
@@ -148,34 +202,7 @@ export default function TrackComments({ trackId }: { trackId: number }) {
         <AnimatePresence>
           <div className="space-y-4">
             {comments.map((comment) => (
-              <motion.div
-                key={comment.id}
-                initial={{ opacity: 0, y: -8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, x: -16 }}
-                className="flex gap-3 group/comment"
-              >
-                <div className="w-8 h-8 rounded-full bg-[var(--surface-2)] flex items-center justify-center text-[var(--primary)] text-xs font-bold shrink-0">
-                  {comment.user_name[0].toUpperCase()}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-baseline gap-2 mb-1">
-                    <span className="text-xs font-semibold text-foreground">{comment.user_name}</span>
-                    <span className="text-[10px] text-[var(--muted)]">
-                      {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
-                    </span>
-                  </div>
-                  <p className="text-sm text-foreground/80 leading-relaxed break-words">{comment.content}</p>
-                </div>
-                {user && comment.user_id === user.id && (
-                  <button
-                    onClick={() => handleDelete(comment.id)}
-                    className="shrink-0 p-1.5 text-[var(--muted)] hover:text-red-400 opacity-0 group-hover/comment:opacity-100 transition-all"
-                  >
-                    <Trash2 size={13} />
-                  </button>
-                )}
-              </motion.div>
+              <CommentItem key={comment.id} comment={comment} userId={user?.id} onDelete={handleDelete} />
             ))}
           </div>
         </AnimatePresence>

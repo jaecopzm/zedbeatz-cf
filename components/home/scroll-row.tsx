@@ -39,20 +39,20 @@ export default function ScrollRow({ children, className = "" }: { children: Reac
       {canScrollLeft && (
         <button
           onClick={() => scroll(-1)}
-          className="hidden md:flex absolute left-1 top-[calc(50%-4px)] -translate-y-1/2 z-10 w-10 h-10 items-center justify-center rounded-full bg-[var(--background)]/90 border border-[var(--border)] text-foreground shadow-xl backdrop-blur-sm opacity-0 group-hover/row:opacity-100 hover:bg-[var(--surface)] hover:scale-105 active:scale-95 transition-all duration-200"
+          className="hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 z-10 w-10 h-12 items-center justify-center rounded-xl bg-[var(--glass)] backdrop-blur-2xl border border-[var(--glass-border)] text-foreground shadow-2xl opacity-0 group-hover/row:opacity-100 hover:bg-[var(--glass-hover)] hover:scale-105 active:scale-95 transition-all duration-200"
           aria-label="Scroll left"
         >
-          <ChevronLeft size={16} strokeWidth={2.5} />
+          <ChevronLeft size={18} strokeWidth={2} />
         </button>
       )}
 
       {canScrollRight && (
         <button
           onClick={() => scroll(1)}
-          className="hidden md:flex absolute right-1 top-[calc(50%-4px)] -translate-y-1/2 z-10 w-10 h-10 items-center justify-center rounded-full bg-[var(--background)]/90 border border-[var(--border)] text-foreground shadow-xl backdrop-blur-sm opacity-0 group-hover/row:opacity-100 hover:bg-[var(--surface)] hover:scale-105 active:scale-95 transition-all duration-200"
+          className="hidden md:flex absolute right-2 top-1/2 -translate-y-1/2 z-10 w-10 h-12 items-center justify-center rounded-xl bg-[var(--glass)] backdrop-blur-2xl border border-[var(--glass-border)] text-foreground shadow-2xl opacity-0 group-hover/row:opacity-100 hover:bg-[var(--glass-hover)] hover:scale-105 active:scale-95 transition-all duration-200"
           aria-label="Scroll right"
         >
-          <ChevronRight size={16} strokeWidth={2.5} />
+          <ChevronRight size={18} strokeWidth={2} />
         </button>
       )}
     </div>

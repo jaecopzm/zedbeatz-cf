@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, Home, Search, Library, Compass, LogOut, BarChart3, Sun, Moon } from "lucide-react";
+import { Menu, X, Home, Search, Library, Compass, LogOut, Sun, Moon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SignInButton, useUser, useClerk } from "@clerk/nextjs";
 import { useTheme } from "./theme-provider";
@@ -14,7 +14,6 @@ const links = [
   { href: "/search",  label: "Search",  icon: Search  },
   { href: "/browse",  label: "Browse",  icon: Compass },
   { href: "/library", label: "Library", icon: Library },
-  { href: "/stats",   label: "Your Stats", icon: BarChart3 },
 ];
 
 function ThemeToggle() {

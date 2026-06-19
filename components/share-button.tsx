@@ -62,7 +62,7 @@ export default function ShareButton({ title, url }: { title: string; url?: strin
   return (
     <>
       <button onClick={handleShare} className="w-9 h-9 flex items-center justify-center transition-colors hover:opacity-70">
-        <Share2 size={17} />
+        <Share2 size={18} />
       </button>
       {modal}
     </>

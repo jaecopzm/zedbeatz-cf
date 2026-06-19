@@ -420,7 +420,7 @@ export default function RadioClient({ seedTrack }: { seedTrack: SeedTrack }) {
                 onClick={() => {
                   const url = `${window.location.origin}/radio/${seedTrack.id}`;
                   if (navigator.share) {
-                    navigator.share({ title: `${seedTrack.artist} Radio`, text: `Listen to ${seedTrack.artist} Radio`, url });
+                    navigator.share({ title: `${seedTrack.artist} Radio`, text: `Listen to ${seedTrack.artist} Radio`, url }).catch(() => {});
                   } else {
                     navigator.clipboard.writeText(url);
                   }

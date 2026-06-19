@@ -28,7 +28,8 @@ import LyricsView from "./lyrics-view";
 import { TrackMenu } from "@/components/track-menu";
 import type { Track } from "@/lib/player-store";
 import type { PlayContext } from "@/lib/player-store";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
+import { useTheme } from "@/components/theme-provider";
 
 interface MobileNowPlayingProps {
   track: Track;
@@ -99,15 +100,34 @@ export default function MobileNowPlaying({
   const [swipeOffset, setSwipeOffset] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
+  const { theme } = useTheme();
+  const isLight = useMemo(() => theme === "light", [theme]);
+
   useEffect(() => {
     const t = setTimeout(() => setIsMounted(true), 10);
     return () => clearTimeout(t);
   }, []);
 
+  const bgColor = isLight ? "#f5f5f7" : "#000";
+  const queueBg = isLight ? "#e8e8ee" : "#111";
+  const blurOverlay = isLight
+    ? "linear-gradient(to bottom, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0.95) 100%)"
+    : "linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0.9) 100%)";
+  const artworkShadow = isLight
+    ? playing
+      ? "0 32px 80px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.06)"
+      : "0 12px 40px rgba(0,0,0,0.1)"
+    : playing
+      ? "0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.06)"
+      : "0 12px 40px rgba(0,0,0,0.5)";
+
+  const c = (alpha: number) => isLight ? `rgba(0,0,0,${alpha})` : `rgba(255,255,255,${alpha})`;
+  const cb = (alpha: number) => isLight ? `rgba(0,0,0,${alpha})` : `rgba(255,255,255,${alpha})`;
+
   return (
     <div
       className="lg:hidden flex flex-col h-full relative overflow-hidden"
-      style={{ background: "#000" }}
+      style={{ background: bgColor }}
       onTouchStart={(e) => {
         const t = e.touches[0];
         touchRef.current = { x: t.clientX, y: t.clientY, time: Date.now() };
@@ -163,11 +183,11 @@ export default function MobileNowPlaying({
                 backgroundImage: `url(${track.coverUrl})`,
                 backgroundSize: "cover",
                 backgroundPosition: "center",
-                filter: "blur(60px) saturate(250%) brightness(0.5)",
+                filter: `blur(60px) saturate(250%) brightness(${isLight ? 1.2 : 0.5})`,
                 transform: "scale(1.4)",
               }}
             />
-            <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0.9) 100%)" }} />
+            <div className="absolute inset-0" style={{ background: blurOverlay }} />
           </>
         )}
       </div>
@@ -181,7 +201,7 @@ export default function MobileNowPlaying({
         <button
           onClick={onClose}
           className="flex items-center justify-center w-10 h-10 rounded-full transition-all active:scale-90"
-          style={{ background: "rgba(255,255,255,0.08)" }}
+          style={{ background: c(0.08) }}
         >
           <ChevronDown size={22} className="text-foreground" strokeWidth={2.5} />
         </button>
@@ -193,7 +213,7 @@ export default function MobileNowPlaying({
         >
           <span
             className={`text-[11px] font-semibold truncate max-w-[180px] ${!context ? "uppercase tracking-[0.18em]" : ""}`}
-            style={{ color: "rgba(255,255,255,0.55)" }}
+            style={{ color: c(0.55) }}
           >
             {showLyrics ? "Lyrics" : context ? (
               context.href ? (
@@ -208,7 +228,7 @@ export default function MobileNowPlaying({
           {/* Tiny drag indicator */}
           <div
             className="w-8 h-0.5 rounded-full"
-            style={{ background: "rgba(255,255,255,0.2)" }}
+            style={{ background: c(0.2) }}
           />
         </div>
 
@@ -236,8 +256,8 @@ export default function MobileNowPlaying({
                   key="lyrics"
                   className="absolute inset-0 rounded-2xl overflow-hidden"
                   style={{
-                    background: "rgba(255,255,255,0.04)",
-                    border: "1px solid rgba(255,255,255,0.08)",
+                    background: c(0.04),
+                    border: `1px solid ${c(0.08)}`,
                   }}
                 >
                   <LyricsView
@@ -250,7 +270,7 @@ export default function MobileNowPlaying({
                 <div
                   key="queue"
                   className="absolute inset-0 overflow-hidden flex flex-col"
-                  style={{ background: "#111" }}
+                  style={{ background: queueBg }}
                 >
                   <div className="px-4 py-3 border-b border-[var(--border)] flex items-center justify-between shrink-0">
                     <span className="text-sm font-bold text-foreground">Up Next</span>
@@ -291,7 +311,15 @@ export default function MobileNowPlaying({
                   </div>
                 </div>
               ) : (
-                <div key="artwork" className="relative w-full h-full">
+                <div key="artwork" className="relative w-full h-full" onTouchEnd={(e) => {
+                  const t = touchRef.current;
+                  if (!t) return;
+                  const dy = e.changedTouches[0].clientY - t.y;
+                  if (dy < -60 && Math.abs(dy) > Math.abs(e.changedTouches[0].clientX - t.x)) {
+                    e.stopPropagation();
+                    onToggleQueue();
+                  }
+                }}>
                   {/* Cover art */}
                   <div
                     className="relative w-full h-full overflow-hidden rounded"
@@ -299,9 +327,7 @@ export default function MobileNowPlaying({
                       transform: `scale(${playing ? 1 : 0.93}) translateX(${swipeOffset * 0.5}px)`,
                       opacity: Math.max(0.3, 1 - Math.abs(swipeOffset) / 400),
                       transition: isTransitioning ? "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease" : "transform 0.1s ease-out, opacity 0.1s ease-out",
-                      boxShadow: playing
-                        ? "0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.06)"
-                        : "0 12px 40px rgba(0,0,0,0.5)",
+                      boxShadow: artworkShadow,
                     }}
                   >
                     {track.coverUrl ? (
@@ -317,7 +343,7 @@ export default function MobileNowPlaying({
                     ) : (
                       <div
                         className="w-full h-full"
-                        style={{ background: "linear-gradient(135deg, #2a2a2a 0%, #111 100%)" }}
+                        style={{ background: isLight ? "linear-gradient(135deg, #ddd 0%, #eee 100%)" : "linear-gradient(135deg, #2a2a2a 0%, #111 100%)" }}
                       />
                     )}
                   </div>
@@ -341,12 +367,12 @@ export default function MobileNowPlaying({
                     : `/artist/${track.artistId}`
                 }
                 className="mt-0.5 text-sm font-medium block truncate transition-colors"
-                style={{ color: "rgba(255,255,255,0.6)" }}
+                style={{ color: c(0.6) }}
                 onClick={onClose}
               >
                 {track.artist}
                 {track.featuredArtists && (
-                  <span style={{ color: "rgba(255,255,255,0.35)" }}>
+                  <span style={{ color: c(0.35) }}>
                     {" "}
                     · feat. {track.featuredArtists}
                   </span>
@@ -387,7 +413,7 @@ export default function MobileNowPlaying({
 
             <div
               className="flex justify-between font-medium tabular-nums"
-              style={{ fontSize: 11, color: "rgba(255,255,255,0.45)" }}
+              style={{ fontSize: 11, color: c(0.45) }}
             >
               <span>{fmt(progress)}</span>
               <span>-{fmt(Math.max(0, duration - progress))}</span>
@@ -400,7 +426,7 @@ export default function MobileNowPlaying({
             <button
               onClick={onToggleShuffle}
               className="relative flex items-center justify-center w-11 h-11 rounded-full transition-all active:scale-90"
-              style={{ color: shuffle ? "#1ed760" : "rgba(255,255,255,0.45)" }}
+              style={{ color: shuffle ? "#1ed760" : c(0.45) }}
             >
               <Shuffle size={21} strokeWidth={2} />
               {shuffle && (
@@ -415,7 +441,7 @@ export default function MobileNowPlaying({
             <button
               onClick={onPrev}
               className="flex items-center justify-center w-12 h-12 rounded-full transition-all active:scale-90"
-              style={{ color: "rgba(255,255,255,0.85)" }}
+              style={{ color: c(0.85) }}
             >
               <SkipBack size={34} fill="currentColor" strokeWidth={0} />
             </button>
@@ -428,14 +454,15 @@ export default function MobileNowPlaying({
                 width: 68,
                 height: 68,
                 background: "#fff",
-                boxShadow:
-                  "0 8px 32px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.1)",
+                boxShadow: isLight
+                  ? "0 8px 32px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.06)"
+                  : "0 8px 32px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.1)",
               }}
             >
               {loading ? (
                 <div
                   className="absolute inset-0 flex items-center justify-center rounded-full"
-                  style={{ background: "rgba(255,255,255,0.6)" }}
+                  style={{ background: isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.6)" }}
                 >
                   <div
                     className="w-6 h-6 rounded-full animate-spin"
@@ -466,7 +493,7 @@ export default function MobileNowPlaying({
             <button
               onClick={onNext}
               className="flex items-center justify-center w-12 h-12 rounded-full transition-all active:scale-90"
-              style={{ color: "rgba(255,255,255,0.85)" }}
+              style={{ color: c(0.85) }}
             >
               <SkipForward size={34} fill="currentColor" strokeWidth={0} />
             </button>
@@ -476,7 +503,7 @@ export default function MobileNowPlaying({
               onClick={onCycleRepeat}
               className="relative flex items-center justify-center w-11 h-11 rounded-full transition-all active:scale-90"
               style={{
-                color: repeat !== "off" ? "#1ed760" : "rgba(255,255,255,0.45)",
+                color: repeat !== "off" ? "#1ed760" : c(0.45),
               }}
             >
               {repeat === "one" ? (
@@ -500,7 +527,7 @@ export default function MobileNowPlaying({
               <button
                 onClick={onToggleMute}
                 className="transition-all active:scale-90"
-                style={{ color: "rgba(255,255,255,0.45)" }}
+                style={{ color: c(0.45) }}
               >
                 {volume === 0 ? <VolumeX size={18} /> : <Volume2 size={18} />}
               </button>
@@ -519,16 +546,16 @@ export default function MobileNowPlaying({
               className="flex items-center gap-1"
               onClick={(e) => e.stopPropagation()}
             >
-              <ActionPill>
+              <ActionPill bg={cb(0.07)}>
                 <button
                   onClick={onToggleQueue}
                   className="transition-all active:scale-90"
-                  style={{ color: showQueue ? "#1ed760" : "rgba(255,255,255,0.6)" }}
+                  style={{ color: showQueue ? "#1ed760" : c(0.6) }}
                 >
                   <List size={18} />
                 </button>
               </ActionPill>
-              <ActionPill>
+              <ActionPill bg={cb(0.07)}>
                 <DownloadButton
                   audioUrl={track.audioUrl}
                   title={track.title}
@@ -537,7 +564,7 @@ export default function MobileNowPlaying({
                   coverUrl={track.coverUrl}
                 />
               </ActionPill>
-              <ActionPill>
+              <ActionPill bg={cb(0.07)}>
                 <ShareButton
                   title={`${track.title} by ${track.artist}`}
                   url={`${
@@ -554,11 +581,11 @@ export default function MobileNowPlaying({
 }
 
 /** Subtle pill wrapper for icon action buttons */
-function ActionPill({ children }: { children: React.ReactNode }) {
+function ActionPill({ children, bg }: { children: React.ReactNode; bg?: string }) {
   return (
     <div
       className="flex items-center justify-center w-9 h-9 rounded-full transition-all active:scale-90"
-      style={{ background: "rgba(255,255,255,0.07)" }}
+      style={{ background: bg ?? "rgba(255,255,255,0.07)" }}
     >
       {children}
     </div>

@@ -1,6 +1,6 @@
 import { db } from "@/lib/db/drizzle";
 import { tracks, artists } from "@/lib/db/schema";
-import { eq, desc, ilike } from "drizzle-orm";
+import { eq, desc, ilike, or } from "drizzle-orm";
 import { getPublicUrl } from "@/lib/r2";
 import { sanitizeFeaturedArtists } from "@/lib/featured-artists";
 import type { Track } from "@/lib/player-store";
@@ -11,6 +11,7 @@ function normalizeGenre(slug: string): string[] {
   const special: Record<string, string> = {
     rnb: "R&B",
     randb: "R&B",
+    rb: "R&B",
   };
   if (special[slug]) return [special[slug]];
   return [slug.replace(/-/g, " "), slug];
@@ -37,7 +38,7 @@ async function getGenreData(slug: string) {
     })
     .from(tracks)
     .leftJoin(artists, eq(tracks.artistId, artists.id))
-    .where(ilike(tracks.genre, `%${patterns[0]}%`))
+    .where(or(...patterns.map(p => ilike(tracks.genre, `%${p}%`))))
     .orderBy(desc(tracks.plays))
     .limit(100);
 
@@ -55,12 +56,20 @@ async function getGenreData(slug: string) {
     createdAt: t.createdAt?.toISOString() ?? undefined,
   }));
 
-  const genreName = rawTracks.length > 0
-    ? (rawTracks.find((t) => patterns.some((p) => t.genre?.toLowerCase() === p.toLowerCase()))?.genre ?? patterns[0])
-    : patterns[0]
-      .split(/[- ]/)
+  const matchedName = rawTracks.find((t) =>
+    [...patterns, ...patterns.map(p => p.replace(/[^a-z0-9]/gi, ''))]
+      .some(p => t.genre?.toLowerCase() === p.toLowerCase())
+  )?.genre;
+
+  const fallbackName = normalizeGenre(slug).length > 1
+    ? normalizeGenre(slug)[0]
+    : slug
+      .replace(/-/g, " ")
+      .split(" ")
       .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-      .join("-");
+      .join(" ");
+
+  const genreName = rawTracks.length > 0 ? (matchedName ?? patterns[0]) : fallbackName;
 
   return { genreName, tracks: formattedTracks };
 }
@@ -73,7 +82,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const genreUrl = `${baseUrl}/genre/${slug}`;
 
   return {
-    title: `${genreName} Music MP3 Download — Best ${genreName} Songs | ZedBeatz`,
+    title: `${genreName} Music MP3 Download — Best ${genreName} Songs`,
     description: `Download latest ${genreName} music MP3 free. Stream top ${genreName} songs, artists, and albums. ${genreTracks.length} tracks available on ZedBeatz.`,
     keywords: [
       `${genreName} music`, `${genreName} songs`, `${genreName} mp3 download`,

@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { usePlayer } from "@/lib/player-store";
+import { useTheme } from "@/components/theme-provider";
 import {
   Play, Pause, SkipBack, SkipForward, Volume2, Volume1, VolumeX, Maximize2,
   Shuffle, Repeat, Repeat1, List, X, ChevronDown, Mic2
@@ -48,6 +49,8 @@ export default function Player() {
   const [showQueue, setShowQueue]         = useState(false);
   const [showLyrics, setShowLyrics]       = useState(false);
   const [showFullScreen, setShowFullScreen] = useState(false);
+  const { theme } = useTheme();
+  const isLight = useMemo(() => theme === "light", [theme]);
   const playedTracksRef = useRef<Set<number>>(new Set());
 
   useEffect(() => {
@@ -92,6 +95,33 @@ export default function Player() {
       a.pause();
     }
   }, [playing]);
+
+  useEffect(() => {
+    if (!track || !("mediaSession" in navigator)) return;
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: `${track.title} | ZedBeatz`,
+      artist: track.featuredArtists ? `${track.artist} feat. ${track.featuredArtists}` : track.artist,
+      album: "ZedBeatz",
+      artwork: track.coverUrl
+        ? [{ src: track.coverUrl, sizes: "512x512", type: "image/jpeg" }]
+        : [],
+    });
+    navigator.mediaSession.playbackState = playing ? "playing" : "paused";
+  }, [track, playing]);
+
+  useEffect(() => {
+    if (!("mediaSession" in navigator)) return;
+    navigator.mediaSession.setActionHandler("play", () => toggle());
+    navigator.mediaSession.setActionHandler("pause", () => toggle());
+    navigator.mediaSession.setActionHandler("nexttrack", () => next());
+    navigator.mediaSession.setActionHandler("previoustrack", () => prev());
+    navigator.mediaSession.setActionHandler("seekforward", () => {
+      if (audioRef.current) audioRef.current.currentTime = Math.min(audioRef.current.currentTime + 10, audioRef.current.duration);
+    });
+    navigator.mediaSession.setActionHandler("seekbackward", () => {
+      if (audioRef.current) audioRef.current.currentTime = Math.max(audioRef.current.currentTime - 10, 0);
+    });
+  }, [toggle, next, prev]);
 
   useEffect(() => {
     // Set initial volume on audio element (will be overridden by GainNode if Web Audio is active)
@@ -240,7 +270,10 @@ export default function Player() {
           {track.coverUrl && (
             <div className="absolute inset-0 overflow-hidden z-0">
               <Image src={track.coverUrl} alt="" fill sizes="100vw" className="object-cover opacity-20 blur-[100px] scale-125 animate-pulse" unoptimized />
-              <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/70 to-black" />
+              <div className="absolute inset-0" style={{ background: isLight
+                ? "linear-gradient(to bottom, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.7) 50%, var(--background) 100%)"
+                : "linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.7) 50%, #000 100%)"
+              }} />
             </div>
           )}
 

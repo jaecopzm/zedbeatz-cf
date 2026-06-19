@@ -88,10 +88,32 @@ function TrackRow({ track, index, tracks }: { track: Track; index: number; track
   );
 }
 
+function useRecentSearches() {
+  const [recent, setRecent] = useState<string[]>([]);
+  useEffect(() => {
+    const stored = localStorage.getItem("recent-searches");
+    if (stored) try { setRecent(JSON.parse(stored)); } catch {}
+  }, []);
+  const addSearch = useRef((q: string) => {
+    setRecent(prev => {
+      const next = [q, ...prev.filter(s => s !== q)].slice(0, 8);
+      localStorage.setItem("recent-searches", JSON.stringify(next));
+      return next;
+    });
+  });
+  const clearRecent = useRef(() => {
+    setRecent([]);
+    localStorage.removeItem("recent-searches");
+  });
+  return { recent, addSearch: addSearch.current, clearRecent: clearRecent.current };
+}
+
 function SearchContent() {
   const searchParams = useSearchParams();
   const [query, setQuery] = useState(searchParams.get("q") ?? "");
   const inputRef = useRef<HTMLInputElement>(null);
+  const { recent, addSearch, clearRecent } = useRecentSearches();
+  const [focused, setFocused] = useState(false);
 
   useEffect(() => { setQuery(searchParams.get("q") ?? ""); }, [searchParams]);
 
@@ -103,13 +125,14 @@ function SearchContent() {
     if (timer.current) clearTimeout(timer.current);
     if (!query.trim()) { setResults({ tracks: [], artists: [], albums: [] }); return; }
     setLoading(true);
+    if (query.trim()) addSearch(query.trim());
     timer.current = setTimeout(async () => {
       try {
         const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
         setResults(await res.json());
       } catch {}
       finally { setLoading(false); }
-    }, 300);
+    }, 150);
   }, [query]);
 
   const hasResults = results.tracks.length > 0 || results.artists.length > 0 || results.albums.length > 0;
@@ -125,6 +148,8 @@ function SearchContent() {
             autoFocus
             value={query}
             onChange={e => setQuery(e.target.value)}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setTimeout(() => setFocused(false), 200)}
             placeholder="What do you want to listen to?"
             className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-full pl-10 pr-9 py-2.5 text-sm outline-none placeholder:text-[var(--muted-2)]"
           />
@@ -142,8 +167,25 @@ function SearchContent() {
 
       <div className="px-4 md:px-6">
         {!query ? (
-          /* ── Empty state: genre cards ── */
+          /* ── Empty state: recent searches + genre cards ── */
           <div className="mt-6">
+            {focused && recent.length > 0 && (
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-sm font-bold text-foreground/60 uppercase tracking-wider">Recent searches</h2>
+                  <button onClick={clearRecent} className="text-[11px] text-[var(--muted)] hover:text-foreground transition-colors">Clear</button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {recent.map(q => (
+                    <button key={q} onClick={() => setQuery(q)}
+                      className="px-3 py-1.5 rounded-full text-xs font-semibold bg-[var(--surface-2)] hover:bg-[var(--surface-3)] text-foreground transition-colors"
+                    >
+                      {q}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             <h2 className="text-xl font-black mb-4">Browse all</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
               {GENRES.map(({ label, color }) => (

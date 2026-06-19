@@ -1,15 +1,45 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Play, Pause, ChevronLeft, ChevronRight } from "lucide-react";
 import { usePlayer, type Track } from "@/lib/player-store";
+import { useTheme } from "@/components/theme-provider";
 
 type FeaturedAlbum = {
   id: number; title: string; slug: string | null; releaseYear: number | null;
   artistName: string; artistSlug: string | null; coverUrl: string | null;
 };
+
+function useDominantColor(src: string | undefined) {
+  const { theme } = useTheme();
+  const [color, setColor] = useState("30,215,96");
+  useEffect(() => {
+    if (!src) return;
+    const img = document.createElement("img");
+    img.crossOrigin = "anonymous";
+    img.src = src;
+    img.onload = () => {
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = canvas.height = 32;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+        ctx.drawImage(img, 0, 0, 32, 32);
+        const { data } = ctx.getImageData(0, 0, 32, 32);
+        let r = 0, g = 0, b = 0, count = 0;
+        for (let i = 0; i < data.length; i += 16) {
+          const br = (data[i] + data[i+1] + data[i+2]) / 3;
+          if (br < 20 || br > 235) continue;
+          r += data[i]; g += data[i+1]; b += data[i+2]; count++;
+        }
+        if (count > 0) setColor(`${Math.round(r/count)},${Math.round(g/count)},${Math.round(b/count)}`);
+      } catch {}
+    };
+  }, [src]);
+  return color;
+}
 
 export default function HeroSection({ tracks, featuredAlbum }: { tracks: Track[]; featuredAlbum?: FeaturedAlbum | null }) {
   const { queue, currentIndex, playing, setQueue, toggle } = usePlayer();
@@ -17,6 +47,7 @@ export default function HeroSection({ tracks, featuredAlbum }: { tracks: Track[]
 
   const track = tracks[activeIndex] ?? tracks[0];
   const isActive = queue[currentIndex]?.id === track?.id;
+  const dominantColor = useDominantColor(track?.coverUrl);
 
   const goNext = useCallback(() => setActiveIndex(i => (i + 1) % tracks.length), [tracks.length]);
   const goPrev = useCallback(() => setActiveIndex(i => (i - 1 + tracks.length) % tracks.length), [tracks.length]);
@@ -34,6 +65,10 @@ export default function HeroSection({ tracks, featuredAlbum }: { tracks: Track[]
     else setQueue(tracks, activeIndex, { label: "Featured", href: "/" });
   }
 
+  const scrimGradient = useMemo(() => {
+    return `linear-gradient(to top, rgba(${dominantColor},0.95) 0%, rgba(${dominantColor},0.3) 50%, transparent 100%)`;
+  }, [dominantColor]);
+
   return (
     <section className="group/hero relative mx-2 md:mx-4 mb-6 md:mb-8 rounded-2xl overflow-hidden bg-[var(--surface-2)]">
       {/* Full-bleed cover art */}
@@ -50,8 +85,8 @@ export default function HeroSection({ tracks, featuredAlbum }: { tracks: Track[]
           />
         )}
 
-        {/* Gradient scrim — bottom heavy */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+        {/* Dynamic gradient scrim using extracted color */}
+        <div className="absolute inset-0" style={{ background: scrimGradient }} />
 
         {/* Nav arrows */}
         {tracks.length > 1 && (
@@ -84,7 +119,8 @@ export default function HeroSection({ tracks, featuredAlbum }: { tracks: Track[]
           <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={handlePlay}
-              className="flex items-center gap-2 px-4 md:px-6 py-2 md:py-3 bg-[var(--primary)] text-black rounded-full font-bold text-xs md:text-sm hover:scale-105 active:scale-95 transition-all shadow-lg"
+              className="flex items-center gap-2 px-4 md:px-6 py-2 md:py-3 text-black rounded-full font-bold text-xs md:text-sm hover:scale-105 active:scale-95 transition-all shadow-lg"
+              style={{ background: `rgb(${dominantColor})` }}
             >
               {isActive && playing
                 ? <><Pause size={14} fill="currentColor" /><span className="hidden sm:inline">Pause</span></>
@@ -125,7 +161,7 @@ export default function HeroSection({ tracks, featuredAlbum }: { tracks: Track[]
             {featuredAlbum.coverUrl && <Image src={featuredAlbum.coverUrl} alt={featuredAlbum.title} fill className="object-cover" unoptimized />}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--primary)]">Featured Album</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: `rgb(${dominantColor})` }}>Featured Album</p>
             <p className="text-xs font-semibold truncate group-hover:text-[var(--primary)] transition-colors">{featuredAlbum.title}</p>
           </div>
           <ChevronRight size={14} className="text-[var(--muted-2)] shrink-0" />
