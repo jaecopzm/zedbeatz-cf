@@ -1,6 +1,6 @@
 import { db } from "@/lib/db/drizzle";
 import { heroTracks, tracks, artists, albums, playlists } from "@/lib/db/schema";
-import { getPublicUrl } from "@/lib/r2";
+import { getCoverUrl, getAudioUrl } from "@/lib/cdn";
 import { sanitizeFeaturedArtists } from "@/lib/featured-artists";
 import { NextResponse } from "next/server";
 import { eq, desc, asc, isNotNull, sql, and } from "drizzle-orm";
@@ -16,8 +16,8 @@ function mapTrack(r: any) {
     artist: r.artistName ?? "Unknown",
     artistSlug: r.artistSlug ?? undefined,
     featuredArtists: sanitizeFeaturedArtists(r.featuredArtists),
-    audioUrl: r.audioKey ? getPublicUrl(r.audioKey) : "",
-    coverUrl: r.coverKey ? getPublicUrl(r.coverKey) : null,
+    audioUrl: getAudioUrl({ audioKey: r.audioKey, isrc: r.isrc }) ?? "",
+    coverUrl: getCoverUrl({ coverKey: r.coverKey, coverUrl: r.coverUrl }),
     duration: r.duration ?? undefined,
     slug: r.slug ?? undefined,
   };
@@ -31,7 +31,9 @@ async function getHomeData() {
         id: tracks.id,
         title: tracks.title,
         audioKey: tracks.audioKey,
+        isrc: tracks.isrc,
         coverKey: tracks.coverKey,
+        coverUrl: tracks.coverUrl,
         duration: tracks.duration,
         slug: tracks.slug,
         featuredArtists: tracks.featuredArtists,
@@ -49,7 +51,9 @@ async function getHomeData() {
         id: tracks.id,
         title: tracks.title,
         audioKey: tracks.audioKey,
+        isrc: tracks.isrc,
         coverKey: tracks.coverKey,
+        coverUrl: tracks.coverUrl,
         duration: tracks.duration,
         slug: tracks.slug,
         featuredArtists: tracks.featuredArtists,
@@ -66,7 +70,9 @@ async function getHomeData() {
         id: tracks.id,
         title: tracks.title,
         audioKey: tracks.audioKey,
+        isrc: tracks.isrc,
         coverKey: tracks.coverKey,
+        coverUrl: tracks.coverUrl,
         duration: tracks.duration,
         slug: tracks.slug,
         featuredArtists: tracks.featuredArtists,
@@ -130,7 +136,7 @@ async function getHomeData() {
       return a.name.localeCompare(b.name);
     })
     .slice(0, 20)
-    .map((a: any) => ({ id: a.id, name: a.name, slug: a.slug, coverUrl: a.imageKey ? getPublicUrl(a.imageKey) : null }));
+    .map((a: any) => ({ id: a.id, name: a.name, slug: a.slug, coverUrl: getCoverUrl({ imageKey: a.imageKey }) }));
 
   const albumsMapped = albumsRes.map((a) => ({
     id: a.id,
@@ -139,14 +145,14 @@ async function getHomeData() {
     releaseYear: a.releaseYear ?? null,
     artistName: a.artistName ?? "Unknown",
     artistSlug: a.artistSlug ?? null,
-    coverUrl: a.coverKey ? getPublicUrl(a.coverKey) : null,
+    coverUrl: getCoverUrl({ coverKey: a.coverKey }),
   }));
 
   const playlistsMapped = playlistsRes.map((p) => ({
     id: p.id,
     name: p.name,
     category: p.category,
-    coverUrl: p.coverKey ? getPublicUrl(p.coverKey) : null,
+    coverUrl: getCoverUrl({ coverKey: p.coverKey }),
   }));
 
   const [featuredAlbum] = await db
@@ -172,7 +178,7 @@ async function getHomeData() {
         releaseYear: featuredAlbum.releaseYear,
         artistName: featuredAlbum.artistName ?? "Unknown",
         artistSlug: featuredAlbum.artistSlug ?? null,
-        coverUrl: featuredAlbum.coverKey ? getPublicUrl(featuredAlbum.coverKey) : null,
+        coverUrl: getCoverUrl({ coverKey: featuredAlbum.coverKey }),
       }
     : null;
 

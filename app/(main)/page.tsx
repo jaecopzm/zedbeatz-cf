@@ -280,7 +280,7 @@ async function getHomeData() {
       title: t.title,
       artist: t.artistName ?? "Unknown",
       artistSlug: t.artistSlug,
-      coverUrl: t.coverKey ? getPublicUrl(t.coverKey) : null,
+      coverUrl: getCoverUrl({ coverKey: t.coverKey }),
       slug: t.slug,
       name: t.artistName ?? "Unknown",
     });
