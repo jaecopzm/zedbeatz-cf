@@ -1,9 +1,9 @@
 import { db } from "@/lib/db/drizzle";
 import { tracks, artists } from "@/lib/db/schema";
-import { getPublicUrl } from "@/lib/r2";
+import { getAudioUrl, getCoverUrl } from "@/lib/cdn";
 import { sanitizeFeaturedArtists } from "@/lib/featured-artists";
 import { NextRequest, NextResponse } from "next/server";
-import { eq, ne, and, isNotNull, desc } from "drizzle-orm";
+import { eq, ne, and, isNotNull, or, desc } from "drizzle-orm";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -33,7 +33,9 @@ const trackFields = {
   id: tracks.id,
   title: tracks.title,
   audioKey: tracks.audioKey,
+  isrc: tracks.isrc,
   coverKey: tracks.coverKey,
+  coverUrl: tracks.coverUrl,
   duration: tracks.duration,
   artistId: tracks.artistId,
   slug: tracks.slug,
@@ -48,7 +50,7 @@ async function fetchTracks(where: any, limit: number) {
     .select(trackFields)
     .from(tracks)
     .leftJoin(artists, eq(tracks.artistId, artists.id))
-    .where(and(isNotNull(tracks.audioKey), where))
+    .where(and(or(isNotNull(tracks.audioKey), isNotNull(tracks.isrc)), where))
     .orderBy(desc(tracks.plays))
     .limit(limit);
 }
@@ -125,8 +127,8 @@ export async function GET(req: NextRequest) {
     artist: t.artistName ?? "Unknown",
     artistSlug: t.artistSlug,
     featuredArtists: sanitizeFeaturedArtists(t.featuredArtists),
-    audioUrl: getPublicUrl(t.audioKey),
-    coverUrl: t.coverKey ? getPublicUrl(t.coverKey) : null,
+    audioUrl: getAudioUrl({ audioKey: t.audioKey, isrc: t.isrc }) ?? "",
+    coverUrl: getCoverUrl({ coverKey: t.coverKey, coverUrl: t.coverUrl }),
     duration: t.duration ?? undefined,
     slug: t.slug,
   }));

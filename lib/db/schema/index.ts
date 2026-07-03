@@ -27,3 +27,6 @@ export type { RecentlyPlayed, NewRecentlyPlayed } from "./recently-played";
 
 export { heroTracks } from "./hero-tracks";
 export type { HeroTrack, NewHeroTrack } from "./hero-tracks";
+
+export { featuredSlots } from "./featured-slots";
+export type { FeaturedSlot, NewFeaturedSlot } from "./featured-slots";

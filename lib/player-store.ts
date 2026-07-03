@@ -7,10 +7,21 @@ export type Track = {
   artistId?: number;
   artistSlug?: string;
   featuredArtists?: string;
+
+  // CDN identifiers — used by lib/cdn.ts to resolve the audio URL
+  isrc?: string;
+  deezerId?: string;
+  spotifyId?: string;
+
+  // Resolved audio URL — always populated at map time via getAudioUrl()
+  // kept for backward compat so all existing player/component code still works
   audioUrl: string;
+
   coverUrl?: string;
   duration?: number;
   slug?: string;
+  status?: string;
+  tags?: string[];
   createdAt?: string;
   plays?: number | null;
 };

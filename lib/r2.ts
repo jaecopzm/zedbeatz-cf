@@ -5,6 +5,7 @@ const ACCESS_KEY = process.env.R2_ACCESS_KEY_ID!.trim();
 const SECRET_KEY = process.env.R2_SECRET_ACCESS_KEY!.trim();
 const BUCKET = process.env.R2_BUCKET_NAME!.trim();
 const ENDPOINT = `https://${ACCOUNT_ID}.r2.cloudflarestorage.com`;
+const R2_CDN = process.env.R2_PUBLIC_URL ?? "https://cdn.zedbeatz.com";
 
 // --- Minimal AWS Sig V4 helpers (Web Crypto, no SDK) ---
 
@@ -74,9 +75,10 @@ export async function getUploadUrl(key: string, contentType: string): Promise<st
   return `${ENDPOINT}/${BUCKET}/${encodeURIComponent(key)}?${sortedParams}&X-Amz-Signature=${sig}`;
 }
 
-/** Public URL for playback/display */
-export function getPublicUrl(key: string): string {
-  return `${process.env.R2_PUBLIC_URL}/${key}`;
+/** Public URL for playback/display — legacy, delegates to cdn.ts */
+export function getPublicUrl(key: string | null | undefined): string {
+  if (!key) return "";
+  return `${R2_CDN}/${key}`;
 }
 
 /** Delete object from R2 */

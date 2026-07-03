@@ -61,36 +61,60 @@ export const revalidate = 60;
 /* ─── Data Fetcher ─────────────────────────────────────── */
 import { db } from "@/lib/db/drizzle";
 import { tracks, artists, albums, playlists, heroTracks } from "@/lib/db/schema";
-import { getPublicUrl } from "@/lib/r2";
+import { getAudioUrl, getCoverUrl } from "@/lib/cdn";
 import { sanitizeFeaturedArtists } from "@/lib/featured-artists";
 import { eq, desc, asc, and, isNotNull, ne } from "drizzle-orm";
 
 function mapTrack(r: any): Track {
+  const audioUrl = getAudioUrl({
+    isrc:      r.isrc,
+    deezerId:  r.deezerId,
+    spotifyId: r.spotifyId,
+    audioKey:  r.audioKey,
+  });
+  const coverUrl = getCoverUrl({
+    coverUrl: r.coverUrl,
+    coverKey: r.coverKey,
+  });
   return {
     id: r.id, title: r.title, artistId: r.artistId ?? undefined,
     artist: r.artistName ?? "Unknown",
     artistSlug: r.artistSlug ?? undefined,
     featuredArtists: sanitizeFeaturedArtists(r.featuredArtists),
-    audioUrl: getPublicUrl(r.audioKey),
-    coverUrl: r.coverKey ? getPublicUrl(r.coverKey) : undefined,
+    isrc: r.isrc ?? undefined,
+    deezerId: r.deezerId ?? undefined,
+    spotifyId: r.spotifyId ?? undefined,
+    audioUrl: audioUrl ?? "",
+    coverUrl: coverUrl ?? undefined,
     duration: r.duration ? Number(r.duration) : undefined,
     slug: r.slug ?? undefined,
+    status: r.status ?? undefined,
   };
 }
+
+// Shared track columns — include all CDN identifiers + legacy R2 keys
+const trackCols = {
+  id: tracks.id,
+  title: tracks.title,
+  audioKey: tracks.audioKey,
+  coverKey: tracks.coverKey,
+  coverUrl: tracks.coverUrl,
+  isrc: tracks.isrc,
+  deezerId: tracks.deezerId,
+  spotifyId: tracks.spotifyId,
+  duration: tracks.duration,
+  slug: tracks.slug,
+  featuredArtists: tracks.featuredArtists,
+  artistId: tracks.artistId,
+  status: tracks.status,
+} as const;
 
 async function getHomeData() {
   const [heroRes, trendingRes, latestRes, artistsRes, albumsRes, playlistsRes, featuredAlbumRes, popularRes, radioRes, genreRows] = await Promise.all([
     db
       .select({
         position: heroTracks.position,
-        id: tracks.id,
-        title: tracks.title,
-        audioKey: tracks.audioKey,
-        coverKey: tracks.coverKey,
-        duration: tracks.duration,
-        slug: tracks.slug,
-        featuredArtists: tracks.featuredArtists,
-        artistId: tracks.artistId,
+        ...trackCols,
         artistName: artists.name,
         artistSlug: artists.slug,
       })
@@ -101,14 +125,7 @@ async function getHomeData() {
       .limit(5),
     db
       .select({
-        id: tracks.id,
-        title: tracks.title,
-        audioKey: tracks.audioKey,
-        coverKey: tracks.coverKey,
-        duration: tracks.duration,
-        slug: tracks.slug,
-        featuredArtists: tracks.featuredArtists,
-        artistId: tracks.artistId,
+        ...trackCols,
         artistName: artists.name,
         artistSlug: artists.slug,
       })
@@ -118,14 +135,7 @@ async function getHomeData() {
       .limit(20),
     db
       .select({
-        id: tracks.id,
-        title: tracks.title,
-        audioKey: tracks.audioKey,
-        coverKey: tracks.coverKey,
-        duration: tracks.duration,
-        slug: tracks.slug,
-        featuredArtists: tracks.featuredArtists,
-        artistId: tracks.artistId,
+        ...trackCols,
         artistName: artists.name,
         artistSlug: artists.slug,
       })
@@ -139,6 +149,7 @@ async function getHomeData() {
         name: artists.name,
         slug: artists.slug,
         imageKey: artists.imageKey,
+        imageUrl: artists.imageUrl,
       })
       .from(artists)
       .limit(40),
@@ -147,6 +158,7 @@ async function getHomeData() {
         id: albums.id,
         title: albums.title,
         coverKey: albums.coverKey,
+        coverUrl: albums.coverUrl,
         releaseYear: albums.releaseYear,
         slug: albums.slug,
         artistName: artists.name,
@@ -160,6 +172,7 @@ async function getHomeData() {
         id: playlists.id,
         name: playlists.name,
         coverKey: playlists.coverKey,
+        coverUrl: playlists.coverUrl,
         category: playlists.category,
       })
       .from(playlists)
@@ -171,6 +184,7 @@ async function getHomeData() {
         id: albums.id,
         title: albums.title,
         coverKey: albums.coverKey,
+        coverUrl: albums.coverUrl,
         releaseYear: albums.releaseYear,
         slug: albums.slug,
         artistName: artists.name,
@@ -233,18 +247,18 @@ async function getHomeData() {
       return a.name.localeCompare(b.name);
     })
     .slice(0, 20)
-    .map((a: any) => ({ id: a.id, name: a.name, slug: a.slug, coverUrl: a.imageKey ? getPublicUrl(a.imageKey) : null }));
+    .map((a: any) => ({ id: a.id, name: a.name, slug: a.slug, coverUrl: getCoverUrl({ imageUrl: a.imageUrl, imageKey: a.imageKey }) }));
 
   const albumsMapped = albumsRes.map((a: any) => ({
     id: a.id, title: a.title, slug: a.slug,
     releaseYear: a.releaseYear ?? null,
     artistName: a.artistName ?? "Unknown",
-    coverUrl: a.coverKey ? getPublicUrl(a.coverKey) : null,
+    coverUrl: getCoverUrl({ coverUrl: a.coverUrl, coverKey: a.coverKey }),
   }));
 
   const playlistsMapped = playlistsRes.map((p: any) => ({
     id: p.id, name: p.name, category: p.category,
-    coverUrl: p.coverKey ? getPublicUrl(p.coverKey) : null,
+    coverUrl: getCoverUrl({ coverUrl: p.coverUrl, coverKey: p.coverKey }),
   }));
 
   const fa = featuredAlbumRes[0];
@@ -253,7 +267,7 @@ async function getHomeData() {
     releaseYear: fa.releaseYear,
     artistName: fa.artistName ?? "Unknown",
     artistSlug: fa.artistSlug ?? null,
-    coverUrl: fa.coverKey ? getPublicUrl(fa.coverKey) : null,
+    coverUrl: getCoverUrl({ coverUrl: fa.coverUrl, coverKey: fa.coverKey }),
   } : null;
 
   const seenArtists = new Set<number>();
