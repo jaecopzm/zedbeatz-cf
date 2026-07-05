@@ -4,7 +4,7 @@ import { db } from "@/lib/db/drizzle";
 import { tracks, artists } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import RadioClient from "./client";
-import { getPublicUrl } from "@/lib/r2";
+import { getAudioUrl, getCoverUrl } from "@/lib/cdn";
 import { sanitizeFeaturedArtists } from "@/lib/featured-artists";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
@@ -36,6 +36,7 @@ export default async function RadioPage({ params }: { params: Promise<{ id: stri
       title: tracks.title,
       audioKey: tracks.audioKey,
       coverKey: tracks.coverKey,
+      coverUrl: tracks.coverUrl,
       duration: tracks.duration,
       artistId: tracks.artistId,
       genre: tracks.genre,
@@ -51,8 +52,8 @@ export default async function RadioPage({ params }: { params: Promise<{ id: stri
 
   if (!track || !track.artistName) return notFound();
 
-  const audioUrl = getPublicUrl(track.audioKey);
-  const coverUrl = track.coverKey ? getPublicUrl(track.coverKey) : "/placeholder.png";
+  const audioUrl = getAudioUrl({ audioKey: track.audioKey }) ?? "";
+  const coverUrl = getCoverUrl({ coverKey: track.coverKey, coverUrl: track.coverUrl }) ?? "/placeholder.png";
 
   return (
     <RadioClient

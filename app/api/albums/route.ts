@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db/drizzle";
 import { albums, artists, tracks } from "@/lib/db/schema";
-import { getPublicUrl } from "@/lib/r2";
+import { getCoverUrl } from "@/lib/cdn";
 import { eq, desc, sql } from "drizzle-orm";
 
 export const dynamic = 'force-dynamic';
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
     slug: album.slug,
     artist: album.artistName ?? "Unknown",
     artistSlug: album.artistSlug,
-    coverUrl: album.coverKey ? getPublicUrl(album.coverKey) : null,
+    coverUrl: getCoverUrl({ coverKey: album.coverKey }),
     releaseYear: album.releaseYear,
     trackCount: Number(album.trackCount),
   }));

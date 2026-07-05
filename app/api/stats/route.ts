@@ -1,6 +1,6 @@
 import { db } from "@/lib/db/drizzle";
 import { recentlyPlayed, tracks, artists } from "@/lib/db/schema";
-import { getPublicUrl } from "@/lib/r2";
+import { getAudioUrl, getCoverUrl } from "@/lib/cdn";
 import { sanitizeFeaturedArtists } from "@/lib/featured-artists";
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
@@ -132,8 +132,8 @@ export async function GET() {
       artist: track.artistName ?? "Unknown",
       artistSlug: track.artistSlug,
       featuredArtists: sanitizeFeaturedArtists(track.featuredArtists),
-      audioUrl: getPublicUrl(track.audioKey),
-      coverUrl: track.coverKey ? getPublicUrl(track.coverKey) : null,
+      audioUrl: getAudioUrl({ audioKey: track.audioKey }),
+      coverUrl: getCoverUrl({ coverKey: track.coverKey }),
       duration: track.duration ?? undefined,
       slug: track.slug,
       plays: trackCounts[id],
@@ -161,7 +161,7 @@ export async function GET() {
         id: artist.id,
         name: artist.name,
         slug: artist.slug,
-        imageUrl: artist.imageKey ? getPublicUrl(artist.imageKey) : null,
+        imageUrl: getCoverUrl({ imageKey: artist.imageKey }),
         plays: artistCounts[id],
       };
     }).filter(Boolean);
@@ -177,7 +177,7 @@ export async function GET() {
       if (!track) return [];
       return [{
         id: track.id,
-        audioUrl: getPublicUrl(track.audioKey),
+        audioUrl: getAudioUrl({ audioKey: track.audioKey }),
         duration: track.duration ?? undefined,
         plays: trackCounts[id],
       }];

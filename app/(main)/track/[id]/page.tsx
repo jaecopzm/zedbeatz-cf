@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { db } from "@/lib/db/drizzle";
 import { tracks, artists, albums } from "@/lib/db/schema";
 import { eq, ne, and, desc, gt } from "drizzle-orm";
-import { getPublicUrl } from "@/lib/r2";
+import { getAudioUrl, getCoverUrl } from "@/lib/cdn";
 import type { Metadata } from "next";
 import TrackPageClient from "./client";
 
@@ -15,6 +15,7 @@ async function getTrackData(id: string) {
       title: tracks.title,
       audioKey: tracks.audioKey,
       coverKey: tracks.coverKey,
+      coverUrl: tracks.coverUrl,
       duration: tracks.duration,
       artistId: tracks.artistId,
       albumId: tracks.albumId,
@@ -40,6 +41,7 @@ async function getTrackData(id: string) {
     title: trackResult.title,
     audio_key: trackResult.audioKey,
     cover_key: trackResult.coverKey,
+    cover_url: trackResult.coverUrl,
     duration: trackResult.duration ? Number(trackResult.duration) : null,
     artist_id: trackResult.artistId,
     album_id: trackResult.albumId,
@@ -59,6 +61,7 @@ async function getTrackData(id: string) {
         id: tracks.id,
         title: tracks.title,
         coverKey: tracks.coverKey,
+        coverUrl: tracks.coverUrl,
         audioKey: tracks.audioKey,
         duration: tracks.duration,
         slug: tracks.slug,
@@ -88,6 +91,7 @@ async function getTrackData(id: string) {
     id: r.id,
     title: r.title,
     cover_key: r.coverKey,
+    cover_url: r.coverUrl,
     audio_key: r.audioKey,
     duration: r.duration,
     slug: r.slug,
@@ -108,7 +112,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const featuredArtists = typeof rawFeatMeta === 'string' && rawFeatMeta && rawFeatMeta !== 'false' && rawFeatMeta !== 'null' ? rawFeatMeta : '';
   const fullArtist = featuredArtists ? `${artist} feat. ${featuredArtists}` : artist;
   const genre = data.genre || "Music";
-  const coverUrl = data.cover_key ? getPublicUrl(data.cover_key) : undefined;
+  const coverUrl = getCoverUrl({ coverKey: data.cover_key, coverUrl: data.cover_url }) ?? undefined;
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zedbeatz.com";
   const trackUrl = `${baseUrl}/track/${data.slug || id}`;
 
@@ -194,15 +198,15 @@ export default async function TrackPage({ params }: { params: Promise<{ id: stri
   const featuredArtists = typeof rawFeat === 'string' && rawFeat && rawFeat !== 'false' && rawFeat !== 'null' ? rawFeat : '';
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zedbeatz.com";
   const trackUrl = `${baseUrl}/track/${data.slug || data.id}`;
-  const coverUrl = data.cover_key ? getPublicUrl(data.cover_key) : undefined;
+  const coverUrl = getCoverUrl({ coverKey: data.cover_key, coverUrl: data.cover_url }) ?? undefined;
 
   const moreFromArtist = (artistTracks ?? []).map(r => ({
     id: r.id,
     title: r.title,
     artist: (r.artists as any)?.name ?? "Unknown",
     artistSlug: (r.artists as any)?.slug ?? null,
-    coverUrl: r.cover_key ? getPublicUrl(r.cover_key) : undefined,
-    audioUrl: getPublicUrl(r.audio_key),
+    coverUrl: getCoverUrl({ coverKey: r.cover_key, coverUrl: r.cover_url }) ?? undefined,
+    audioUrl: getAudioUrl({ audioKey: r.audio_key }) ?? "",
     duration: r.duration ? Number(r.duration) : undefined,
     slug: r.slug ?? undefined,
   }));
@@ -212,7 +216,7 @@ export default async function TrackPage({ params }: { params: Promise<{ id: stri
     artist: artist,
     artistSlug: artistSlug,
     featuredArtists: featuredArtists,
-    audioUrl: getPublicUrl(data.audio_key),
+    audioUrl: getAudioUrl({ audioKey: data.audio_key }) ?? "",
     coverUrl: coverUrl,
     duration: data.duration ? Number(data.duration) : undefined,
     genre: data.genre, plays: data.plays, slug: data.slug ?? undefined,

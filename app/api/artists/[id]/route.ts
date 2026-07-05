@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db/drizzle";
 import { artists, tracks } from "@/lib/db/schema";
-import { getPublicUrl } from "@/lib/r2";
+import { getCoverUrl, getAudioUrl } from "@/lib/cdn";
 import { eq, desc } from "drizzle-orm";
 
 export const dynamic = 'force-dynamic';
@@ -62,12 +62,12 @@ export async function GET(
   return NextResponse.json({
     artist: {
       ...artist,
-      imageUrl: artist.imageKey ? getPublicUrl(artist.imageKey) : null,
+      imageUrl: getCoverUrl({ imageKey: artist.imageKey }),
     },
     tracks: trackList.map(t => ({
       ...t,
-      coverUrl: t.coverKey ? getPublicUrl(t.coverKey) : null,
-      audioUrl: getPublicUrl(t.audioKey),
+      coverUrl: getCoverUrl({ coverKey: t.coverKey }),
+      audioUrl: getAudioUrl({ audioKey: t.audioKey }),
     })),
   });
 }

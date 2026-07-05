@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { db } from "@/lib/db/drizzle";
 import { tracks, artists } from "@/lib/db/schema";
 import { eq, desc, sql } from "drizzle-orm";
-import { getPublicUrl } from "@/lib/r2";
+import { getAudioUrl, getCoverUrl } from "@/lib/cdn";
 import { sanitizeFeaturedArtists } from "@/lib/featured-artists";
 import TracksSearch from "@/components/tracks-search";
 import type { Track } from "@/lib/player-store";
@@ -43,6 +43,7 @@ export default async function AllTracksPage({ searchParams }: { searchParams: Pr
       title: tracks.title,
       audioKey: tracks.audioKey,
       coverKey: tracks.coverKey,
+      coverUrl: tracks.coverUrl,
       duration: tracks.duration,
       artistId: tracks.artistId,
       slug: tracks.slug,
@@ -63,8 +64,8 @@ export default async function AllTracksPage({ searchParams }: { searchParams: Pr
     artist: r.artistName ?? "Unknown",
     artistSlug: r.artistSlug ?? undefined,
     featuredArtists: sanitizeFeaturedArtists(r.featuredArtists),
-    audioUrl: getPublicUrl(r.audioKey),
-    coverUrl: r.coverKey ? getPublicUrl(r.coverKey) : undefined,
+    audioUrl: getAudioUrl({ audioKey: r.audioKey }) ?? "",
+    coverUrl: getCoverUrl({ coverKey: r.coverKey, coverUrl: r.coverUrl }) ?? undefined,
     duration: r.duration ? Number(r.duration) : undefined,
     slug: r.slug ?? undefined,
   }));

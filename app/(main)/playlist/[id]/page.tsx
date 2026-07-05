@@ -1,7 +1,7 @@
 import { db } from "@/lib/db/drizzle";
 import { playlists, playlistTracks, tracks, artists } from "@/lib/db/schema";
 import { eq, desc, sql } from "drizzle-orm";
-import { getPublicUrl } from "@/lib/r2";
+import { getAudioUrl, getCoverUrl } from "@/lib/cdn";
 import { sanitizeFeaturedArtists } from "@/lib/featured-artists";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
@@ -51,6 +51,7 @@ export default async function PlaylistPage({ params }: { params: Promise<{ id: s
         id: playlists.id,
         name: playlists.name,
         coverKey: playlists.coverKey,
+        coverUrl: playlists.coverUrl,
         isFeatured: playlists.isFeatured,
         category: playlists.category,
       })
@@ -70,6 +71,7 @@ export default async function PlaylistPage({ params }: { params: Promise<{ id: s
         trackTitle: tracks.title,
         audioKey: tracks.audioKey,
         coverKey: tracks.coverKey,
+        coverUrl: tracks.coverUrl,
         duration: tracks.duration,
         slug: tracks.slug,
         featuredArtists: tracks.featuredArtists,
@@ -90,6 +92,7 @@ export default async function PlaylistPage({ params }: { params: Promise<{ id: s
     id: playlistResult.id,
     name: playlistResult.name,
     cover_key: playlistResult.coverKey,
+    cover_url: playlistResult.coverUrl,
     is_featured: playlistResult.isFeatured,
     category: playlistResult.category,
     playlist_tracks: [{ count: countResult }],
@@ -102,6 +105,7 @@ export default async function PlaylistPage({ params }: { params: Promise<{ id: s
       title: r.trackTitle,
       audio_key: r.audioKey,
       cover_key: r.coverKey,
+      cover_url: r.coverUrl,
       duration: r.duration ? Number(r.duration) : null,
       slug: r.slug,
       featured_artists: r.featuredArtists,
@@ -117,13 +121,13 @@ export default async function PlaylistPage({ params }: { params: Promise<{ id: s
     artistSlug: t.artists?.slug,
     featuredArtists: sanitizeFeaturedArtists(t.featured_artists),
     slug: t.slug,
-    audioUrl: getPublicUrl(t.audio_key),
-    coverUrl: t.cover_key ? getPublicUrl(t.cover_key) : undefined,
+    audioUrl: getAudioUrl({ audioKey: t.audio_key }) ?? "",
+    coverUrl: getCoverUrl({ coverKey: t.cover_key, coverUrl: t.cover_url }) ?? undefined,
     duration: t.duration,
   }));
 
   const firstCover = tracksMapped.find(t => t.coverUrl)?.coverUrl ?? null;
-  const coverUrl = playlist.cover_key ? getPublicUrl(playlist.cover_key) : firstCover;
+  const coverUrl = getCoverUrl({ coverKey: playlist.cover_key, coverUrl: playlist.cover_url }) ?? firstCover;
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zedbeatz.com";
 
   const jsonLd = {

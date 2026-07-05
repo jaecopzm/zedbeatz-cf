@@ -2,7 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db/drizzle";
 import { playlists, playlistTracks, tracks, savedPlaylists } from "@/lib/db/schema";
 import { NextRequest, NextResponse } from "next/server";
-import { getPublicUrl } from "@/lib/r2";
+import { getCoverUrl } from "@/lib/cdn";
 import { eq, and, isNull, desc, asc, sql } from "drizzle-orm";
 
 export const dynamic = 'force-dynamic';
@@ -11,11 +11,8 @@ export const revalidate = 0;
 async function enrichPlaylists(rows: any[]) {
   return rows.map((p) => ({
     ...p,
-    cover_url: p.coverKey
-      ? getPublicUrl(p.coverKey)
-      : p.firstCoverKey
-      ? getPublicUrl(p.firstCoverKey)
-      : null,
+    cover_url: getCoverUrl({ coverKey: p.coverKey })
+      ?? (p.firstCoverKey ? getCoverUrl({ coverKey: p.firstCoverKey }) : null),
   }));
 }
 

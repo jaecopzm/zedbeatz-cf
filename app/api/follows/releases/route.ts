@@ -1,6 +1,6 @@
 import { db } from "@/lib/db/drizzle";
 import { follows, tracks, artists } from "@/lib/db/schema";
-import { getPublicUrl } from "@/lib/r2";
+import { getAudioUrl, getCoverUrl } from "@/lib/cdn";
 import { sanitizeFeaturedArtists } from "@/lib/featured-artists";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
@@ -54,8 +54,8 @@ export async function GET(req: NextRequest) {
     artist: t.artistName ?? "Unknown",
     artistSlug: t.artistSlug,
     featuredArtists: sanitizeFeaturedArtists(t.featuredArtists),
-    audioUrl: getPublicUrl(t.audioKey),
-    coverUrl: t.coverKey ? getPublicUrl(t.coverKey) : null,
+    audioUrl: getAudioUrl({ audioKey: t.audioKey }),
+    coverUrl: getCoverUrl({ coverKey: t.coverKey }),
     duration: t.duration,
     slug: t.slug,
     createdAt: t.createdAt,

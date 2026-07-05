@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db/drizzle";
-import { getPublicUrl } from "@/lib/r2";
+import { getAudioUrl, getCoverUrl } from "@/lib/cdn";
 import { sanitizeFeaturedArtists } from "@/lib/featured-artists";
 import type { Track } from "@/lib/player-store";
 import type { Metadata } from "next";
@@ -15,6 +15,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     id: albums.id,
     title: albums.title,
     coverKey: albums.coverKey,
+    coverUrl: albums.coverUrl,
     releaseYear: albums.releaseYear,
     artistId: albums.artistId,
     slug: albums.slug,
@@ -37,7 +38,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const artistSlug = albumRow.artistSlug;
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zedbeatz.com";
   const albumUrl = `${baseUrl}/album/${albumRow.slug || albumRow.id}`;
-  const coverUrl = albumRow.coverKey ? getPublicUrl(albumRow.coverKey) : undefined;
+  const coverUrl = getCoverUrl({ coverKey: albumRow.coverKey, coverUrl: albumRow.coverUrl }) ?? undefined;
   const trackCount = rawTracks?.length ?? 0;
   const trackTitles = (rawTracks ?? []).slice(0, 5).map((t: any) => t.title);
   const tracksText = trackTitles.length > 0 ? ` Tracks: ${trackTitles.join(", ")}${trackCount > 5 ? ` and ${trackCount - 5} more` : ""}.` : "";
@@ -89,6 +90,7 @@ export default async function AlbumPage({ params }: { params: Promise<{ id: stri
     id: albums.id,
     title: albums.title,
     coverKey: albums.coverKey,
+    coverUrl: albums.coverUrl,
     releaseYear: albums.releaseYear,
     artistId: albums.artistId,
     slug: albums.slug,
@@ -107,6 +109,7 @@ export default async function AlbumPage({ params }: { params: Promise<{ id: stri
     title: tracks.title,
     audioKey: tracks.audioKey,
     coverKey: tracks.coverKey,
+    coverUrl: tracks.coverUrl,
     duration: tracks.duration,
     artistId: tracks.artistId,
     slug: tracks.slug,
@@ -129,15 +132,15 @@ export default async function AlbumPage({ params }: { params: Promise<{ id: stri
     artist: t.artistName ?? artistName,
     artistSlug: t.artistSlug ?? undefined,
     featuredArtists: sanitizeFeaturedArtists(t.featuredArtists),
-    audioUrl: getPublicUrl(t.audioKey),
-    coverUrl: t.coverKey ? getPublicUrl(t.coverKey) : undefined,
+    audioUrl: getAudioUrl({ audioKey: t.audioKey }) ?? "",
+    coverUrl: getCoverUrl({ coverKey: t.coverKey, coverUrl: t.coverUrl }) ?? undefined,
     duration: t.duration ? Number(t.duration) : undefined,
     slug: t.slug ?? undefined,
   }));
 
   const totalPlays = (rawTracks ?? []).reduce((sum, t) => sum + (t.plays ?? 0), 0);
 
-  const coverUrl = albumRow.coverKey ? getPublicUrl(albumRow.coverKey) : null;
+  const coverUrl = getCoverUrl({ coverKey: albumRow.coverKey, coverUrl: albumRow.coverUrl });
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zedbeatz.com";
   const albumUrl = `${baseUrl}/album/${albumRow.slug || albumRow.id}`;
 

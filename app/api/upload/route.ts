@@ -1,4 +1,4 @@
-import { getUploadUrl, getPublicUrl } from "@/lib/r2";
+import { getUploadUrl } from "@/lib/r2";
 import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = 'force-dynamic';

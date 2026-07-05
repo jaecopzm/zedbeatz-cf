@@ -1,7 +1,7 @@
 import { db } from "@/lib/db/drizzle";
 import { tracks, artists } from "@/lib/db/schema";
 import { eq, desc, ilike, or } from "drizzle-orm";
-import { getPublicUrl } from "@/lib/r2";
+import { getAudioUrl, getCoverUrl } from "@/lib/cdn";
 import { sanitizeFeaturedArtists } from "@/lib/featured-artists";
 import type { Track } from "@/lib/player-store";
 import type { Metadata } from "next";
@@ -26,6 +26,7 @@ async function getGenreData(slug: string) {
       title: tracks.title,
       audioKey: tracks.audioKey,
       coverKey: tracks.coverKey,
+      coverUrl: tracks.coverUrl,
       duration: tracks.duration,
       slug: tracks.slug,
       genre: tracks.genre,
@@ -49,8 +50,8 @@ async function getGenreData(slug: string) {
     artist: t.artistName ?? "Unknown",
     artistSlug: t.artistSlug ?? undefined,
     featuredArtists: sanitizeFeaturedArtists(t.featuredArtists),
-    audioUrl: getPublicUrl(t.audioKey),
-    coverUrl: t.coverKey ? getPublicUrl(t.coverKey) : undefined,
+    audioUrl: getAudioUrl({ audioKey: t.audioKey }) ?? "",
+    coverUrl: getCoverUrl({ coverKey: t.coverKey, coverUrl: t.coverUrl }) ?? undefined,
     duration: t.duration ? Number(t.duration) : undefined,
     slug: t.slug ?? undefined,
     createdAt: t.createdAt?.toISOString() ?? undefined,

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db/drizzle";
 import { albums, artists, tracks } from "@/lib/db/schema";
-import { getPublicUrl } from "@/lib/r2";
+import { getAudioUrl, getCoverUrl } from "@/lib/cdn";
 import { sanitizeFeaturedArtists } from "@/lib/featured-artists";
 import { eq, asc } from "drizzle-orm";
 
@@ -97,7 +97,7 @@ export async function GET(
     slug: albumData.slug,
     artist: albumData.artistName ?? "Unknown",
     artistSlug: albumData.artistSlug,
-    coverUrl: albumData.coverKey ? getPublicUrl(albumData.coverKey) : null,
+    coverUrl: getCoverUrl({ coverKey: albumData.coverKey }),
     releaseYear: albumData.releaseYear,
     trackCount: trackRows.length,
   };
@@ -109,8 +109,8 @@ export async function GET(
     artistId: r.artistId,
     artistSlug: r.artistSlug,
     featuredArtists: sanitizeFeaturedArtists(r.featuredArtists),
-    audioUrl: getPublicUrl(r.audioKey),
-    coverUrl: r.coverKey ? getPublicUrl(r.coverKey) : null,
+    audioUrl: getAudioUrl({ audioKey: r.audioKey }),
+    coverUrl: getCoverUrl({ coverKey: r.coverKey }),
     duration: r.duration,
     slug: r.slug,
     plays: r.plays,

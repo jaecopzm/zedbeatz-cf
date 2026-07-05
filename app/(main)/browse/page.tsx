@@ -1,7 +1,7 @@
 import { db } from "@/lib/db/drizzle";
 import { tracks, artists } from "@/lib/db/schema";
 import { desc, eq } from "drizzle-orm";
-import { getPublicUrl } from "@/lib/r2";
+import { getAudioUrl, getCoverUrl } from "@/lib/cdn";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import TopCharts from "@/components/browse/top-charts";
@@ -42,7 +42,8 @@ export default async function BrowsePage() {
     db
       .select({
         id: tracks.id, title: tracks.title, slug: tracks.slug,
-        coverKey: tracks.coverKey, audioKey: tracks.audioKey,
+        coverKey: tracks.coverKey, coverUrl: tracks.coverUrl,
+        audioKey: tracks.audioKey,
         duration: tracks.duration, artistId: tracks.artistId,
         artistName: artists.name, artistSlug: artists.slug,
         featuredArtists: tracks.featuredArtists,
@@ -54,7 +55,8 @@ export default async function BrowsePage() {
     db
       .select({
         id: tracks.id, title: tracks.title, slug: tracks.slug,
-        coverKey: tracks.coverKey, audioKey: tracks.audioKey,
+        coverKey: tracks.coverKey, coverUrl: tracks.coverUrl,
+        audioKey: tracks.audioKey,
         duration: tracks.duration, artistId: tracks.artistId,
         artistName: artists.name, artistSlug: artists.slug,
         featuredArtists: tracks.featuredArtists,
@@ -67,8 +69,8 @@ export default async function BrowsePage() {
 
   const mapTrack = (t: typeof topTracksData[0]): Track => ({
     id: t.id, title: t.title, slug: t.slug ?? undefined,
-    coverUrl: t.coverKey ? getPublicUrl(t.coverKey) : undefined,
-    audioUrl: getPublicUrl(t.audioKey),
+    coverUrl: getCoverUrl({ coverKey: t.coverKey, coverUrl: t.coverUrl }) ?? undefined,
+    audioUrl: getAudioUrl({ audioKey: t.audioKey }) ?? "",
     duration: t.duration ? Number(t.duration) : undefined,
     artist: t.artistName ?? "Unknown",
     artistSlug: t.artistSlug ?? undefined,

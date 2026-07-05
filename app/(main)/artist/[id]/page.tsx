@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db/drizzle";
-import { getPublicUrl } from "@/lib/r2";
+import { getAudioUrl, getCoverUrl } from "@/lib/cdn";
 import type { Track } from "@/lib/player-store";
 import type { Metadata } from "next";
 import ArtistHeader from "@/components/artist/artist-header";
@@ -15,6 +15,7 @@ async function getArtistData(id: string) {
     name: artists.name,
     bio: artists.bio,
     imageKey: artists.imageKey,
+    imageUrl: artists.imageUrl,
     slug: artists.slug,
   })
     .from(artists)
@@ -29,6 +30,7 @@ async function getArtistData(id: string) {
       title: tracks.title,
       audioKey: tracks.audioKey,
       coverKey: tracks.coverKey,
+      coverUrl: tracks.coverUrl,
       duration: tracks.duration,
       artistId: tracks.artistId,
       slug: tracks.slug,
@@ -42,6 +44,7 @@ async function getArtistData(id: string) {
       id: albums.id,
       title: albums.title,
       coverKey: albums.coverKey,
+      coverUrl: albums.coverUrl,
       releaseYear: albums.releaseYear,
       slug: albums.slug,
     })
@@ -53,6 +56,7 @@ async function getArtistData(id: string) {
       title: tracks.title,
       audioKey: tracks.audioKey,
       coverKey: tracks.coverKey,
+      coverUrl: tracks.coverUrl,
       duration: tracks.duration,
       artistId: tracks.artistId,
       slug: tracks.slug,
@@ -83,8 +87,8 @@ function mapTrack(t: any, artistName: string, artistSlug?: string | null, featur
     artist: t.artistName ?? artistName,
     artistSlug: t.artistSlug ?? artistSlug ?? undefined,
     featuredArtists: sanitizeFeaturedArtists(t.featuredArtists ?? featuredArtists),
-    audioUrl: getPublicUrl(t.audioKey),
-    coverUrl: t.coverKey ? getPublicUrl(t.coverKey) : undefined,
+    audioUrl: getAudioUrl({ audioKey: t.audioKey }) ?? "",
+    coverUrl: getCoverUrl({ coverKey: t.coverKey, coverUrl: t.coverUrl }) ?? undefined,
     duration: t.duration ? Number(t.duration) : undefined,
     slug: t.slug ?? undefined,
     plays: t.plays ?? 0,
@@ -99,7 +103,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zedbeatz.com";
   const artistUrl = `${baseUrl}/artist/${artist.slug || artist.id}`;
-  const imageUrl = artist.imageKey ? getPublicUrl(artist.imageKey) : undefined;
+  const imageUrl = getCoverUrl({ imageKey: artist.imageKey, imageUrl: artist.imageUrl }) ?? undefined;
   const trackTitles = rawTracks.slice(0, 5).map((t: any) => t.title);
   const trackCount = rawTracks.length;
   const bioExcerpt = artist.bio ? artist.bio.slice(0, 120) : "";
@@ -160,14 +164,14 @@ export default async function ArtistPage({ params }: { params: Promise<{ id: str
     title: a.title,
     slug: a.slug,
     releaseYear: a.releaseYear,
-    coverUrl: a.coverKey ? getPublicUrl(a.coverKey) : null,
+    coverUrl: getCoverUrl({ coverKey: a.coverKey, coverUrl: a.coverUrl }),
   }));
 
   const artistData = {
     id: artist.id,
     name: artist.name,
     bio: artist.bio,
-    imageUrl: artist.imageKey ? getPublicUrl(artist.imageKey) : null,
+    imageUrl: getCoverUrl({ imageKey: artist.imageKey, imageUrl: artist.imageUrl }),
     slug: artist.slug,
     trackCount: tracksList.length,
     albumCount: albumsList.length,

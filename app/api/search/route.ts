@@ -1,6 +1,6 @@
 import { db } from "@/lib/db/drizzle";
 import { tracks, artists, albums } from "@/lib/db/schema";
-import { getPublicUrl } from "@/lib/r2";
+import { getCoverUrl, getAudioUrl } from "@/lib/cdn";
 import { NextRequest, NextResponse } from "next/server";
 import { sanitizeFeaturedArtists } from "@/lib/featured-artists";
 import { ilike, eq, inArray, desc, and, isNotNull, sql } from "drizzle-orm";
@@ -25,6 +25,8 @@ export async function GET(req: NextRequest) {
         title: tracks.title,
         audioKey: tracks.audioKey,
         coverKey: tracks.coverKey,
+        coverUrl: tracks.coverUrl,
+        isrc: tracks.isrc,
         duration: tracks.duration,
         artistId: tracks.artistId,
         slug: tracks.slug,
@@ -55,6 +57,7 @@ export async function GET(req: NextRequest) {
         name: artists.name,
         slug: artists.slug,
         imageKey: artists.imageKey,
+        imageUrl: artists.imageUrl,
       })
       .from(artists)
       .where(ilike(artists.name, searchPattern))
@@ -64,6 +67,7 @@ export async function GET(req: NextRequest) {
         id: albums.id,
         title: albums.title,
         coverKey: albums.coverKey,
+        coverUrl: albums.coverUrl,
         releaseYear: albums.releaseYear,
         slug: albums.slug,
         artistName: artists.name,
@@ -84,6 +88,8 @@ export async function GET(req: NextRequest) {
         title: tracks.title,
         audioKey: tracks.audioKey,
         coverKey: tracks.coverKey,
+        coverUrl: tracks.coverUrl,
+        isrc: tracks.isrc,
         duration: tracks.duration,
         artistId: tracks.artistId,
         slug: tracks.slug,
@@ -107,6 +113,8 @@ export async function GET(req: NextRequest) {
         title: tracks.title,
         audioKey: tracks.audioKey,
         coverKey: tracks.coverKey,
+        coverUrl: tracks.coverUrl,
+        isrc: tracks.isrc,
         duration: tracks.duration,
         artistId: tracks.artistId,
         slug: tracks.slug,
@@ -137,8 +145,8 @@ export async function GET(req: NextRequest) {
       artist: t.artistName ?? "Unknown",
       artistSlug: t.artistSlug,
       featuredArtists: sanitizeFeaturedArtists(t.featuredArtists),
-      audioUrl: t.audioKey ? getPublicUrl(t.audioKey) : "",
-      coverUrl: t.coverKey ? getPublicUrl(t.coverKey) : null,
+      audioUrl: getAudioUrl({ audioKey: t.audioKey, isrc: t.isrc }) ?? "",
+      coverUrl: getCoverUrl({ coverKey: t.coverKey, coverUrl: t.coverUrl }),
       duration: t.duration,
       slug: t.slug,
     })),
@@ -146,14 +154,14 @@ export async function GET(req: NextRequest) {
       id: a.id,
       name: a.name,
       slug: a.slug,
-      imageUrl: a.imageKey ? getPublicUrl(a.imageKey) : null,
+      imageUrl: getCoverUrl({ imageKey: a.imageKey, imageUrl: a.imageUrl }),
     })),
     albums: albumsResult.map((a) => ({
       id: a.id,
       title: a.title,
       slug: a.slug,
       releaseYear: a.releaseYear,
-      coverUrl: a.coverKey ? getPublicUrl(a.coverKey) : null,
+      coverUrl: getCoverUrl({ coverKey: a.coverKey, coverUrl: a.coverUrl }),
       artistName: a.artistName ?? "Unknown",
       artistSlug: a.artistSlug,
     })),

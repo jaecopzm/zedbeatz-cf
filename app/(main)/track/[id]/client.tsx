@@ -177,7 +177,7 @@ export default function TrackPageClient({ track }: { track: TrackWithMeta }) {
         <div className="flex flex-col items-center text-center gap-5">
           {/* Art — large, prominent, like Apple Music */}
           <div
-            className="relative w-56 h-56 md:w-64 md:h-64 shrink-0 rounded-2xl overflow-hidden"
+            className="relative w-56 h-56 md:w-64 md:h-64 shrink-0 rounded-xl overflow-hidden"
             style={{
               boxShadow: isLight
                 ? "0 24px 80px rgba(0,0,0,0.15), 0 0 0 0.5px rgba(0,0,0,0.04)"
