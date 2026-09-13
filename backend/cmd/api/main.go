@@ -3,17 +3,24 @@ package main
 import (
 	"context"
 	"log"
+	"log/slog"
 	"net/http"
+	"os"
 
+	"zedbeatz/backend/internal/cache"
 	"zedbeatz/backend/internal/cdn"
 	"zedbeatz/backend/internal/config"
 	"zedbeatz/backend/internal/db"
 	"zedbeatz/backend/internal/handlers"
 	"zedbeatz/backend/internal/r2"
+	"zedbeatz/backend/internal/realtime"
 	"zedbeatz/backend/internal/routes"
 )
 
 func main() {
+	// Structured JSON logger to stdout for observability lane.
+	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, nil)))
+
 	cfg := config.Load()
 	if cfg.DatabaseURL == "" {
 		log.Fatal("DATABASE_URL is required")
@@ -26,13 +33,35 @@ func main() {
 	}
 	defer pool.Close()
 
+	hub := realtime.NewHub()
+	go hub.Run()
+
+	var cacheClient *cache.Client
+	if cfg.RedisURL != "" {
+		c, err := cache.New(cfg.RedisURL)
+		if err != nil {
+			slog.Warn("redis init failed — continuing without cache", "err", err)
+		} else {
+			cacheClient = c
+			if cacheClient != nil {
+				defer func() { _ = cacheClient.Close() }()
+				slog.Info("redis cache enabled", "url", cfg.RedisURL)
+			}
+		}
+	} else {
+		slog.Info("REDIS_URL not set — cache disabled")
+	}
+
 	env := &handlers.Env{
-		DB:  pool,
-		CDN: cdn.Resolver{R2PublicURL: cfg.R2PublicURL, LegacyCDN: cfg.LegacyMusicCDN},
-		R2:  r2.New(cfg.R2AccountID, cfg.R2AccessKey, cfg.R2SecretKey, cfg.R2Bucket),
+		DB:    pool,
+		CDN:   cdn.Resolver{R2PublicURL: cfg.R2PublicURL, LegacyCDN: cfg.LegacyMusicCDN},
+		R2:    r2.New(cfg.R2AccountID, cfg.R2AccessKey, cfg.R2SecretKey, cfg.R2Bucket),
+		Hub:   hub,
+		Cache: cacheClient,
 	}
 
 	h := routes.New(env, cfg.FrontendURL, cfg.AdminSecret)
+	slog.Info("zedbeatz-api listening", "port", cfg.Port)
 	log.Printf("zedbeatz-api listening on :%s", cfg.Port)
 	log.Fatal(http.ListenAndServe(":"+cfg.Port, h))
 }

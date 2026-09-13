@@ -6,6 +6,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
 	"zedbeatz/backend/internal/handlers"
+	"zedbeatz/backend/internal/metrics"
 	"zedbeatz/backend/internal/middleware"
 )
 
@@ -21,17 +22,30 @@ func New(e *handlers.Env, frontendURL, adminSecret string) http.Handler {
 		origins = []string{"https://zedbeatz.com"}
 	}
 	r := chi.NewRouter()
+	// Observability: request ID, structured JSON logging, Prometheus metrics.
+	r.Use(middleware.RequestID)
+	r.Use(middleware.Device)
+	r.Use(middleware.Logger)
+	r.Use(metrics.Middleware)
 	r.Use(middleware.OptionalAuth)
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   origins,
 		AllowedMethods:   []string{"GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Authorization", "Content-Type", "x-admin-secret"},
+		AllowedHeaders:   []string{"Authorization", "Content-Type", "x-admin-secret", "X-Device-ID", "X-Request-ID"},
+		ExposedHeaders:   []string{"X-Device-ID", "X-Request-ID"},
 		AllowCredentials: true,
 	}))
+
+	// Expose /metrics before auth — Prometheus scrape must not require admin secret.
+	// Registered after global middleware but before admin group to bypass RequireAdmin.
+	r.Handle("/metrics", metrics.Handler())
 
 	r.Get("/health", e.Health)
 
 	// Public — no auth
+	// WebSocket now-playing — no auth, optional ?device= / ?queue= passthrough
+	r.Get("/api/v1/ws", e.ServeWS)
+	r.Get("/ws", e.ServeWS)
 	r.Get("/api/v1/tracks", e.ListTracks)
 	r.Get("/api/v1/tracks/{id}", e.GetTrack)
 	r.Post("/api/v1/tracks/play", e.PlayTrack)
@@ -46,19 +60,20 @@ func New(e *handlers.Env, frontendURL, adminSecret string) http.Handler {
 	r.Get("/api/v1/radio", e.Radio)
 	r.Post("/api/v1/lyrics/check", e.LyricsCheck)
 	r.Get("/api/v1/playlists", e.ListPlaylists)
+	// Social lane — device-based anonymous
 	r.Get("/api/v1/comments", e.Comments)
+	r.Post("/api/v1/comments", e.Comments)
+	r.Delete("/api/v1/comments", e.Comments)
 	r.Get("/api/v1/follows", e.Follows)
+	r.Post("/api/v1/follows", e.Follows)
 	r.Post("/api/v1/recently-played", e.LogPlay)
 	r.Get("/api/v1/recently-played/list", e.ListRecent)
 	r.Get("/api/v1/stats", e.Stats)
+	r.Get("/api/v1/likes", e.GetLikes)
+	r.Post("/api/v1/likes", e.ToggleLike)
 	r.Get("/api/v1/follows/releases", func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.Write([]byte(`{"releases":[]}`))
-	})
-	// Public stubs — likes/comments follow/follows are local-only now
-	r.Get("/api/v1/likes", func(w http.ResponseWriter, _ *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{"liked":false,"tracks":[]}`))
 	})
 
 	// Upload — admin only (presign + delete)

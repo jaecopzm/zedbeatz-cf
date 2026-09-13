@@ -18,6 +18,7 @@ type Config struct {
 	LegacyMusicCDN string
 	AdminSecret    string
 	HashidsSalt    string
+	RedisURL       string
 }
 
 func getenv(key, fallback string) string {
@@ -44,5 +45,6 @@ func Load() Config {
 		LegacyMusicCDN: getenv("LEGACY_MUSIC_CDN", "https://cdn-spotify-247.zm.io.vn/download"),
 		AdminSecret:    os.Getenv("ADMIN_SECRET"),
 		HashidsSalt:    getenv("HASHIDS_SALT", "zedbeatz-2026-salt"),
+		RedisURL:       os.Getenv("REDIS_URL"),
 	}
 }

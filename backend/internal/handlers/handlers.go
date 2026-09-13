@@ -5,14 +5,18 @@ import (
 	"net/http"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"zedbeatz/backend/internal/cache"
 	"zedbeatz/backend/internal/cdn"
 	"zedbeatz/backend/internal/r2"
+	"zedbeatz/backend/internal/realtime"
 )
 
 type Env struct {
-	DB  *pgxpool.Pool
-	CDN cdn.Resolver
-	R2  *r2.Client
+	DB    *pgxpool.Pool
+	CDN   cdn.Resolver
+	R2    *r2.Client
+	Hub   *realtime.Hub
+	Cache *cache.Client
 }
 
 func writeJSON(w http.ResponseWriter, code int, v any) {

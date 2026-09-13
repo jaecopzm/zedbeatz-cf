@@ -2,8 +2,10 @@ package handlers
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
+	"zedbeatz/backend/internal/cache"
 	"zedbeatz/backend/internal/models"
 )
 
@@ -127,37 +129,51 @@ func (e *Env) Search(w http.ResponseWriter, r *http.Request) {
 
 func (e *Env) Home(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	trending := []map[string]any{}
-	rows, _ := e.DB.Query(ctx, `SELECT t.id, t.title, a.name, t.cover_url, t.plays FROM tracks t LEFT JOIN artists a ON a.id=t.artist_id WHERE t.status='active' ORDER BY t.plays DESC LIMIT 10`)
-	if rows != nil {
-		defer rows.Close()
-		for rows.Next() {
-			var id, plays int
-			var title string
-			var aname, cover *string
-			_ = rows.Scan(&id, &title, &aname, &cover, &plays)
-			trending = append(trending, map[string]any{"id": id, "title": title, "artist": aname, "cover_url": cover, "plays": plays})
+	data, err := cache.Fetch(ctx, e.Cache, cache.KeyHomeTrending10, 60*time.Second, func() (map[string]any, error) {
+		trending := []map[string]any{}
+		rows, _ := e.DB.Query(ctx, `SELECT t.id, t.title, a.name, t.cover_url, t.plays FROM tracks t LEFT JOIN artists a ON a.id=t.artist_id WHERE t.status='active' ORDER BY t.plays DESC LIMIT 10`)
+		if rows != nil {
+			defer rows.Close()
+			for rows.Next() {
+				var id, plays int
+				var title string
+				var aname, cover *string
+				_ = rows.Scan(&id, &title, &aname, &cover, &plays)
+				trending = append(trending, map[string]any{"id": id, "title": title, "artist": aname, "cover_url": cover, "plays": plays})
+			}
 		}
-	}
-	writeJSON(w, 200, map[string]any{"trending": trending})
-}
-
-func (e *Env) Hero(w http.ResponseWriter, r *http.Request) {
-	rows, err := e.DB.Query(r.Context(), `SELECT t.id, t.title, a.name, t.cover_url FROM featured_slots f JOIN tracks t ON t.id=f.track_id LEFT JOIN artists a ON a.id=t.artist_id WHERE f.slot_type='hero' AND f.is_active ORDER BY f.position ASC LIMIT 10`)
+		return map[string]any{"trending": trending}, nil
+	})
 	if err != nil {
 		writeError(w, 500, err.Error())
 		return
 	}
-	defer rows.Close()
-	out := []map[string]any{}
-	for rows.Next() {
-		var id int
-		var title string
-		var aname, cover *string
-		_ = rows.Scan(&id, &title, &aname, &cover)
-		out = append(out, map[string]any{"id": id, "title": title, "artist": aname, "cover_url": cover})
+	writeJSON(w, 200, data)
+}
+
+func (e *Env) Hero(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	data, err := cache.Fetch(ctx, e.Cache, cache.KeyHero, 30*time.Minute, func() (map[string]any, error) {
+		rows, err := e.DB.Query(ctx, `SELECT t.id, t.title, a.name, t.cover_url FROM featured_slots f JOIN tracks t ON t.id=f.track_id LEFT JOIN artists a ON a.id=t.artist_id WHERE f.slot_type='hero' AND f.is_active ORDER BY f.position ASC LIMIT 10`)
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+		out := []map[string]any{}
+		for rows.Next() {
+			var id int
+			var title string
+			var aname, cover *string
+			_ = rows.Scan(&id, &title, &aname, &cover)
+			out = append(out, map[string]any{"id": id, "title": title, "artist": aname, "cover_url": cover})
+		}
+		return map[string]any{"hero": out}, nil
+	})
+	if err != nil {
+		writeError(w, 500, err.Error())
+		return
 	}
-	writeJSON(w, 200, map[string]any{"hero": out})
+	writeJSON(w, 200, data)
 }
 
 func (e *Env) Radio(w http.ResponseWriter, r *http.Request) {
@@ -166,8 +182,44 @@ func (e *Env) Radio(w http.ResponseWriter, r *http.Request) {
 		writeError(w, 400, "trackId required")
 		return
 	}
-	var genre *string
-	_ = e.DB.QueryRow(r.Context(), `SELECT genre FROM tracks WHERE id::text=$1`, trackID).Scan(&genre)
+	// Radio v2 stub: filter by genre/artist similarity if genre param present.
+	// Explicit ?genre= overrides DB seed genre. If genre is set, results are
+	// filtered to same genre (or same artist as fallback) for better relevance.
+	// ?queue= is passthrough — frontend handles queue share URLs, no server change.
+	_ = r.URL.Query().Get("queue")
+	genreParam := r.URL.Query().Get("genre")
+
+	var seedGenre *string
+	var seedArtistID *int
+	_ = e.DB.QueryRow(r.Context(), `SELECT genre, artist_id FROM tracks WHERE id::text=$1`, trackID).Scan(&seedGenre, &seedArtistID)
+
+	effectiveGenre := genreParam
+	if effectiveGenre == "" && seedGenre != nil {
+		effectiveGenre = *seedGenre
+	}
+
+	if effectiveGenre != "" {
+		rows, err := e.DB.Query(r.Context(), `SELECT t.id, t.title, a.name, t.cover_url FROM tracks t LEFT JOIN artists a ON a.id=t.artist_id WHERE t.status='active' AND t.id::text <> $1 AND (t.genre = $2 OR t.artist_id = $3) ORDER BY RANDOM() LIMIT 20`, trackID, effectiveGenre, seedArtistID)
+		if err != nil {
+			writeError(w, 500, err.Error())
+			return
+		}
+		defer rows.Close()
+		out := []map[string]any{}
+		for rows.Next() {
+			var id int
+			var title string
+			var aname, cover *string
+			_ = rows.Scan(&id, &title, &aname, &cover)
+			out = append(out, map[string]any{"id": id, "title": title, "artist": aname, "cover_url": cover})
+		}
+		if len(out) > 0 {
+			writeJSON(w, 200, map[string]any{"tracks": out, "seed_genre": effectiveGenre})
+			return
+		}
+		// Fall through to random if genre filter returned nothing — rows closed via defer at return.
+	}
+
 	rows, err := e.DB.Query(r.Context(), `SELECT t.id, t.title, a.name, t.cover_url FROM tracks t LEFT JOIN artists a ON a.id=t.artist_id WHERE t.status='active' AND t.id::text <> $1 ORDER BY RANDOM() LIMIT 20`, trackID)
 	if err != nil {
 		writeError(w, 500, err.Error())
@@ -182,5 +234,5 @@ func (e *Env) Radio(w http.ResponseWriter, r *http.Request) {
 		_ = rows.Scan(&id, &title, &aname, &cover)
 		out = append(out, map[string]any{"id": id, "title": title, "artist": aname, "cover_url": cover})
 	}
-	writeJSON(w, 200, map[string]any{"tracks": out, "seed_genre": genre})
+	writeJSON(w, 200, map[string]any{"tracks": out, "seed_genre": seedGenre})
 }
