@@ -76,14 +76,21 @@ func New(e *handlers.Env, frontendURL, adminSecret string) http.Handler {
 		w.Write([]byte(`{"releases":[]}`))
 	})
 
-	// Upload — admin only (presign + delete)
+	// Upload + Admin — admin only (presign + delete + CRUD)
 	r.Group(func(ar chi.Router) {
 		ar.Use(middleware.RequireAdmin(adminSecret))
 		ar.Post("/api/v1/upload", e.PresignUpload)
+		ar.Post("/api/v1/admin/upload/presign", e.PresignUpload)
 		ar.Delete("/api/v1/upload/delete", e.DeleteUpload)
 		ar.Handle("/api/v1/admin/tracks", http.HandlerFunc(e.AdminTracks))
 		ar.Handle("/api/v1/admin/artists", http.HandlerFunc(e.AdminArtists))
 		ar.Handle("/api/v1/admin/artists/{id}", http.HandlerFunc(e.AdminArtists))
+		ar.Handle("/api/v1/admin/albums", http.HandlerFunc(e.AdminAlbums))
+		ar.Handle("/api/v1/admin/albums/{id}", http.HandlerFunc(e.AdminAlbums))
+		ar.Handle("/api/v1/admin/hero", http.HandlerFunc(e.AdminHero))
+		ar.Get("/api/v1/admin/spotify/search", e.SearchSpotify)
+		ar.Post("/api/v1/admin/ingest", e.AdminIngestFlex)
+		ar.Get("/api/v1/admin/jobs/{id}", e.AdminJobStatus)
 	})
 
 	return r

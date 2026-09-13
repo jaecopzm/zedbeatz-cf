@@ -12,9 +12,12 @@ import (
 	"zedbeatz/backend/internal/config"
 	"zedbeatz/backend/internal/db"
 	"zedbeatz/backend/internal/handlers"
+	"zedbeatz/backend/internal/hashids"
+	"zedbeatz/backend/internal/ingest"
 	"zedbeatz/backend/internal/r2"
 	"zedbeatz/backend/internal/realtime"
 	"zedbeatz/backend/internal/routes"
+	"zedbeatz/backend/internal/spotify"
 )
 
 func main() {
@@ -52,12 +55,22 @@ func main() {
 		slog.Info("REDIS_URL not set — cache disabled")
 	}
 
+	coder, err := hashids.New(cfg.HashidsSalt)
+	if err != nil {
+		slog.Warn("hashids init failed", "err", err)
+	}
+	r2Client := r2.New(cfg.R2AccountID, cfg.R2AccessKey, cfg.R2SecretKey, cfg.R2Bucket)
+	spotifyClient := spotify.New(cfg.SpotifyClientID, cfg.SpotifyClientSecret, cfg.SpotifyMarket)
+	ingestSvc := ingest.New(pool, r2Client, spotifyClient, cfg.StreamerURL)
 	env := &handlers.Env{
-		DB:    pool,
-		CDN:   cdn.Resolver{R2PublicURL: cfg.R2PublicURL, LegacyCDN: cfg.LegacyMusicCDN},
-		R2:    r2.New(cfg.R2AccountID, cfg.R2AccessKey, cfg.R2SecretKey, cfg.R2Bucket),
-		Hub:   hub,
-		Cache: cacheClient,
+		DB:      pool,
+		CDN:     cdn.Resolver{R2PublicURL: cfg.R2PublicURL, LegacyCDN: cfg.LegacyMusicCDN},
+		R2:      r2Client,
+		Hub:     hub,
+		Cache:   cacheClient,
+		Spotify: spotifyClient,
+		IDs:     coder,
+		Ingest:  ingestSvc,
 	}
 
 	h := routes.New(env, cfg.FrontendURL, cfg.AdminSecret)

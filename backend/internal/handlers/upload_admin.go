@@ -48,31 +48,6 @@ func (e *Env) DeleteUpload(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, 200, map[string]any{"ok": true})
 }
 
-// Admin stubs: full CRUD mirrors /api/admin/* — expand per-table as needed.
-func (e *Env) AdminTracks(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodGet:
-		e.ListTracks(w, r)
-	default:
-		// Invalidate cached home/hero on admin writes (stub).
-		_ = e.Cache.Del(r.Context(), cache.KeyHero, cache.KeyHomeTrending10, cache.KeyHome)
-		// Also clear trending variants — stub invalidation.
-		_ = e.Cache.Del(r.Context(), cache.KeyTracksTrending(10), cache.KeyTracksTrending(24))
-		writeJSON(w, 200, map[string]any{"ok": true, "todo": "admin write path — port from app/api/admin/tracks/route.ts"})
-	}
-}
-
-func (e *Env) AdminArtists(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodGet:
-		e.ListArtists(w, r)
-	default:
-		// Invalidate cache on admin writes (stub).
-		_ = e.Cache.Del(r.Context(), cache.KeyHero, cache.KeyHomeTrending10)
-		writeJSON(w, 200, map[string]any{"ok": true, "todo": "admin write path"})
-	}
-}
-
 // InvalidateHome clears home/hero cache — call from admin write paths when
 // expanding CRUD beyond stubs.
 func (e *Env) InvalidateHome(ctx context.Context) {

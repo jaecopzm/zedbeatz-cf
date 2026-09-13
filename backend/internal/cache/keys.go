@@ -1,6 +1,9 @@
 package cache
 
-import "fmt"
+import (
+	"crypto/sha256"
+	"fmt"
+)
 
 // Canonical Redis keys. Keep prefix "zed:" consistent.
 const (
@@ -56,4 +59,10 @@ func AllTrendingKeys(limits ...int) []string {
 		out = append(out, KeyTracksTrending(l))
 	}
 	return out
+}
+
+// SpotifySearchKey returns zed:spotify:search:{hash(q)} with 16-char hex hash.
+func SpotifySearchKey(q string) string {
+	sum := sha256.Sum256([]byte(q))
+	return fmt.Sprintf("zed:spotify:search:%x", sum[:8])
 }

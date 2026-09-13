@@ -1,6 +1,7 @@
 package r2
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"time"
@@ -47,4 +48,22 @@ func (c *Client) Delete(ctx context.Context, key string) error {
 		Key:    aws.String(key),
 	})
 	return err
+}
+
+func (c *Client) Upload(ctx context.Context, key string, data []byte, contentType string) error {
+	if c.s3 == nil {
+		return fmt.Errorf("r2 not configured")
+	}
+	_, err := c.s3.PutObject(ctx, &s3.PutObjectInput{
+		Bucket:      aws.String(c.bucket),
+		Key:         aws.String(key),
+		Body:        bytesReader(data),
+		ContentType: aws.String(contentType),
+		ContentLength: aws.Int64(int64(len(data))),
+	})
+	return err
+}
+
+func bytesReader(b []byte) *bytes.Reader {
+	return bytes.NewReader(b)
 }
