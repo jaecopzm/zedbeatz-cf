@@ -1,6 +1,6 @@
 "use client";
 import { useRef, useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { CaretLeft, CaretRight } from "@phosphor-icons/react";
 
 export default function ScrollRow({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -28,10 +28,10 @@ export default function ScrollRow({ children, className = "" }: { children: Reac
   }
 
   return (
-    <div className="relative group/row px-4 md:px-8">
+    <div className="relative group/row px-4 md:px-6">
       <div
         ref={ref}
-        className={`flex gap-2 md:gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory ${className}`}
+        className={`flex gap-2 md:gap-2.5 overflow-x-auto pb-1.5 scrollbar-hide snap-x snap-mandatory ${className}`}
       >
         {children}
       </div>
@@ -39,20 +39,20 @@ export default function ScrollRow({ children, className = "" }: { children: Reac
       {canScrollLeft && (
         <button
           onClick={() => scroll(-1)}
-          className="hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 z-10 w-10 h-12 items-center justify-center rounded-xl bg-[var(--glass)] backdrop-blur-2xl border border-[var(--glass-border)] text-foreground shadow-2xl opacity-0 group-hover/row:opacity-100 hover:bg-[var(--glass-hover)] hover:scale-105 active:scale-95 transition-all duration-200"
+          className="hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 z-10 w-10 h-12 items-center justify-center rounded-[4px] bg-[var(--glass)] backdrop-blur-2xl border border-[var(--glass-border)] text-foreground shadow-2xl opacity-0 group-hover/row:opacity-100 hover:bg-[var(--glass-hover)] hover:scale-105 active:scale-95 transition-all duration-200"
           aria-label="Scroll left"
         >
-          <ChevronLeft size={18} strokeWidth={2} />
+          <CaretLeft size={18} weight="bold" />
         </button>
       )}
 
       {canScrollRight && (
         <button
           onClick={() => scroll(1)}
-          className="hidden md:flex absolute right-2 top-1/2 -translate-y-1/2 z-10 w-10 h-12 items-center justify-center rounded-xl bg-[var(--glass)] backdrop-blur-2xl border border-[var(--glass-border)] text-foreground shadow-2xl opacity-0 group-hover/row:opacity-100 hover:bg-[var(--glass-hover)] hover:scale-105 active:scale-95 transition-all duration-200"
+          className="hidden md:flex absolute right-2 top-1/2 -translate-y-1/2 z-10 w-10 h-12 items-center justify-center rounded-[4px] bg-[var(--glass)] backdrop-blur-2xl border border-[var(--glass-border)] text-foreground shadow-2xl opacity-0 group-hover/row:opacity-100 hover:bg-[var(--glass-hover)] hover:scale-105 active:scale-95 transition-all duration-200"
           aria-label="Scroll right"
         >
-          <ChevronRight size={18} strokeWidth={2} />
+          <CaretRight size={18} weight="bold" />
         </button>
       )}
     </div>

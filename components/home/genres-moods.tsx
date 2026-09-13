@@ -1,16 +1,18 @@
+ "use client";
+
 import Link from "next/link";
 import { slugify } from "@/lib/slugify";
-import { Flame, Mic2, Church, Music, Music2, Drum, Headphones, Radio } from "lucide-react";
+import { Flame, Microphone, Church, MusicNote, MusicNotes, Guitar, Headphones, Radio } from "@phosphor-icons/react";
 
 const iconMap: Record<string, typeof Flame> = {
-  pop: Music,
-  hip: Mic2,
-  dance: Music2,
-  rnb: Music,
-  "r&b": Music,
+  pop: MusicNote,
+  hip: Microphone,
+  dance: MusicNotes,
+  rnb: MusicNote,
+  "r&b": MusicNote,
   gospel: Church,
   afro: Flame,
-  dunka: Drum,
+  dunka: Guitar,
   zed: Headphones,
 };
 
@@ -38,18 +40,17 @@ export default function GenresMoods({ genres }: { genres: string[] }) {
   if (genres.length === 0) return null;
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+    <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-1 -mx-4 px-4 md:mx-0 md:px-0">
       {genres.map((label) => {
-        const { Icon, color } = matchGenre(label);
+        const { Icon } = matchGenre(label);
         return (
           <Link
             key={label}
             href={`/genre/${slugify(label)}`}
-            className="relative h-20 rounded-xl overflow-hidden flex items-end p-3 hover:scale-[1.02] active:scale-[0.98] transition-transform"
-            style={{ background: `linear-gradient(135deg, ${color}cc, ${color}77)` }}
+            className="flex shrink-0 items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.06] backdrop-blur-xl px-3.5 py-2 text-[13px] font-semibold text-foreground/80 hover:bg-[var(--primary)] hover:text-black hover:border-transparent hover:shadow-lg hover:shadow-primary/25 active:scale-95 transition-all"
           >
-            <Icon size={22} className="absolute top-3 right-3 text-white/70" />
-            <span className="text-white font-black text-sm drop-shadow">{label}</span>
+            <Icon size={14} weight="bold" />
+            {label}
           </Link>
         );
       })}

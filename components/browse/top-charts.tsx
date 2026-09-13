@@ -15,7 +15,7 @@ export default function TopCharts({ tracks }: { tracks: Track[] }) {
         <div
           key={track.id}
           onClick={() => setQueue(topTracks, i)}
-          className="group flex items-center gap-3 p-2 rounded-xl hover:bg-[var(--surface)] transition-all cursor-pointer"
+          className="group flex items-center gap-3 p-2 rounded hover:bg-[var(--surface)] transition-all cursor-pointer"
         >
           <span className="w-6 text-center text-sm font-bold text-[var(--muted)] tabular-nums">
             {i + 1}

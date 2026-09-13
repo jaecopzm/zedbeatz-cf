@@ -30,6 +30,7 @@ import type { Track } from "@/lib/player-store";
 import type { PlayContext } from "@/lib/player-store";
 import { useEffect, useRef, useState, useMemo } from "react";
 import { useTheme } from "@/components/theme-provider";
+import { encodeId } from "@/lib/hashids";
 
 interface MobileNowPlayingProps {
   track: Track;
@@ -361,11 +362,7 @@ export default function MobileNowPlaying({
                 {track.title}
               </h1>
               <Link
-                href={
-                  track.artistSlug
-                    ? `/artist/${track.artistSlug}`
-                    : `/artist/${track.artistId}`
-                }
+                href={track.artistId ? `/artist/${encodeId(track.artistId)}` : "/browse"}
                 className="mt-0.5 text-sm font-medium block truncate transition-colors"
                 style={{ color: c(0.6) }}
                 onClick={onClose}
@@ -569,7 +566,7 @@ export default function MobileNowPlaying({
                   title={`${track.title} by ${track.artist}`}
                   url={`${
                     typeof window !== "undefined" ? window.location.origin : ""
-                  }/track/${track.slug || track.id}`}
+                  }/track/${encodeId(track.id)}`}
                 />
               </ActionPill>
             </div>

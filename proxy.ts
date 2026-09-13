@@ -1,31 +1,12 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-const isLibraryRoute = createRouteMatcher(["/library(.*)"]);
-const isAdminRoute = createRouteMatcher(["/admin(.*)"]);
-
-export const proxy = clerkMiddleware(async (auth, req) => {
-  if (isLibraryRoute(req)) {
-    await auth.protect();
-  }
-
-  if (isAdminRoute(req)) {
-    const session = await auth();
-
-    if (!session.userId) {
-      await auth.protect();
-    }
-
-    const metadata = session.sessionClaims?.metadata as any;
-    const isAdmin =
-      metadata?.role === "admin" ||
-      (process.env.ADMIN_USER_ID && session.userId === process.env.ADMIN_USER_ID);
-
-    if (!isAdmin) {
-      return NextResponse.redirect(new URL("/", req.url));
-    }
-  }
-});
+// No user auth — public site. Admin API routes are guarded by
+// x-admin-secret via lib/require-admin.ts. Admin UI handles its own
+// secret prompt (localStorage), so middleware stays a pass-through.
+export function proxy(_req: NextRequest) {
+  return NextResponse.next();
+}
 
 export const config = {
   matcher: ["/((?!_next|.*\\..*).*)"],

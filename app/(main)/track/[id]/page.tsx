@@ -1,13 +1,20 @@
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { db } from "@/lib/db/drizzle";
 import { tracks, artists, albums } from "@/lib/db/schema";
 import { eq, ne, and, desc, gt } from "drizzle-orm";
 import { getAudioUrl, getCoverUrl } from "@/lib/cdn";
+import { encodeId, decodeId } from "@/lib/hashids";
 import type { Metadata } from "next";
 import TrackPageClient from "./client";
 
 async function getTrackData(id: string) {
-  const whereClause = isNaN(Number(id)) ? eq(tracks.slug, id) : eq(tracks.id, Number(id));
+  let whereClause;
+  if (/^\d+$/.test(id)) whereClause = eq(tracks.id, Number(id));
+  else {
+    const dec = decodeId(id);
+    if (dec !== null) whereClause = eq(tracks.id, dec);
+    else whereClause = eq(tracks.slug, id);
+  }
 
   const [trackResult] = await db
     .select({
@@ -114,7 +121,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const genre = data.genre || "Music";
   const coverUrl = getCoverUrl({ coverKey: data.cover_key, coverUrl: data.cover_url }) ?? undefined;
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zedbeatz.com";
-  const trackUrl = `${baseUrl}/track/${data.slug || id}`;
+  const trackUrl = `${baseUrl}/track/${encodeId(data.id)}`;
 
   const year = data.created_at ? new Date(data.created_at).getFullYear() : new Date().getFullYear();
   const keywords = [
@@ -170,7 +177,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 export async function generateStaticParams() {
   try {
     const topTracks = await db
-      .select({ id: tracks.id, slug: tracks.slug })
+      .select({ id: tracks.id })
       .from(tracks)
       .where(gt(tracks.plays, 0))
       .orderBy(desc(tracks.plays))
@@ -179,7 +186,7 @@ export async function generateStaticParams() {
     if (!topTracks.length) return [];
 
     return topTracks.map((track) => ({
-      id: track.slug || track.id.toString(),
+      id: encodeId(track.id),
     }));
   } catch {
     return [];
@@ -190,6 +197,10 @@ export default async function TrackPage({ params }: { params: Promise<{ id: stri
   const { id } = await params;
   const result = await getTrackData(id);
   if (!result) notFound();
+  const hid = encodeId(result.data.id);
+  if (id !== hid) {
+    permanentRedirect(`/track/${hid}`);
+  }
   const { data, artistTracks, album: albumData } = result;
 
   const artist = (data.artists as unknown as { name: string } | null)?.name ?? "Unknown";
@@ -197,7 +208,7 @@ export default async function TrackPage({ params }: { params: Promise<{ id: stri
   const rawFeat = data.featured_artists;
   const featuredArtists = typeof rawFeat === 'string' && rawFeat && rawFeat !== 'false' && rawFeat !== 'null' ? rawFeat : '';
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zedbeatz.com";
-  const trackUrl = `${baseUrl}/track/${data.slug || data.id}`;
+  const trackUrl = `${baseUrl}/track/${encodeId(data.id)}`;
   const coverUrl = getCoverUrl({ coverKey: data.cover_key, coverUrl: data.cover_url }) ?? undefined;
 
   const moreFromArtist = (artistTracks ?? []).map(r => ({
@@ -236,7 +247,7 @@ export default async function TrackPage({ params }: { params: Promise<{ id: stri
     "byArtist": {
       "@type": "MusicGroup",
       "name": artist,
-      "url": artistSlug ? `${baseUrl}/artist/${artistSlug}` : undefined,
+      "url": data.artist_id ? `${baseUrl}/artist/${encodeId(data.artist_id)}` : undefined,
     },
     "duration": data.duration ? `PT${Number(data.duration)}S` : undefined,
     "genre": data.genre || "Zambian Music",
@@ -256,7 +267,7 @@ export default async function TrackPage({ params }: { params: Promise<{ id: stri
     musicRecordingLd["inAlbum"] = {
       "@type": "MusicAlbum",
       "name": ad.title,
-      "url": `${baseUrl}/album/${ad.slug || ad.id}`,
+      "url": `${baseUrl}/album/${encodeId(ad.id)}`,
     };
   }
 
@@ -267,7 +278,7 @@ export default async function TrackPage({ params }: { params: Promise<{ id: stri
       "@type": "BreadcrumbList",
       "itemListElement": [
         { "@type": "ListItem", "position": 1, "name": "Home", "item": baseUrl },
-        { "@type": "ListItem", "position": 2, "name": artist, "item": artistSlug ? `${baseUrl}/artist/${artistSlug}` : `${baseUrl}/search?q=${encodeURIComponent(artist)}` },
+        { "@type": "ListItem", "position": 2, "name": artist, "item": data.artist_id ? `${baseUrl}/artist/${encodeId(data.artist_id)}` : `${baseUrl}/search?q=${encodeURIComponent(artist)}` },
         { "@type": "ListItem", "position": 3, "name": data.title, "item": trackUrl },
       ],
     },

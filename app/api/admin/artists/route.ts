@@ -7,8 +7,8 @@ import { asc } from "drizzle-orm";
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export async function GET() {
-  const deny = await requireAdmin(); if (deny) return deny;
+export async function GET(req: NextRequest) {
+  const deny = await requireAdmin(req); if (deny) return deny;
   const data = await db
     .select({ id: artists.id, name: artists.name })
     .from(artists)
@@ -17,7 +17,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const deny = await requireAdmin(); if (deny) return deny;
+  const deny = await requireAdmin(req); if (deny) return deny;
   const { name, bio, image_key } = await req.json();
   const [data] = await db
     .insert(artists)

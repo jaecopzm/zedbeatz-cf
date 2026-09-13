@@ -6,7 +6,7 @@ export default function WhatsAppBanner({ className = "" }: { className?: string 
       href="https://whatsapp.com/channel/0029VbBhHE70LKZJPRGmBL35"
       target="_blank"
       rel="noopener noreferrer"
-      className={`flex items-center gap-3 px-4 py-3 rounded-xl bg-[#25D366]/10 border border-[#25D366]/25 hover:bg-[#25D366]/15 transition-colors ${className}`}
+      className={`flex items-center gap-3 px-4 py-3 rounded bg-[#25D366]/10 border border-[#25D366]/25 hover:bg-[#25D366]/15 transition-colors ${className}`}
     >
       {/* WhatsApp icon */}
       <svg viewBox="0 0 24 24" className="w-5 h-5 shrink-0 fill-[#25D366]" xmlns="http://www.w3.org/2000/svg">

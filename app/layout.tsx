@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { ClerkProvider } from "@clerk/nextjs";
+import { Inter, Space_Grotesk } from "next/font/google";
 import Script from "next/script";
 import PwaManager from "@/components/pwa-manager";
 import ToastContainer from "@/components/toast";
@@ -10,6 +10,18 @@ import "./globals.css";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zedbeatz.com";
 const ogImage = new URL("/og-image.png", siteUrl).toString();
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-body",
+  display: "swap",
+});
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-display",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -80,15 +92,19 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <ClerkProvider>
-      <html lang="en" className="min-h-full">
+      <html lang="en" suppressHydrationWarning className={`min-h-full ${inter.variable} ${spaceGrotesk.variable}`}>
         <head>
           <meta name="google-adsense-account" content="ca-pub-2560191456415218" />
-          <meta name="theme-color" content="#0a0a0f" />
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `(function(){try{var t=localStorage.getItem("theme");if(!t){t=window.matchMedia("(prefers-color-scheme: light)").matches?"light":"dark";}document.documentElement.setAttribute("data-theme",t);}catch(e){document.documentElement.setAttribute("data-theme","dark");}})();`,
+            }}
+          />
+          <meta name="theme-color" content="#000000" />
           <meta name="apple-mobile-web-app-capable" content="yes" />
           <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
           <meta name="application-name" content="ZedBeatz" />
-          <meta name="msapplication-TileColor" content="#0a0a0f" />
+          <meta name="msapplication-TileColor" content="#000000" />
           <meta name="p:domain_verify" content="f175e6724de13902cbcb3012011d9799" />
           <link rel="preconnect" href="https://fonts.googleapis.com" />
           <link rel="dns-prefetch" href="https://cdn.zedbeatz.com" />
@@ -115,6 +131,5 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </ThemeProvider>
         </body>
       </html>
-    </ClerkProvider>
   );
 }

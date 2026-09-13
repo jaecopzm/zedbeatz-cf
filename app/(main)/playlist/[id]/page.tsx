@@ -3,22 +3,29 @@ import { playlists, playlistTracks, tracks, artists } from "@/lib/db/schema";
 import { eq, desc, sql } from "drizzle-orm";
 import { getAudioUrl, getCoverUrl } from "@/lib/cdn";
 import { sanitizeFeaturedArtists } from "@/lib/featured-artists";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import type { Metadata } from "next";
 import PlaylistPageClient from "./client";
+import { encodeId, decodeId } from "@/lib/hashids";
 
+function resolvePlaylistId(param: string): number | null {
+  if (/^\d+$/.test(param)) return Number(param);
+  const dec = decodeId(param);
+  return dec;
+}
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
-  const isNumeric = !isNaN(Number(id));
-  if (!isNumeric) return {};
+  const numericId = resolvePlaylistId(id);
+  if (numericId === null) return {};
   const [playlist] = await db
     .select({ name: playlists.name, category: playlists.category })
     .from(playlists)
-    .where(eq(playlists.id, Number(id)))
+    .where(eq(playlists.id, numericId))
     .limit(1);
   if (!playlist) return {};
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zedbeatz.com";
   const category = playlist.category || "Zambian Music";
+  const hid = encodeId(numericId);
   return {
     title: `${playlist.name} - ${category} Playlist | ZedBeatz`,
     description: `Listen to ${playlist.name} - a curated ${category} playlist on ZedBeatz. Stream and download Zambian music MP3 free.`,
@@ -30,7 +37,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     openGraph: {
       title: `${playlist.name} - ${category} Playlist`,
       description: `Listen to ${playlist.name} on ZedBeatz. Curated ${category} playlist.`,
-      url: `${baseUrl}/playlist/${id}`,
+      url: `${baseUrl}/playlist/${hid}`,
       siteName: "ZedBeatz",
       type: "music.playlist",
     },
@@ -39,11 +46,17 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       title: `${playlist.name} - ${category} Playlist | ZedBeatz`,
       description: `Listen to ${playlist.name} on ZedBeatz. Curated ${category} playlist.`,
     },
+    alternates: { canonical: `${baseUrl}/playlist/${hid}` },
   };
 }
 
 export default async function PlaylistPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const numericId = resolvePlaylistId(id);
+  if (numericId === null) notFound();
+  // 301 numeric/slug to hashid
+  const hidCheck = encodeId(numericId);
+  if (id !== hidCheck) permanentRedirect(`/playlist/${hidCheck}`);
 
   const [playlistResult, countResult, trackRows] = await Promise.all([
     db
@@ -56,13 +69,13 @@ export default async function PlaylistPage({ params }: { params: Promise<{ id: s
         category: playlists.category,
       })
       .from(playlists)
-      .where(eq(playlists.id, Number(id)))
+      .where(eq(playlists.id, numericId))
       .limit(1)
       .then((r) => r[0] ?? null),
     db
       .select({ count: sql<number>`count(*)::int` })
       .from(playlistTracks)
-      .where(eq(playlistTracks.playlistId, Number(id)))
+      .where(eq(playlistTracks.playlistId, numericId))
       .then((r) => r[0]?.count ?? 0),
     db
       .select({
@@ -82,7 +95,7 @@ export default async function PlaylistPage({ params }: { params: Promise<{ id: s
       .from(playlistTracks)
       .leftJoin(tracks, eq(playlistTracks.trackId, tracks.id))
       .leftJoin(artists, eq(tracks.artistId, artists.id))
-      .where(eq(playlistTracks.playlistId, Number(id)))
+      .where(eq(playlistTracks.playlistId, numericId))
       .orderBy(playlistTracks.position),
   ]);
 
@@ -136,7 +149,7 @@ export default async function PlaylistPage({ params }: { params: Promise<{ id: s
     name: playlist.name,
     description: `${playlist.name} - ${playlist.category || "Zambian Music"} playlist on ZedBeatz. ${tracksMapped.length} tracks.`,
     numTracks: tracksMapped.length,
-    url: `${baseUrl}/playlist/${playlist.id}`,
+    url: `${baseUrl}/playlist/${encodeId(playlist.id)}`,
     ...(coverUrl && { image: coverUrl }),
   };
 

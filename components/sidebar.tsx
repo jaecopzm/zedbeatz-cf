@@ -1,40 +1,95 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Search, Library, Sun, MoonStar } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Sun, MoonStar } from "lucide-react";
+import { House, MagnifyingGlass, Books, CaretDoubleLeft, CaretDoubleRight } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
-import { SignInButton, UserButton, useUser } from "@clerk/nextjs";
 import { useTheme } from "./theme-provider";
 
 const links = [
-  { href: "/", label: "Home", icon: Home },
-  { href: "/search", label: "Search", icon: Search },
-  { href: "/library", label: "Library", icon: Library },
+  { href: "/", label: "Home", icon: House },
+  { href: "/search", label: "Search", icon: MagnifyingGlass },
+  { href: "/library", label: "Library", icon: Books },
 ];
+
+const STORAGE_KEY = "zedbeatz-sidebar-collapsed";
 
 export default function Sidebar() {
   const path = usePathname();
-  const { isSignedIn, user } = useUser();
   const { theme, toggle } = useTheme();
+  const [collapsed, setCollapsed] = useState(false);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored !== null) {
+        setCollapsed(stored === "1");
+      } else {
+        // Tablet (md–lg): start as icon rail so content + dock have room
+        setCollapsed(window.matchMedia("(max-width: 1023.5px)").matches);
+      }
+    } catch {}
+    setReady(true);
+  }, []);
+
+  function toggleCollapsed() {
+    setCollapsed((c) => {
+      try {
+        localStorage.setItem(STORAGE_KEY, c ? "0" : "1");
+      } catch {}
+      return !c;
+    });
+  }
 
   return (
-    <aside className="hidden lg:flex w-64 shrink-0 flex-col h-full border-r border-[var(--border)] relative">
-      {/* Logo */}
-      <div className="px-6 py-7 shrink-0">
-        <Link href="/" className="group inline-block">
-          <img
-            src="/Logo.png"
-            alt="ZedBeatz"
-            className="h-9 w-auto transition-opacity duration-200 group-hover:opacity-80"
-          />
-        </Link>
+    <aside
+      className={cn(
+        "hidden md:flex shrink-0 flex-col h-full relative transition-[width] duration-300 ease-in-out",
+        collapsed ? "w-[76px]" : "w-[220px]",
+        !ready && "transition-none"
+      )}
+    >
+      {/* Logo + collapse toggle */}
+      <div className={cn("flex items-center py-6 shrink-0", collapsed ? "justify-center px-0" : "justify-between pl-5 pr-3")}>
+        {!collapsed && (
+          <Link href="/" className="group inline-block overflow-hidden">
+            <img
+              src="/zedbeatz-logo.png"
+              alt="ZedBeatz"
+              className="h-8 w-auto transition-opacity duration-200 group-hover:opacity-80"
+            />
+          </Link>
+        )}
+        {collapsed && (
+          <Link href="/" className="group inline-block">
+            <img
+              src="/zedbeatz-icon.png"
+              alt="ZedBeatz"
+              className="h-9 w-9 transition-opacity duration-200 group-hover:opacity-80"
+            />
+          </Link>
+        )}
+        {!collapsed && (
+          <button
+            onClick={toggleCollapsed}
+            aria-label="Collapse sidebar"
+            title="Collapse sidebar"
+            className="w-8 h-8 rounded-full flex items-center justify-center text-[var(--muted-2)] hover:text-[var(--foreground)] hover:bg-white/[0.06] transition-colors shrink-0"
+          >
+            <CaretDoubleLeft size={16} weight="bold" />
+          </button>
+        )}
       </div>
 
       {/* Nav */}
-      <nav className="flex flex-col px-3 flex-1 gap-0.5">
-        <p className="text-[11px] font-bold text-[var(--muted-2)] uppercase tracking-[0.12em] px-3 mb-4">
-          Menu
-        </p>
+      <nav className="flex flex-col px-3 flex-1 gap-1.5">
+        {!collapsed && (
+          <p className="text-[11px] font-bold text-[var(--muted-2)] uppercase tracking-[0.12em] px-4 mb-2 whitespace-nowrap overflow-hidden">
+            Menu
+          </p>
+        )}
 
         {links.map(({ href, label, icon: Icon }) => {
           const isActive = path === href;
@@ -42,58 +97,66 @@ export default function Sidebar() {
             <Link
               key={href}
               href={href}
+              title={collapsed ? label : undefined}
               className={cn(
-                "flex items-center gap-3.5 px-3 py-3 rounded-lg text-[16px] font-semibold transition-all duration-200 group",
+                "flex items-center py-2.5 rounded-full text-[15px] font-semibold transition-all duration-200 group hover:scale-[1.02] active:scale-[0.98]",
+                collapsed ? "justify-center gap-0 px-0" : "gap-3 px-4",
                 isActive
-                  ? "text-[var(--foreground)] bg-[var(--surface-hover)]"
-                  : "text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--surface-hover)]"
+                  ? "text-black bg-[var(--primary)] shadow-lg shadow-primary/20"
+                  : "text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-white/[0.06]"
               )}
             >
               <Icon
-                size={26}
-                strokeWidth={isActive ? 2.5 : 1.8}
+                size={20}
+                weight={isActive ? "fill" : "regular"}
                 className={cn(
                   "shrink-0 transition-colors duration-200",
-                  isActive ? "text-[var(--primary)]" : "text-[var(--muted)] group-hover:text-[var(--foreground)]"
+                  isActive ? "text-black" : "text-[var(--muted)] group-hover:text-[var(--foreground)]"
                 )}
               />
-              <span>{label}</span>
+              <span
+                className={cn(
+                  "whitespace-nowrap overflow-hidden transition-[opacity,transform] duration-200",
+                  collapsed ? "opacity-0 w-0 -translate-x-2" : "opacity-100 w-auto translate-x-0"
+                )}
+              >
+                {label}
+              </span>
             </Link>
           );
         })}
       </nav>
 
+      {/* Expand button when collapsed */}
+      {collapsed && (
+        <div className="flex justify-center pb-2">
+          <button
+            onClick={toggleCollapsed}
+            aria-label="Expand sidebar"
+            title="Expand sidebar"
+            className="w-10 h-10 rounded-full flex items-center justify-center text-[var(--muted-2)] hover:text-[var(--foreground)] hover:bg-white/[0.06] transition-colors"
+          >
+            <CaretDoubleRight size={16} weight="bold" />
+          </button>
+        </div>
+      )}
+
       {/* Divider */}
       <div className="mx-6 h-px bg-[var(--border)] shrink-0" />
 
-      {/* Theme toggle + User area */}
-      <div className="px-5 py-5 shrink-0 flex flex-col gap-4">
+      {/* Theme toggle */}
+      <div className={cn("py-5 shrink-0 flex flex-col gap-3", collapsed ? "px-0 items-center" : "px-4")}>
         <button
           onClick={toggle}
-          className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--surface-hover)] transition-all duration-200"
+          title={collapsed ? (theme === "dark" ? "Light mode" : "Dark mode") : undefined}
+          className={cn(
+            "flex items-center gap-3 py-2.5 rounded-full text-sm font-medium text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-white/[0.06] transition-all duration-200",
+            collapsed ? "justify-center px-0 w-10 h-10" : "px-4"
+          )}
         >
-          {theme === "dark" ? <Sun size={18} /> : <MoonStar size={18} />}
-          {theme === "dark" ? "Light mode" : "Dark mode"}
+          {ready && theme === "dark" ? <Sun size={18} /> : <MoonStar size={18} />}
+          {!collapsed && (theme === "dark" ? "Light mode" : "Dark mode")}
         </button>
-        {isSignedIn ? (
-          <div className="flex items-center gap-3">
-            <UserButton />
-            <div className="min-w-0">
-              <p className="text-[13px] font-semibold text-[var(--foreground)] truncate leading-tight">
-                {user.firstName ?? user.username}
-              </p>
-              <p className="text-[11px] text-[var(--muted)] truncate mt-0.5">
-                {user.primaryEmailAddress?.emailAddress}
-              </p>
-            </div>
-          </div>
-        ) : (
-          <SignInButton mode="modal">
-            <button className="w-full py-2.5 rounded-lg bg-[var(--primary)] text-black text-xs font-bold hover:opacity-90 hover:shadow-[var(--glow-primary)] transition-all duration-200">
-              Sign In
-            </button>
-          </SignInButton>
-        )}
       </div>
     </aside>
   );

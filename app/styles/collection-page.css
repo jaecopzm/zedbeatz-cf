@@ -24,7 +24,7 @@
 .collection-sticky-thumb {
   width: 44px;
   height: 44px;
-  border-radius: 6px;
+  border-radius: 4px;
   overflow: hidden;
   background: var(--glass-hover);
   flex-shrink: 0;
@@ -68,8 +68,10 @@
   z-index: 1;
   display: flex;
   flex-direction: column;
-  padding: 50px 20px 20px;
-  gap: 14px;
+  align-items: center;
+  text-align: center;
+  padding: 40px 16px 16px;
+  gap: 12px;
   max-width: 1200px;
   margin: 0 auto;
 }
@@ -77,15 +79,16 @@
   .collection-hero-content {
     flex-direction: row;
     align-items: flex-end;
+    text-align: left;
     padding: 100px 48px 44px;
     gap: 20px;
   }
 }
 
 .collection-cover {
-  width: 140px;
-  height: 140px;
-  border-radius: 8px;
+  width: 120px;
+  height: 120px;
+  border-radius: 4px;
   overflow: hidden;
   flex-shrink: 0;
   background: var(--glass-hover);
@@ -149,8 +152,8 @@
 .collection-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 16px 20px 14px;
+  gap: 10px;
+  padding: 12px 16px 10px;
   margin: 0;
 }
 @media (min-width: 640px) {
@@ -231,6 +234,32 @@
   background: var(--primary-hover);
 }
 
+/* ── Compact icon-cluster actions (mobile) ── */
+@media (max-width: 639px) {
+  .collection-actions--compact .collection-play-btn {
+    width: 52px;
+    height: 52px;
+    padding: 0;
+    justify-content: center;
+  }
+  .collection-actions--compact .collection-play-btn .collection-btn-label,
+  .collection-actions--compact .collection-shuffle-btn .collection-btn-label {
+    display: none;
+  }
+  .collection-actions--compact .collection-shuffle-btn {
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    justify-content: center;
+    border-color: transparent;
+    background: transparent;
+  }
+  .collection-actions--compact .collection-shuffle-btn--active {
+    background: var(--primary-dim);
+    color: var(--primary);
+  }
+}
+
 /* ── Track list ── */
 .collection-tracklist {
   padding: 0 0 8px;
@@ -243,7 +272,7 @@
 }
 
 .collection-tracklist-inner {
-  padding: 0 12px;
+  padding: 0 8px;
 }
 @media (min-width: 640px) {
   .collection-tracklist-inner {
@@ -266,9 +295,6 @@
 }
 @media (max-width: 767px) {
   .collection-col-header {
-    grid-template-columns: 40px 1fr 110px;
-  }
-  .collection-col-header .col-artist {
     display: none;
   }
 }
@@ -293,31 +319,31 @@
   gap: 16px;
   align-items: center;
   padding: 6px 12px 6px 8px;
-  border-radius: 8px;
+  border-radius: 4px;
   cursor: pointer;
-  transition: background 0.12s, transform 0.12s;
+  transition: background 0.12s;
   animation: rowIn 0.35s both;
   user-select: none;
 }
 @media (max-width: 767px) {
   .track-row {
-    grid-template-columns: 40px 1fr 110px;
+    grid-template-columns: 1fr 100px;
     gap: 12px;
+    padding: 6px 8px;
   }
+  .track-row .track-index,
   .track-row .track-artist-col {
     display: none;
   }
 }
 .track-row:hover {
   background: var(--surface-hover);
-  transform: translateX(2px);
 }
 .track-row--active {
   background: var(--glass-hover);
 }
 .track-row--active:hover {
   background: var(--surface-hover);
-  transform: translateX(2px);
 }
 @keyframes rowIn {
   from { opacity: 0; transform: translateY(6px); }
@@ -375,7 +401,7 @@
 .track-thumb {
   width: 40px;
   height: 40px;
-  border-radius: 6px;
+  border-radius: 4px;
   overflow: hidden;
   flex-shrink: 0;
   background: var(--glass-hover);

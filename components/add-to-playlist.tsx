@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Plus, Check, ListPlus, X } from "lucide-react";
 import { showToast } from "@/components/toast";
-import { useUser, SignInButton } from "@clerk/nextjs";
 
 type Playlist = { id: number; name: string };
 
@@ -12,7 +11,6 @@ export default function AddToPlaylist({ trackId }: { trackId: number }) {
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [added, setAdded] = useState<number | null>(null);
   const ref = useRef<HTMLDivElement>(null);
-  const { isSignedIn } = useUser();
 
   useEffect(() => {
     if (open) {
@@ -54,18 +52,11 @@ export default function AddToPlaylist({ trackId }: { trackId: number }) {
     setTimeout(() => { setAdded(null); setOpen(false); }, 800);
   }
 
-  if (!isSignedIn) return (
-    <SignInButton mode="modal">
-      <button className="w-7 h-7 rounded-full bg-background/60 flex items-center justify-center text-foreground hover:bg-[var(--primary)] hover:text-black transition-colors">
-        <Plus size={16} />
-      </button>
-    </SignInButton>
-  );
-
   return (
     <div className="relative" ref={ref} onClick={e => e.stopPropagation()}>
       <button
         onClick={() => setOpen(o => !o)}
+        aria-label="Add to playlist"
         className="w-7 h-7 rounded-full bg-background/60 flex items-center justify-center text-foreground hover:bg-[var(--primary)] hover:text-black transition-colors"
       >
         <Plus size={16} />
@@ -86,7 +77,7 @@ export default function AddToPlaylist({ trackId }: { trackId: number }) {
               </div>
               <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)]">
                 <h3 className="font-semibold text-sm">Add to playlist</h3>
-                <button onClick={() => setOpen(false)} className="p-1 text-[var(--muted)]">
+                <button onClick={() => setOpen(false)} aria-label="Close" className="p-1 text-[var(--muted)]">
                   <X size={18} />
                 </button>
               </div>
@@ -112,7 +103,7 @@ export default function AddToPlaylist({ trackId }: { trackId: number }) {
           </div>
 
           {/* ── Desktop dropdown (unchanged) ── */}
-          <div className="hidden sm:block absolute bottom-8 right-0 bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-xl min-w-44 z-50 py-1 overflow-hidden">
+          <div className="hidden sm:block absolute bottom-8 right-0 bg-[var(--surface)] border border-[var(--border)] rounded shadow-xl min-w-44 z-50 py-1 overflow-hidden">
             {playlists.length === 0 ? (
               <p className="text-xs text-[var(--muted)] px-3 py-2">No playlists yet</p>
             ) : playlists.map(p => (

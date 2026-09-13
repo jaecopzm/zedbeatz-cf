@@ -8,6 +8,7 @@ import { usePlayer, type Track } from "@/lib/player-store";
 import { useLikes } from "@/lib/likes-context";
 import "@/app/styles/collection-page.css";
 import { TrackMenu } from "@/components/track-menu";
+import { encodeId } from "@/lib/hashids";
 
 /* ─────────────────────────────────────────────
    Dominant-color extractor (canvas, client-only)
@@ -153,7 +154,7 @@ function TrackRow({
           </span>
           <div className="track-sub">
             <Link
-              href={track.artistSlug ? `/artist/${track.artistSlug}` : track.artistId ? `/artist/${track.artistId}` : "/browse"}
+              href={track.artistId ? `/artist/${encodeId(track.artistId)}` : "/browse"}
               className="track-artist"
               onClick={(e) => e.stopPropagation()}
             >
@@ -169,7 +170,7 @@ function TrackRow({
       {/* Artist col (hidden on mobile) */}
       <div className="track-artist-col">
         <Link
-          href={track.artistSlug ? `/artist/${track.artistSlug}` : track.artistId ? `/artist/${track.artistId}` : "/browse"}
+          href={track.artistId ? `/artist/${encodeId(track.artistId)}` : "/browse"}
           className="track-artist-link"
           onClick={(e) => e.stopPropagation()}
         >
@@ -244,7 +245,7 @@ export default function PlaylistPageClient({
   const handlePlayAll = useCallback(() => {
     if (!tracks.length) return;
     if (isPlaylistQueue) toggle();
-    else setQueue(tracks, 0, { label: playlist.name, href: `/playlist/${playlist.id}` });
+    else setQueue(tracks, 0, { label: playlist.name, href: `/playlist/${encodeId(playlist.id)}` });
   }, [tracks, isPlaylistQueue, toggle, setQueue, playlist]);
 
   const currentTrack = queue[currentIndex] ?? null;
@@ -423,7 +424,7 @@ export default function PlaylistPageClient({
                   isPlaylistQueue={isPlaylistQueue}
                   onPlay={() => {
                     if (isCurrent) toggle();
-                    else setQueue(tracks, i, { label: playlist.name, href: `/playlist/${playlist.id}` });
+                    else setQueue(tracks, i, { label: playlist.name, href: `/playlist/${encodeId(playlist.id)}` });
                   }}
                   style={{ animationDelay: `${i * 0.035}s` }}
                 />

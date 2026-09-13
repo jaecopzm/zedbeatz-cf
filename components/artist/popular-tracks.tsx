@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Play, Pause, GripVertical } from "lucide-react";
 import { usePlayer, type Track } from "@/lib/player-store";
+import { encodeId } from "@/lib/hashids";
 
 export default function PopularTracks({
   tracks,
@@ -112,7 +113,7 @@ export default function PopularTracks({
                 </div>
                 <div className="min-w-0">
                   <Link
-                    href={track.slug ? `/track/${track.slug}` : `/track/${track.id}`}
+                    href={`/track/${encodeId(track.id)}`}
                     onClick={(e) => e.stopPropagation()}
                     className={`text-sm font-semibold truncate block hover:underline ${
                       isActive ? "text-[var(--primary)]" : "text-foreground"

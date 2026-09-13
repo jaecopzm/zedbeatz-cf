@@ -1,40 +1,12 @@
 "use client";
 
-import { useRef, useEffect, useState } from "react";
+import { useRef } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { Play, Pause } from "lucide-react";
+import { MusicNote } from "@phosphor-icons/react";
 import { usePlayer } from "@/lib/player-store";
 import LikeButton from "@/components/like-button";
-import { useTheme } from "@/components/theme-provider";
-
-function useDominantColor(src: string | undefined) {
-  const { theme } = useTheme();
-  const [color, setColor] = useState(theme === "light" ? "230,230,235" : "30,30,30");
-  useEffect(() => {
-    if (!src) return;
-    const img = document.createElement("img");
-    img.crossOrigin = "anonymous";
-    img.src = src;
-    img.onload = () => {
-      try {
-        const canvas = document.createElement("canvas");
-        canvas.width = canvas.height = 32;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return;
-        ctx.drawImage(img, 0, 0, 32, 32);
-        const { data } = ctx.getImageData(0, 0, 32, 32);
-        let r = 0, g = 0, b = 0, count = 0;
-        for (let i = 0; i < data.length; i += 16) {
-          const br = (data[i] + data[i+1] + data[i+2]) / 3;
-          if (br < 20 || br > 235) continue;
-          r += data[i]; g += data[i+1]; b += data[i+2]; count++;
-        }
-        if (count > 0) setColor(`${Math.round(r/count)},${Math.round(g/count)},${Math.round(b/count)}`);
-      } catch {}
-    };
-  }, [src]);
-  return color;
-}
 
 export default function MobileMiniplayer({
   onOpenFullscreen,
@@ -48,7 +20,6 @@ export default function MobileMiniplayer({
   const { queue, currentIndex, playing, toggle, next, prev } = usePlayer();
   const track = queue[currentIndex];
   const touchRef = useRef<{ x: number; y: number } | null>(null);
-  const color = useDominantColor(track?.coverUrl);
 
   if (!track) return null;
 
@@ -66,9 +37,15 @@ export default function MobileMiniplayer({
   };
 
   return (
-    <div className="lg:hidden fixed left-0 right-0 z-50 px-1 bottom-[68px]" style={{ marginBottom: "env(safe-area-inset-bottom, 0px)" }}>
+    <div className="md:hidden fixed left-0 right-0 z-50 px-4 bottom-[72px]" style={{ marginBottom: "env(safe-area-inset-bottom, 0px)" }}>
       <div
         onClick={onOpenFullscreen}
+        role="button"
+        tabIndex={0}
+        aria-label={`Open ${track.title} by ${track.artist}`}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onOpenFullscreen(); }
+        }}
         onTouchStart={(e) => {
           const touch = e.touches[0];
           touchRef.current = { x: touch.clientX, y: touch.clientY };
@@ -92,61 +69,76 @@ export default function MobileMiniplayer({
             if (dx < 0) next(); else handlePrev();
           }
         }}
-        className="relative rounded-lg shadow-2xl overflow-hidden cursor-pointer active:scale-[0.98]"
-        style={{ background: `linear-gradient(135deg, rgb(${color}) 0%, rgba(${color},0.95) 100%)`, transition: "background 0.8s ease" }}
+        className="relative rounded-full overflow-hidden cursor-pointer active:scale-[0.98] transition-transform bg-[var(--surface-2)] ring-1 ring-white/10 shadow-[0_16px_48px_rgba(0,0,0,0.6)]"
       >
-        {/* Permanent dark scrim for contrast */}
-        <div className="absolute inset-0 bg-black/20" />
-
-        <div className="absolute top-0 left-0 right-0 h-[2px] bg-[var(--glass-hover)]">
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-white/10">
           <div
             className="h-full bg-[var(--primary)] transition-all duration-300"
-            style={{ 
-              width: `${(progress / (duration || 1)) * 100}%` 
+            style={{
+              width: `${(progress / (duration || 1)) * 100}%`
             }}
           />
         </div>
-        
-        <div className="relative flex items-center gap-2 px-2 py-2.5 pt-3">
+
+        <div className="relative flex items-center gap-2.5 pl-3.5 pr-2 py-2 pt-[10px]">
           {/* Album art */}
           <div className="relative shrink-0">
-            <div className="w-10 h-10 rounded-md overflow-hidden bg-surface-2 shadow-lg">
+            <div className="w-10 h-10 rounded overflow-hidden bg-[var(--surface-3)]">
               {track.coverUrl ? (
                 <Image src={track.coverUrl} alt={track.title} width={40} height={40} className="object-cover" unoptimized />
               ) : (
-                <div className="w-full h-full bg-gradient-to-br from-[var(--surface-3)] to-[var(--surface-2)]" />
+                <div className="w-full h-full bg-[var(--surface-3)]" />
               )}
             </div>
           </div>
 
           {/* Track info */}
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold text-foreground truncate leading-tight">{track.title}</p>
-            <p className="text-[10px] text-foreground/60 truncate mt-0.5">
+            <p className="text-[13px] font-semibold text-foreground truncate leading-tight">{track.title}</p>
+            <p className="text-[11px] text-[var(--muted)] truncate mt-0.5">
               {track.artist}
               {track.featuredArtists && (
-                <span className="text-foreground/50"> ft. {track.featuredArtists}</span>
+                <span> ft. {track.featuredArtists}</span>
               )}
             </p>
           </div>
 
           {/* Controls */}
-          <div className="flex items-center gap-0.5 shrink-0">
+          <div className="flex items-center gap-1 shrink-0">
             <LikeButton trackId={track.id} size={16} />
             <button
               onClick={(e) => { e.stopPropagation(); haptic(); toggle(); }}
-              className="w-8 h-8 rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-all hover:scale-105 relative"
-              style={{ background: "rgba(255,255,255,0.9)", color: "#000" }}
+              aria-label={playing ? "Pause" : "Play"}
+              className="w-9 h-9 rounded-full bg-[var(--primary)] text-black flex items-center justify-center active:scale-95 transition-transform"
             >
               {playing ? (
-                <Pause size={16} fill="currentColor" />
+                <Pause size={15} fill="currentColor" />
               ) : (
-                <Play size={16} fill="currentColor" className="ml-0.5" />
+                <Play size={15} fill="currentColor" className="ml-0.5" />
               )}
             </button>
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+export function MobileMiniplayerIdle() {
+  return (
+    <div className="md:hidden fixed left-0 right-0 z-50 px-4 bottom-[72px]" style={{ marginBottom: "env(safe-area-inset-bottom, 0px)" }}>
+      <Link
+        href="/tracks"
+        className="relative rounded-full overflow-hidden active:scale-[0.98] transition-transform bg-[var(--surface-2)] ring-1 ring-white/10 flex items-center gap-2.5 pl-3.5 pr-2 py-2"
+      >
+        <div className="w-10 h-10 rounded overflow-hidden bg-[var(--surface-3)] flex items-center justify-center shrink-0">
+          <MusicNote size={16} weight="bold" className="text-[var(--muted-2)]" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[13px] font-semibold text-[var(--muted)] truncate leading-tight">Nothing playing</p>
+          <p className="text-[11px] text-[var(--muted-2)] truncate mt-0.5">Tap to find music</p>
+        </div>
+      </Link>
     </div>
   );
 }

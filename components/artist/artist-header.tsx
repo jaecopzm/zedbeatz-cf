@@ -4,6 +4,7 @@ import Image from "next/image";
 import { Play, Pause, Shuffle, BadgeCheck } from "lucide-react";
 import { usePlayer, type Track } from "@/lib/player-store";
 import FollowButton from "@/components/follow-button";
+import { encodeId } from "@/lib/hashids";
 
 type Artist = {
   id: number;
@@ -22,13 +23,13 @@ export default function ArtistHeader({ artist, tracks }: { artist: Artist; track
 
   function handlePlay() {
     if (isPlaying) toggle();
-    else setQueue(tracks, 0, { label: artist.name, href: `/artist/${artist.slug || artist.id}` });
+    else setQueue(tracks, 0, { label: artist.name, href: `/artist/${encodeId(artist.id)}` });
   }
 
   function handleShuffle() {
     if (tracks.length === 0) return;
     const shuffled = [...tracks].sort(() => Math.random() - 0.5);
-    setQueue(shuffled, 0, { label: artist.name, href: `/artist/${artist.slug || artist.id}` });
+    setQueue(shuffled, 0, { label: artist.name, href: `/artist/${encodeId(artist.id)}` });
   }
 
   return (

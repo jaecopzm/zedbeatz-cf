@@ -27,9 +27,9 @@ export const metadata: Metadata = {
 
 export default function ContactPage() {
   return (
-    <div className="min-h-screen pb-32 px-4 md:px-8 py-8">
+    <div className="pb-8 px-4 md:px-8 pt-4 md:pt-5">
       <div className="max-w-3xl mx-auto">
-        <h1 className="text-2xl md:text-5xl font-bold mb-6">Contact Us</h1>
+        <h1 className="font-display text-2xl md:text-[32px] font-bold tracking-tight leading-tight mb-4">Contact Us</h1>
         
         <div className="space-y-8">
           <p className="text-[var(--muted)] leading-relaxed text-sm md:text-base">
@@ -37,10 +37,10 @@ export default function ContactPage() {
           </p>
           
           {/* Support Email */}
-          <div className="glass-card p-6 rounded-2xl border border-[var(--border)]">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-full bg-[var(--primary)]/20 flex items-center justify-center shrink-0">
-                <Mail className="text-[var(--primary)]" size={20} />
+          <div className="glass-card p-4 md:p-5 rounded border border-[var(--border)]">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-full bg-[var(--primary)]/20 flex items-center justify-center shrink-0">
+                <Mail className="text-[var(--primary)]" size={18} />
               </div>
               <div>
                 <h2 className="text-xl font-bold mb-2">Email Support</h2>
@@ -58,10 +58,10 @@ export default function ContactPage() {
           </div>
           
           {/* WhatsApp for Artists */}
-          <div className="glass-card p-6 rounded-2xl border border-[var(--border)]">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center shrink-0">
-                <MessageCircle className="text-green-500" size={20} />
+          <div className="glass-card p-4 md:p-5 rounded border border-[var(--border)]">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center shrink-0">
+                <MessageCircle className="text-green-500" size={18} />
               </div>
               <div>
                 <h2 className="text-xl font-bold mb-2">Music Upload Inquiries</h2>
@@ -82,7 +82,7 @@ export default function ContactPage() {
           </div>
           
           {/* Response Time */}
-          <div className="bg-[var(--surface)] p-4 rounded-xl border border-[var(--border)]">
+          <div className="bg-[var(--surface)] p-4 rounded border border-[var(--border)]">
             <p className="text-sm text-[var(--muted)]">
               <strong className="text-foreground">Response Time:</strong> We typically respond within 24-48 hours during business days.
             </p>

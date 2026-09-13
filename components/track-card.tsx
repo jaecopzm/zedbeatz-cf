@@ -8,6 +8,7 @@ import { usePlayer, type Track } from "@/lib/player-store";
 import AddToPlaylist from "@/components/add-to-playlist";
 import LikeButton from "@/components/like-button";
 import { useLongPress } from "@/lib/use-long-press";
+import { encodeId } from "@/lib/hashids";
 
 export default function TrackCard({ track, queue, bare, minimal }: { track: Track; queue?: Track[]; bare?: boolean; minimal?: boolean }) {
   const { queue: pQueue, currentIndex, playing, loading, setQueue, play, toggle } = usePlayer();
@@ -166,7 +167,7 @@ export default function TrackCard({ track, queue, bare, minimal }: { track: Trac
 
       {/* Text */}
       <Link
-        href={track.slug ? `/track/${track.slug}` : `/track/${track.id}`}
+        href={`/track/${encodeId(track.id)}`}
         onClick={(e) => e.stopPropagation()}
         className={`text-[10px] md:text-sm font-semibold truncate mb-0.5 transition-colors block hover:underline ${isActive ? "text-[var(--primary)]" : "text-foreground"}`}
       >
@@ -175,7 +176,7 @@ export default function TrackCard({ track, queue, bare, minimal }: { track: Trac
       {track.artistId ? (
         <div className="text-[9px] md:text-xs text-[var(--muted)] truncate">
           <Link
-            href={track.artistSlug ? `/artist/${track.artistSlug}` : `/artist/${track.artistId}`}
+            href={`/artist/${encodeId(track.artistId)}`}
             onClick={(e) => e.stopPropagation()}
             className="hover:text-foreground hover:underline transition-colors"
           >

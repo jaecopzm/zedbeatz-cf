@@ -1,14 +1,14 @@
 import { db } from "@/lib/db/drizzle";
 import { artists, tracks } from "@/lib/db/schema";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/require-admin";
 import { eq, or, inArray } from "drizzle-orm";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export async function POST() {
-  const deny = await requireAdmin(); if (deny) return deny;
+export async function POST(req: NextRequest) {
+  const deny = await requireAdmin(req); if (deny) return deny;
   try {
     const matchedArtists = await db
       .select({ id: artists.id, name: artists.name, slug: artists.slug })

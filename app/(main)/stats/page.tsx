@@ -7,8 +7,8 @@ import { BarChart3, Clock, Disc3, Headphones, PlayCircle, Trophy } from "lucide-
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Cell } from "recharts";
 import TrackRow from "@/components/track-row";
 import { ChartContainer } from "@/components/ui/chart";
-import { useUser, SignInButton } from "@clerk/nextjs";
 import type { Track } from "@/lib/player-store";
+import { encodeId } from "@/lib/hashids";
 
 type StatsTrack = Track & { plays: number };
 type TopArtist = { id: number; name: string; slug?: string; imageUrl?: string | null; plays: number };
@@ -61,19 +61,16 @@ function Skeleton() {
 }
 
 export default function StatsPage() {
-  const { isSignedIn, isLoaded } = useUser();
   const [stats, setStats] = useState<StatsResponse | null>(null);
   const [resolvedTime, setResolvedTime] = useState<{ key: string; value: number } | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!isLoaded) return;
-    if (!isSignedIn) { setLoading(false); return; }
     fetch("/api/stats")
       .then(r => r.json())
-      .then(d => { setStats(d?.totalPlays ? d : null); setLoading(false); })
+      .then(d => { setStats(d); setLoading(false); })
       .catch(() => setLoading(false));
-  }, [isSignedIn, isLoaded]);
+  }, []);
 
   const tracksKey = useMemo(() =>
     (stats?.playedTracks ?? []).map(t => `${t.id}:${t.plays}:${t.duration ?? ""}`).join("|"),
@@ -99,22 +96,7 @@ export default function StatsPage() {
     return () => { cancelled = true; };
   }, [tracksKey, stats]);
 
-  if (!isLoaded || loading) return <Skeleton />;
-
-  if (!isSignedIn) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4 gap-4">
-        <BarChart3 size={48} className="text-foreground/10" />
-        <h2 className="text-xl font-black">Sign in to see your stats</h2>
-        <p className="text-sm text-foreground/40 max-w-xs">Track your listening history, top tracks and artists.</p>
-        <SignInButton mode="modal">
-          <button className="px-6 py-2.5 bg-[var(--primary)] text-black font-bold text-sm hover:opacity-90 transition-opacity">
-            Sign In
-          </button>
-        </SignInButton>
-      </div>
-    );
-  }
+  if (loading) return <Skeleton />;
 
   if (!stats || stats.totalPlays === 0) {
     return (
@@ -199,7 +181,7 @@ export default function StatsPage() {
 
           <div className="grid grid-cols-2 gap-2">
             {stats.topArtists.map((artist, i) => (
-              <Link key={artist.id} href={`/artist/${artist.slug || artist.id}`}
+              <Link key={artist.id} href={`/artist/${encodeId(artist.id)}`}
                 className="flex items-center gap-2.5 p-2.5 bg-[var(--surface)] border border-[var(--border)] hover:bg-[var(--surface-2)] transition-colors">
                 <div className="relative w-10 h-10 rounded-full overflow-hidden shrink-0 bg-[var(--surface-2)]">
                   {artist.imageUrl && <Image src={artist.imageUrl} alt={artist.name} fill className="object-cover" unoptimized />}

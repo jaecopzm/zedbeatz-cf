@@ -40,7 +40,7 @@ export function LibraryDetailView({
     <div className="relative min-h-screen bg-background overflow-hidden pb-6">
       {/* Ambient background */}
       <div className="pointer-events-none absolute inset-0 z-0">
-        <div className="absolute inset-0 bg-gradient-to-b from-purple-900/25 via-black to-black" />
+        <div className="absolute inset-0 bg-gradient-to-b from-white/[0.04] via-black to-black" />
         {playingTrack?.coverUrl && (
           <div
             key={playingTrack.id}
@@ -83,18 +83,19 @@ export function LibraryDetailView({
 
       {/* Hero */}
       <div className="collection-hero relative" ref={heroRef}>
-        <button 
-          onClick={goBack} 
+        <button
+          onClick={goBack}
+          aria-label="Go back"
           className="absolute top-4 left-4 z-20 w-8 h-8 rounded-full bg-background/40 backdrop-blur-md flex items-center justify-center cursor-pointer active:scale-95 transition-transform"
         >
           <ChevronLeft size={18} className="text-foreground" />
         </button>
-        <div className="collection-hero-bg" style={{ 
-          background: selected === "liked" 
-            ? "linear-gradient(135deg, #f43f5e 0%, #ec4899 100%)" 
+        <div className={`collection-hero-bg ${selected !== "liked" && selected !== "recent" ? "bg-[var(--surface-2)]" : ""}`} style={{
+          background: selected === "liked"
+            ? "linear-gradient(135deg, #f43f5e 0%, #ec4899 100%)"
             : selected === "recent"
             ? "linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)"
-            : "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+            : undefined
         }} />
         <div className="collection-hero-content">
           <div className="collection-cover">

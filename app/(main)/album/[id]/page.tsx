@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { db } from "@/lib/db/drizzle";
 import { getAudioUrl, getCoverUrl } from "@/lib/cdn";
 import { sanitizeFeaturedArtists } from "@/lib/featured-artists";
@@ -7,10 +7,18 @@ import type { Metadata } from "next";
 import AlbumClient from "./client";
 import { albums, artists, tracks } from "@/lib/db/schema";
 import { eq, asc } from "drizzle-orm";
+import { encodeId, decodeId } from "@/lib/hashids";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
 
+  let where;
+  if (/^\d+$/.test(id)) where = eq(albums.id, Number(id));
+  else {
+    const dec = decodeId(id);
+    if (dec !== null) where = eq(albums.id, dec);
+    else where = eq(albums.slug, id);
+  }
   const [albumRow] = await db.select({
     id: albums.id,
     title: albums.title,
@@ -24,7 +32,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   })
     .from(albums)
     .leftJoin(artists, eq(albums.artistId, artists.id))
-    .where(isNaN(Number(id)) ? eq(albums.slug, id) : eq(albums.id, Number(id)))
+    .where(where)
     .limit(1);
 
   if (!albumRow) return {};
@@ -35,9 +43,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     .orderBy(asc(tracks.createdAt));
 
   const artistName = albumRow.artistName ?? "Unknown";
-  const artistSlug = albumRow.artistSlug;
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zedbeatz.com";
-  const albumUrl = `${baseUrl}/album/${albumRow.slug || albumRow.id}`;
+  const albumUrl = `${baseUrl}/album/${encodeId(albumRow.id)}`;
   const coverUrl = getCoverUrl({ coverKey: albumRow.coverKey, coverUrl: albumRow.coverUrl }) ?? undefined;
   const trackCount = rawTracks?.length ?? 0;
   const trackTitles = (rawTracks ?? []).slice(0, 5).map((t: any) => t.title);
@@ -85,7 +92,20 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
 export default async function AlbumPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-
+  // hashid/slug/numeric all 301 to hashid canonical
+  // We fetch first to know numeric id, handled below after decode. Temporary: try decode then fallback.
+  let albumWhere;
+  if (/^\d+$/.test(id)) albumWhere = eq(albums.id, Number(id));
+  else {
+    const dec = decodeId(id);
+    if (dec !== null) albumWhere = eq(albums.id, dec);
+    else albumWhere = eq(albums.slug, id);
+  }
+  const [preAlbum] = await db.select({ id: albums.id }).from(albums).where(albumWhere).limit(1);
+  if (preAlbum) {
+    const hid = encodeId(preAlbum.id);
+    if (id !== hid) permanentRedirect(`/album/${hid}`);
+  }
   const [albumRow] = await db.select({
     id: albums.id,
     title: albums.title,
@@ -99,7 +119,7 @@ export default async function AlbumPage({ params }: { params: Promise<{ id: stri
   })
     .from(albums)
     .leftJoin(artists, eq(albums.artistId, artists.id))
-    .where(isNaN(Number(id)) ? eq(albums.slug, id) : eq(albums.id, Number(id)))
+    .where(albumWhere)
     .limit(1);
 
   if (!albumRow) notFound();
@@ -142,7 +162,7 @@ export default async function AlbumPage({ params }: { params: Promise<{ id: stri
 
   const coverUrl = getCoverUrl({ coverKey: albumRow.coverKey, coverUrl: albumRow.coverUrl });
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zedbeatz.com";
-  const albumUrl = `${baseUrl}/album/${albumRow.slug || albumRow.id}`;
+  const albumUrl = `${baseUrl}/album/${encodeId(albumRow.id)}`;
 
   const jsonLd = [
     {
@@ -150,7 +170,7 @@ export default async function AlbumPage({ params }: { params: Promise<{ id: stri
       "@type": "BreadcrumbList",
       "itemListElement": [
         { "@type": "ListItem", "position": 1, "name": "Home", "item": baseUrl },
-        { "@type": "ListItem", "position": 2, "name": artistName, "item": `${baseUrl}/artist/${artistSlug || artistName}` },
+        { "@type": "ListItem", "position": 2, "name": artistName, "item": albumRow.artistId ? `${baseUrl}/artist/${encodeId(albumRow.artistId)}` : `${baseUrl}/browse` },
         { "@type": "ListItem", "position": 3, "name": albumRow.title, "item": albumUrl },
       ],
     },
@@ -164,7 +184,7 @@ export default async function AlbumPage({ params }: { params: Promise<{ id: stri
       byArtist: {
         "@type": "MusicGroup",
         name: artistName,
-        ...(artistSlug && { url: `${baseUrl}/artist/${artistSlug}` }),
+        ...(albumRow.artistId && { url: `${baseUrl}/artist/${encodeId(albumRow.artistId)}` }),
       },
       genre: "Zambian Music",
       numTracks: tracksList.length,
@@ -178,7 +198,7 @@ export default async function AlbumPage({ params }: { params: Promise<{ id: stri
             "@type": "MusicGroup",
             name: t.artist,
           },
-          url: `${baseUrl}/track/${t.slug || t.id}`,
+          url: `${baseUrl}/track/${encodeId(t.id)}`,
         })),
       }),
     },
@@ -197,6 +217,7 @@ export default async function AlbumPage({ params }: { params: Promise<{ id: stri
           title: albumRow.title,
           slug: albumRow.slug ?? null,
           artistName,
+          artistId: albumRow.artistId ?? null,
           artistSlug: artistSlug ?? null,
           coverUrl,
           releaseYear: albumRow.releaseYear ?? null,

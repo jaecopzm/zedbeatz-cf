@@ -21,6 +21,7 @@ import { useAudioAnalyser } from "@/lib/use-audio-analyser";
 import MobileMiniplayer from "./mobile-miniplayer";
 import MobileNowPlaying from "./mobile-now-playing";
 import { TrackMenu } from "@/components/track-menu";
+import { encodeId } from "@/lib/hashids";
 
 function fmt(s: number) {
   const m = Math.floor(s / 60);
@@ -330,7 +331,7 @@ export default function Player() {
                 <div className="min-w-0 flex-1 mr-3">
                   <h1 className="text-xl font-black tracking-tight leading-tight text-foreground mb-0.5 truncate">{track.title}</h1>
                   <p className="text-sm text-foreground/60 truncate">
-                    <Link href={track.artistSlug ? `/artist/${track.artistSlug}` : `/artist/${track.artistId}`}
+                    <Link href={track.artistId ? `/artist/${encodeId(track.artistId)}` : "/browse"}
                       className="hover:text-[var(--primary)] transition-colors font-semibold">
                       {track.artist}
                     </Link>
@@ -406,7 +407,7 @@ export default function Player() {
                     <Mic2 size={17} />
                   </button>
                   <DownloadButton audioUrl={track.audioUrl} title={track.title} artist={track.artist} featuredArtists={track.featuredArtists} coverUrl={track.coverUrl} />
-                  <ShareButton title={`${track.title} by ${track.artist}`} url={`${typeof window !== "undefined" ? window.location.origin : ""}/track/${track.slug || track.id}`} />
+                  <ShareButton title={`${track.title} by ${track.artist}`} url={`${typeof window !== "undefined" ? window.location.origin : ""}/track/${encodeId(track.id)}`} />
                 </div>
               </div>
             </div>
@@ -524,7 +525,7 @@ export default function Player() {
 
             {/* Title + artist + context */}
             <div className="min-w-0 flex-1">
-              <Link href={track.slug ? `/track/${track.slug}` : `/track/${track.id}`} className="block group/link">
+              <Link href={`/track/${encodeId(track.id)}`} className="block group/link">
                 <p className="text-sm font-semibold truncate group-hover/link:text-[var(--primary)] transition-colors leading-tight">{track.title}</p>
                 <p className="text-[11px] text-[var(--muted)] truncate mt-0.5">
                   {track.artist}

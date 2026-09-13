@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Play, Pause } from "lucide-react";
+import { Play, Pause } from "@phosphor-icons/react";
 import { usePlayer, type Track } from "@/lib/player-store";
 import { TrackMenu } from "@/components/track-menu";
 
@@ -22,7 +22,7 @@ export default function TrackListItem({ track, tracks, index }: TrackListItemPro
       onClick={() => isActive ? toggle() : setQueue(tracks, index)}
     >
       {/* Artwork */}
-      <div className="relative w-10 h-10 md:w-12 md:h-12 shrink-0 rounded-md overflow-hidden bg-[var(--surface-3)]">
+      <div className="relative w-10 h-10 md:w-12 md:h-12 shrink-0 rounded-[3px] overflow-hidden bg-[var(--surface-3)]">
         {track.coverUrl ? (
           <Image src={track.coverUrl} alt={track.title} fill className="object-cover" sizes="48px" />
         ) : (
@@ -34,9 +34,9 @@ export default function TrackListItem({ track, tracks, index }: TrackListItemPro
           isActive && playing ? "opacity-0" : "opacity-0 group-hover:opacity-100"
         }`}>
           {isActive && playing ? (
-            <Pause size={12} className="text-foreground" fill="currentColor" />
+            <Pause size={12} weight="fill" className="text-foreground" />
           ) : (
-            <Play size={12} className="text-foreground ml-0.5" fill="currentColor" />
+            <Play size={12} weight="fill" className="text-foreground ml-0.5" />
           )}
         </div>
 

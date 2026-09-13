@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export async function GET(req: NextRequest) {
-  const deny = await requireAdmin(); if (deny) return deny;
+  const deny = await requireAdmin(req); if (deny) return deny;
   const { searchParams } = new URL(req.url);
   const artist_id = searchParams.get("artist_id");
   const title = searchParams.get("title");
@@ -49,7 +49,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const deny = await requireAdmin(); if (deny) return deny;
+  const deny = await requireAdmin(req); if (deny) return deny;
   const body = await req.json();
 
   delete body.featured;
@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  const deny = await requireAdmin(); if (deny) return deny;
+  const deny = await requireAdmin(req); if (deny) return deny;
   const { id, featured_artists, ...fields } = await req.json();
 
   if (featured_artists !== undefined && featured_artists) {
@@ -106,7 +106,7 @@ export async function PATCH(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const deny = await requireAdmin(); if (deny) return deny;
+  const deny = await requireAdmin(req); if (deny) return deny;
   const { id } = await req.json();
   await db.delete(tracks).where(eq(tracks.id, id));
   return NextResponse.json({ ok: true });

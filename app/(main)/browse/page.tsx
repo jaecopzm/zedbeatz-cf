@@ -2,8 +2,7 @@ import { db } from "@/lib/db/drizzle";
 import { tracks, artists } from "@/lib/db/schema";
 import { desc, eq } from "drizzle-orm";
 import { getAudioUrl, getCoverUrl } from "@/lib/cdn";
-import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import SectionHeader from "@/components/section-header";
 import TopCharts from "@/components/browse/top-charts";
 import NewReleases from "@/components/browse/new-releases";
 import GenreGrid from "@/components/browse/genre-grid";
@@ -22,20 +21,6 @@ const GENRES = [
   "Afrobeats", "Hip Hop", "Gospel", "R&B", "Dancehall", "Drill",
   "Bongo", "Amapiano", "Praise", "Kalindula", "Reggae", "Pop",
 ];
-
-function SectionHeader({ title, href }: { title: string; href?: string }) {
-  return (
-    <div className="flex items-center justify-between mb-3 md:mb-4">
-      <h2 className="text-xl md:text-[26px] font-black tracking-tight">{title}</h2>
-      {href && (
-        <Link href={href} className="flex items-center gap-1 text-[11px] font-bold text-foreground/35 hover:text-foreground transition-colors tracking-wider group">
-          See All
-          <ChevronRight size={12} className="group-hover:translate-x-0.5 transition-transform" />
-        </Link>
-      )}
-    </div>
-  );
-}
 
 export default async function BrowsePage() {
   const [topTracksData, latestTracksData] = await Promise.all([
@@ -82,15 +67,16 @@ export default async function BrowsePage() {
   const latestTracks = latestTracksData.map(mapTrack);
 
   return (
-    <div className="pb-32 space-y-8 md:space-y-10">
-      {/* Hero banner */}
-      <section className="px-4 md:px-8 pt-4">
-        <div className="rounded-2xl overflow-hidden bg-gradient-to-br from-[#1ed760]/20 via-[#1ed760]/5 to-background border border-[var(--border)] p-6 md:p-10">
-          <h1 className="text-3xl md:text-5xl font-black tracking-tight mb-2">Discover</h1>
-          <p className="text-sm md:text-base text-foreground/60 max-w-md">
-            Explore top charts, new releases, and music across every genre.
-          </p>
-        </div>
+    <div className="pb-8 space-y-7 md:space-y-9">
+      {/* Header */}
+      <section className="px-4 md:px-8 pt-4 md:pt-5">
+        <p className="text-[11px] md:text-xs font-semibold uppercase tracking-[0.16em] text-[var(--primary)] mb-1">
+          Browse
+        </p>
+        <h1 className="font-display text-2xl md:text-[32px] font-bold tracking-tight leading-tight">Discover</h1>
+        <p className="text-[13px] md:text-sm text-[var(--muted)] mt-1">
+          Charts, new releases and every genre.
+        </p>
       </section>
 
       {/* Top Charts */}

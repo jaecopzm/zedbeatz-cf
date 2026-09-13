@@ -9,6 +9,7 @@ import { slugify } from "@/lib/slugify";
 import { usePlayer, type Track } from "@/lib/player-store";
 import { TrackMenu } from "@/components/track-menu";
 import { Play, Pause } from "lucide-react";
+import { encodeId } from "@/lib/hashids";
 
 type Artist = { id: number; name: string; slug?: string; imageUrl: string | null };
 type Album = { id: number; title: string; slug?: string; releaseYear?: number; coverUrl: string | null; artistName: string; artistSlug?: string };
@@ -234,7 +235,7 @@ function SearchContent() {
                 <h2 className="text-xl font-black mb-4">Artists</h2>
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4">
                   {results.artists.map(a => (
-                    <Link key={a.id} href={a.slug ? `/artist/${a.slug}` : `/artist/${a.id}`}
+                    <Link key={a.id} href={`/artist/${encodeId(a.id)}`}
                       className="group flex flex-col items-center gap-2 text-center">
                       <div className="relative w-full aspect-square rounded-full overflow-hidden bg-[var(--surface-3)] shadow-md group-hover:shadow-lg transition-shadow">
                         {a.imageUrl
@@ -256,7 +257,7 @@ function SearchContent() {
                 <h2 className="text-xl font-black mb-4">Albums</h2>
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4">
                   {results.albums.map(a => (
-                    <Link key={a.id} href={`/album/${a.slug || a.id}`}
+                    <Link key={a.id} href={`/album/${encodeId(a.id)}`}
                       className="group flex flex-col gap-2">
                       <div className="relative aspect-square rounded-xl overflow-hidden bg-[var(--surface-3)] shadow-md group-hover:shadow-lg transition-shadow">
                         {a.coverUrl

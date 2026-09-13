@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Play, Pause } from "lucide-react";
 import { usePlayer, type Track } from "@/lib/player-store";
 import { TrackMenu } from "@/components/track-menu";
+import { encodeId } from "@/lib/hashids";
 
 export default function TracksListClient({ tracks, offset = 0 }: { tracks: Track[]; offset?: number }) {
   const { queue, currentIndex, playing, setQueue, toggle } = usePlayer();
@@ -44,7 +45,7 @@ export default function TracksListClient({ tracks, offset = 0 }: { tracks: Track
               </p>
               <p className="text-xs text-[var(--muted)] truncate">
                 {track.artistId
-                  ? <Link href={track.artistSlug ? `/artist/${track.artistSlug}` : `/artist/${track.artistId}`}
+                  ? <Link href={`/artist/${encodeId(track.artistId)}`}
                       className="hover:underline hover:text-foreground transition-colors"
                       onClick={e => e.stopPropagation()}>
                       {track.artist}

@@ -14,7 +14,7 @@ export function QuickCard({
   return (
     <button
       onClick={onClick}
-      className={`relative overflow-hidden rounded-2xl p-4 text-left active:scale-95 transition-transform bg-gradient-to-br ${gradient}`}
+      className={`relative overflow-hidden rounded p-4 text-left active:scale-95 transition-transform bg-gradient-to-br ${gradient}`}
     >
       <div className="absolute -bottom-3 -right-3 opacity-20">
         {icon && <div className="scale-[2.5]">{icon}</div>}

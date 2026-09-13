@@ -28,10 +28,11 @@ export default function TracksSearch({ tracks }: { tracks: Track[] }) {
           value={query}
           onChange={e => setQuery(e.target.value)}
           placeholder="Filter tracks…"
-          className="w-full pl-9 pr-8 py-2 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] text-sm placeholder:text-[var(--muted-2)] focus:outline-none transition-colors"
+          aria-label="Filter tracks"
+          className="w-full pl-9 pr-8 py-2 rounded bg-[var(--surface-2)] border border-[var(--border)] text-sm placeholder:text-[var(--muted-2)] focus:outline-none focus:border-[var(--primary)]/60 transition-colors"
         />
         {query && (
-          <button onClick={() => setQuery("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--muted)] hover:text-foreground">
+          <button onClick={() => setQuery("")} aria-label="Clear filter" className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--muted)] hover:text-foreground">
             <X size={13} />
           </button>
         )}

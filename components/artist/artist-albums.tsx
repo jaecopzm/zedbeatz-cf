@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Play, LayoutGrid } from "lucide-react";
 import ScrollRow from "@/components/home/scroll-row";
+import { encodeId } from "@/lib/hashids";
 
 type Album = {
   id: number;
@@ -24,7 +25,7 @@ export default function ArtistAlbums({ albums }: { albums: Album[] }) {
         {albums.map((album) => (
           <Link
             key={album.id}
-            href={`/album/${album.slug || album.id}`}
+            href={`/album/${encodeId(album.id)}`}
             className="group flex-shrink-0 w-[140px] md:w-[176px] snap-start"
           >
             <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-[var(--surface-3)] mb-2 shadow-md ring-1 ring-white/[0.04] group-hover:ring-[var(--primary)]/30 group-hover:shadow-xl transition-all duration-300">

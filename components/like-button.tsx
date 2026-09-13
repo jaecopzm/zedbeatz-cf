@@ -2,12 +2,10 @@
 
 import { useState } from "react";
 import { Heart } from "lucide-react";
-import { useUser } from "@clerk/nextjs";
 import { useLikes } from "@/lib/likes-context";
 import { showToast } from "@/components/toast";
 
 export default function LikeButton({ trackId, size = 18 }: { trackId: number; size?: number }) {
-  const { isSignedIn } = useUser();
   const { isLiked, toggleLike } = useLikes();
   const [loading, setLoading] = useState(false);
   const [popping, setPopping] = useState(false);
@@ -16,7 +14,7 @@ export default function LikeButton({ trackId, size = 18 }: { trackId: number; si
 
   async function toggle(e: React.MouseEvent) {
     e.stopPropagation();
-    if (loading || !isSignedIn) return;
+    if (loading) return;
     
     if ('vibrate' in navigator) navigator.vibrate(10);
     setLoading(true);

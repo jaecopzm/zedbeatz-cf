@@ -4,7 +4,7 @@ export default function RadioLoading() {
   return (
     <div className="relative min-h-screen bg-background overflow-hidden">
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute inset-0 bg-gradient-to-b from-purple-900/25 via-black to-black" />
+        <div className="absolute inset-0 bg-gradient-to-b from-white/[0.04] via-black to-black" />
       </div>
 
       <section className="relative px-4 sm:px-6 md:px-8 pt-6 pb-6 md:pb-8 max-w-6xl mx-auto">
@@ -27,7 +27,7 @@ export default function RadioLoading() {
       </section>
 
       <section className="relative px-2 sm:px-4 md:px-6 pb-10 max-w-6xl mx-auto">
-        <div className="rounded-2xl border border-[var(--border)] bg-[var(--glass-hover)] backdrop-blur-xl overflow-hidden">
+          <div className="rounded border border-[var(--border)] bg-[var(--glass-hover)] backdrop-blur-xl overflow-hidden">
           <div className="grid grid-cols-[48px_1fr_140px] sm:grid-cols-[56px_1fr_180px] gap-2 px-4 sm:px-6 py-3 text-[11px] font-black uppercase tracking-widest text-foreground/40 border-b border-[var(--border)]">
             <div className="text-center">#</div>
             <div>Title</div>

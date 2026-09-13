@@ -9,6 +9,7 @@ import type { Track } from "@/lib/player-store";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import TracksListClient from "@/components/tracks-list-client";
+import { encodeId } from "@/lib/hashids";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zedbeatz.com";
 
@@ -86,7 +87,7 @@ export default async function AllTracksPage({ searchParams }: { searchParams: Pr
       "item": {
         "@type": "MusicRecording",
         "name": track.title,
-        "url": `${baseUrl}/track/${track.slug || track.id}`,
+        "url": `${baseUrl}/track/${encodeId(track.id)}`,
         "byArtist": {
           "@type": "MusicGroup",
           "name": track.artist,

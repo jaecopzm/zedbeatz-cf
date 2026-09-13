@@ -7,7 +7,7 @@ export default function TrackLoading() {
       {/* Hero — centered like Apple Music */}
       <div className="px-5 pt-8 pb-6 w-full">
         <div className="flex flex-col items-center text-center gap-5">
-          <div className="w-56 h-56 md:w-64 md:h-64 rounded-2xl bg-[var(--glass-hover)]" />
+          <div className="w-56 h-56 md:w-64 md:h-64 rounded bg-[var(--glass-hover)]" />
           <div className="max-w-md space-y-3">
             <div className="h-3 w-16 mx-auto bg-[var(--glass-hover)] rounded" />
             <div className="h-7 w-56 mx-auto bg-[var(--glass-hover)] rounded" />
@@ -36,7 +36,7 @@ export default function TrackLoading() {
 
       {/* Content skeleton */}
       <div className="px-5 w-full mb-6">
-        <div className="rounded-2xl border" style={{ borderColor: "var(--border)", background: "var(--glass-hover)" }}>
+        <div className="rounded border" style={{ borderColor: "var(--border)", background: "var(--glass-hover)" }}>
           <div className="p-6 space-y-3">
             {[...Array(6)].map((_, i) => (
               <div key={i} className="h-3 bg-[var(--surface-2)] rounded" style={{ width: `${60 + (i % 4) * 10}%` }} />
@@ -48,7 +48,7 @@ export default function TrackLoading() {
       {/* Up next skeleton */}
       <div className="px-5 w-full mb-6">
         <div className="h-4 w-24 bg-[var(--glass-hover)] rounded mb-3" />
-        <div className="rounded-2xl border divide-y" style={{ borderColor: "var(--border)", background: "var(--glass-hover)" }}>
+        <div className="rounded border divide-y" style={{ borderColor: "var(--border)", background: "var(--glass-hover)" }}>
           {[...Array(3)].map((_, i) => (
             <div key={i} className="flex items-center gap-3 px-4 py-3">
               <div className="w-4 h-4 bg-[var(--surface-2)] rounded" />

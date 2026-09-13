@@ -1,7 +1,6 @@
 "use client";
 
 import { Download } from "lucide-react";
-import { useUser, SignInButton } from "@clerk/nextjs";
 import { showToast } from "@/components/toast";
 
 export default function DownloadButton({
@@ -17,8 +16,6 @@ export default function DownloadButton({
   featuredArtists?: string;
   coverUrl?: string;
 }) {
-  const { isSignedIn } = useUser();
-
   async function handleDownload() {
     try {
       showToast("Preparing download…", "info");
@@ -74,19 +71,6 @@ export default function DownloadButton({
       console.error("Download error:", err);
       showToast("Download failed", "error");
     }
-  }
-
-  if (!isSignedIn) {
-    return (
-      <SignInButton mode="modal">
-        <button
-          className="flex items-center justify-center transition-colors hover:opacity-70"
-          title="Sign in to download"
-        >
-          <Download size={18} />
-        </button>
-      </SignInButton>
-    );
   }
 
   return (

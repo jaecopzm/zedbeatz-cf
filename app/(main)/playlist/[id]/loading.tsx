@@ -5,7 +5,7 @@ export default function PlaylistLoading() {
     <div className="pb-28">
       <div className="relative overflow-hidden mb-6">
         <div className="absolute inset-0 -z-10">
-          <div className="absolute inset-0 bg-gradient-to-b from-purple-900/25 via-black to-black" />
+          <div className="absolute inset-0 bg-gradient-to-b from-white/[0.04] via-black to-black" />
         </div>
 
         <section className="relative px-4 md:px-8 pt-8 pb-6 flex flex-col sm:flex-row items-start sm:items-end gap-5 max-w-6xl mx-auto animate-pulse">

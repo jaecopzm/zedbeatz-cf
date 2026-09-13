@@ -203,7 +203,7 @@ export default function TrackPageClient({ track }: { track: TrackWithMeta }) {
             </p>
             <h1 className="text-2xl md:text-3xl font-black leading-tight mb-1.5">{track.title}</h1>
             <Link
-              href={track.artistSlug ? `/artist/${track.artistSlug}` : `/artist/${track.artistId}`}
+              href={`/artist/${track.artistId}`}
               className="text-base font-semibold transition-colors inline-block"
               style={{ color: isLight ? "rgba(0,0,0,0.55)" : "rgba(255,255,255,0.55)" }}
             >

@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { db } from "@/lib/db/drizzle";
 import { getAudioUrl, getCoverUrl } from "@/lib/cdn";
 import type { Track } from "@/lib/player-store";
@@ -8,8 +8,16 @@ import ArtistPageClient from "./client";
 import { sanitizeFeaturedArtists } from "@/lib/featured-artists";
 import { artists, tracks, albums } from "@/lib/db/schema";
 import { eq, desc, and, ilike, isNotNull } from "drizzle-orm";
+import { encodeId, decodeId } from "@/lib/hashids";
 
 async function getArtistData(id: string) {
+  let where;
+  if (/^\d+$/.test(id)) where = eq(artists.id, Number(id));
+  else {
+    const dec = decodeId(id);
+    if (dec !== null) where = eq(artists.id, dec);
+    else where = eq(artists.slug, id);
+  }
   const [artist] = await db.select({
     id: artists.id,
     name: artists.name,
@@ -19,7 +27,7 @@ async function getArtistData(id: string) {
     slug: artists.slug,
   })
     .from(artists)
-    .where(isNaN(Number(id)) ? eq(artists.slug, id) : eq(artists.id, Number(id)))
+    .where(where)
     .limit(1);
 
   if (!artist) return null;
@@ -102,7 +110,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const { artist, rawTracks } = result;
 
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zedbeatz.com";
-  const artistUrl = `${baseUrl}/artist/${artist.slug || artist.id}`;
+  const artistUrl = `${baseUrl}/artist/${encodeId(artist.id)}`;
   const imageUrl = getCoverUrl({ imageKey: artist.imageKey, imageUrl: artist.imageUrl }) ?? undefined;
   const trackTitles = rawTracks.slice(0, 5).map((t: any) => t.title);
   const trackCount = rawTracks.length;
@@ -149,6 +157,10 @@ export default async function ArtistPage({ params }: { params: Promise<{ id: str
   const { id } = await params;
   const result = await getArtistData(id);
   if (!result) notFound();
+  const hid = encodeId(result.artist.id);
+  if (id !== hid) {
+    permanentRedirect(`/artist/${hid}`);
+  }
   const { artist, rawTracks, rawAlbums, appearsOnTracks } = result;
 
   const tracksList = rawTracks.map((t) => mapTrack(t, artist.name, artist.slug, t.featuredArtists));
@@ -179,7 +191,7 @@ export default async function ArtistPage({ params }: { params: Promise<{ id: str
   };
 
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zedbeatz.com";
-  const artistUrl = `${baseUrl}/artist/${artist.slug || artist.id}`;
+  const artistUrl = `${baseUrl}/artist/${encodeId(artist.id)}`;
 
   const jsonLd = [
     {
@@ -206,14 +218,14 @@ export default async function ArtistPage({ params }: { params: Promise<{ id: str
           name: al.title,
           ...(al.releaseYear && { datePublished: `${al.releaseYear}` }),
           ...(al.coverUrl && { image: al.coverUrl }),
-          url: `${baseUrl}/album/${al.slug || al.id}`,
+          url: `${baseUrl}/album/${encodeId(al.id)}`,
         })),
       }),
       track: tracksList.map((t) => ({
         "@type": "MusicRecording",
         name: t.title,
         ...(t.duration && { duration: `PT${Math.floor(t.duration)}S` }),
-        url: `${baseUrl}/track/${t.slug || t.id}`,
+        url: `${baseUrl}/track/${encodeId(t.id)}`,
       })),
       ...(tracksList.length > 0 && { numTracks: tracksList.length }),
     },

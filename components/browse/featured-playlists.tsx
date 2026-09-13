@@ -60,7 +60,7 @@ export default function FeaturedPlaylists() {
               href={`/playlist/${playlist.id}`}
               className="group flex flex-col gap-1.5 md:gap-2 transition-all duration-300"
             >
-              <div className="relative aspect-square rounded-xl overflow-hidden bg-[var(--surface-3)] shadow-md ring-1 ring-white/[0.04] transition-all duration-300 group-hover:shadow-xl group-hover:ring-[var(--primary)]/30 group-hover:scale-[1.02]">
+              <div className="relative aspect-square rounded overflow-hidden bg-[var(--surface-3)] shadow-md ring-1 ring-white/[0.04] transition-all duration-300 group-hover:shadow-xl group-hover:ring-[var(--primary)]/30 group-hover:scale-[1.02]">
                 {playlist.cover_url ? (
                   <Image src={playlist.cover_url} alt={playlist.name} fill sizes="(max-width: 768px) 140px, 176px" className="object-cover transition-transform duration-500 group-hover:scale-110" unoptimized />
                 ) : (

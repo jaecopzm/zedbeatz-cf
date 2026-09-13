@@ -24,8 +24,8 @@ function mapTrack(r: any) {
   };
 }
 
-export async function GET() {
-  const deny = await requireAdmin(); if (deny) return deny;
+export async function GET(req: NextRequest) {
+  const deny = await requireAdmin(req); if (deny) return deny;
   const data = await db
     .select({
       trackId: heroTracks.trackId,
@@ -50,7 +50,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const deny = await requireAdmin(); if (deny) return deny;
+  const deny = await requireAdmin(req); if (deny) return deny;
   const { track_id } = await req.json();
   const [countResult] = await db
     .select({ count: sql<number>`count(*)::int` })
@@ -63,14 +63,14 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const deny = await requireAdmin(); if (deny) return deny;
+  const deny = await requireAdmin(req); if (deny) return deny;
   const { track_id } = await req.json();
   await db.delete(heroTracks).where(eq(heroTracks.trackId, track_id));
   return NextResponse.json({ ok: true });
 }
 
 export async function PATCH(req: NextRequest) {
-  const deny = await requireAdmin(); if (deny) return deny;
+  const deny = await requireAdmin(req); if (deny) return deny;
   const { order } = await req.json();
   await Promise.all(
     order.map(({ track_id, position }: { track_id: number; position: number }) =>

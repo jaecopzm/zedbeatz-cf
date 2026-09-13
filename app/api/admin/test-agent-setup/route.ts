@@ -1,14 +1,14 @@
 import { db } from "@/lib/db/drizzle";
 import { tracks, artists } from "@/lib/db/schema";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/require-admin";
 import { eq } from "drizzle-orm";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export async function GET() {
-  const deny = await requireAdmin(); if (deny) return deny;
+export async function GET(req: NextRequest) {
+  const deny = await requireAdmin(req); if (deny) return deny;
   const checks = {
     database: { status: "unknown", details: {} },
     endpoints: { status: "unknown", details: {} },

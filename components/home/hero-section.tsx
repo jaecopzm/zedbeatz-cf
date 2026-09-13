@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Play, Pause, ChevronLeft, ChevronRight } from "lucide-react";
 import { usePlayer, type Track } from "@/lib/player-store";
 import { useTheme } from "@/components/theme-provider";
+import { encodeId } from "@/lib/hashids";
 
 type FeaturedAlbum = {
   id: number; title: string; slug: string | null; releaseYear: number | null;
@@ -128,7 +129,7 @@ export default function HeroSection({ tracks, featuredAlbum }: { tracks: Track[]
               }
             </button>
             <Link
-              href={track.slug ? `/track/${track.slug}` : `/track/${track.id}`}
+              href={`/track/${encodeId(track.id)}`}
               className="hidden sm:flex items-center px-4 md:px-5 py-2 md:py-3 rounded-full border border-white/30 text-white text-xs md:text-sm font-semibold hover:bg-white/10 transition-all"
               onClick={e => e.stopPropagation()}
             >
@@ -154,7 +155,7 @@ export default function HeroSection({ tracks, featuredAlbum }: { tracks: Track[]
       {/* Featured Album strip */}
       {featuredAlbum && (
         <Link
-          href={`/album/${featuredAlbum.slug || featuredAlbum.id}`}
+          href={`/album/${encodeId(featuredAlbum.id)}`}
           className="group flex items-center gap-3 px-4 py-3 bg-[var(--surface-2)] hover:bg-[var(--surface-3)] border-t border-[var(--border)] transition-colors"
         >
           <div className="relative w-9 h-9 rounded-lg overflow-hidden shrink-0">

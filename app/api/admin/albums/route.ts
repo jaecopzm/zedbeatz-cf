@@ -7,8 +7,8 @@ import { eq, desc } from "drizzle-orm";
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export async function GET() {
-  const deny = await requireAdmin(); if (deny) return deny;
+export async function GET(req: NextRequest) {
+  const deny = await requireAdmin(req); if (deny) return deny;
   const data = await db
     .select({
       id: albums.id,
@@ -24,7 +24,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const deny = await requireAdmin(); if (deny) return deny;
+  const deny = await requireAdmin(req); if (deny) return deny;
   const body = await req.json();
   const [data] = await db.insert(albums).values(body).returning();
   return NextResponse.json(data);

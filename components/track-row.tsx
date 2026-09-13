@@ -8,6 +8,7 @@ import AddToPlaylist from "@/components/add-to-playlist";
 import LikeButton from "@/components/like-button";
 import { parseFeaturedArtists, getArtistSlugFromName } from "@/lib/featured-artists";
 import { cn } from "@/lib/utils";
+import { encodeId } from "@/lib/hashids";
 
 export default function TrackRow({ track, queue, index, className }: { track: Track; queue?: Track[]; index?: number; className?: string }) {
   const { queue: pQueue, currentIndex, playing, loading, setQueue, play, toggle } = usePlayer();
@@ -69,7 +70,7 @@ export default function TrackRow({ track, queue, index, className }: { track: Tr
       {/* Title / artist */}
       <div className="flex flex-col flex-1 min-w-0">
         <Link
-          href={track.slug ? `/track/${track.slug}` : `/track/${track.id}`}
+          href={`/track/${encodeId(track.id)}`}
           onClick={(e) => e.stopPropagation()}
           className={`text-sm font-semibold truncate transition-colors hover:underline ${isActive ? "text-[var(--primary)]" : "text-foreground"}`}
         >
@@ -79,7 +80,7 @@ export default function TrackRow({ track, queue, index, className }: { track: Tr
           {track.artistId ? (
             <>
               <Link
-                href={track.artistSlug ? `/artist/${track.artistSlug}` : `/artist/${track.artistId}`}
+                href={`/artist/${encodeId(track.artistId)}`}
                 onClick={(e) => e.stopPropagation()}
                 className="hover:text-foreground hover:underline transition-colors"
               >

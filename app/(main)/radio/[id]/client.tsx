@@ -9,6 +9,7 @@ import { useLikes } from "@/lib/likes-context";
 import { X, Play, Pause, SkipForward, Radio, Music2, RefreshCw, Shuffle, MoreHorizontal, Heart } from "lucide-react";
 import "@/app/styles/collection-page.css";
 import { TrackMenu } from "@/components/track-menu";
+import { encodeId } from "@/lib/hashids";
 
 type SeedTrack = Track & { genre?: string; artist_id: number };
 
@@ -87,7 +88,7 @@ function TrackRow({
           </span>
           <div className="track-sub">
             <Link
-              href={track.artistSlug ? `/artist/${track.artistSlug}` : track.artistId ? `/artist/${track.artistId}` : "/browse"}
+              href={track.artistId ? `/artist/${encodeId(track.artistId)}` : "/browse"}
               className="track-artist"
               onClick={(e) => e.stopPropagation()}
             >
@@ -100,7 +101,7 @@ function TrackRow({
 
       <div className="track-artist-col">
         <Link
-          href={track.artistSlug ? `/artist/${track.artistSlug}` : track.artistId ? `/artist/${track.artistId}` : "/browse"}
+          href={track.artistId ? `/artist/${encodeId(track.artistId)}` : "/browse"}
           className="track-artist-link"
           onClick={(e) => e.stopPropagation()}
         >

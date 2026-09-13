@@ -34,7 +34,7 @@ export default function ShareButton({ title, url }: { title: string; url?: strin
         <div className="flex justify-center mb-3"><div className="w-10 h-1 bg-[var(--surface-2)]" /></div>
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-bold text-sm">Share</h3>
-          <button onClick={() => setOpen(false)} className="p-1 text-[var(--muted)]"><X size={18} /></button>
+          <button onClick={() => setOpen(false)} aria-label="Close share" className="p-1 text-[var(--muted)]"><X size={18} /></button>
         </div>
         <div className="space-y-2">
           <button onClick={copyLink} className={`w-full flex items-center gap-3 p-3 transition-colors ${copied ? "bg-[var(--primary)]/20 text-[var(--primary)]" : "bg-[var(--glass-hover)] hover:bg-[var(--glass-hover)]"}`}>
@@ -61,7 +61,7 @@ export default function ShareButton({ title, url }: { title: string; url?: strin
 
   return (
     <>
-      <button onClick={handleShare} className="w-9 h-9 flex items-center justify-center transition-colors hover:opacity-70">
+      <button onClick={handleShare} aria-label="Share" className="w-9 h-9 flex items-center justify-center transition-colors hover:opacity-70">
         <Share2 size={18} />
       </button>
       {modal}

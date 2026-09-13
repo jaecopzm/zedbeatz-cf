@@ -14,7 +14,7 @@ export default function AppearsOn({ tracks, artistName }: { tracks: Track[]; art
   return (
     <section className="mb-8">
       <div className="px-4 md:px-10 mb-3">
-        <h2 className="text-xl md:text-[26px] font-black tracking-tight">Appears On</h2>
+        <h2 className="font-display text-[17px] md:text-xl font-bold tracking-tight text-foreground">Appears on</h2>
       </div>
 
       <div className="px-4 md:px-10">
@@ -35,10 +35,10 @@ export default function AppearsOn({ tracks, artistName }: { tracks: Track[]; art
                   ? toggle()
                   : setQueue(tracks, tracks.findIndex((t) => t.id === track.id))
               }
-              className="group relative flex items-center gap-2 md:gap-2.5 px-3 py-2 cursor-pointer transition-all duration-200 border-b border-[var(--border)] hover:bg-[var(--surface-hover)]"
+              className="group relative flex items-center gap-2 md:gap-2.5 px-3 py-2 cursor-pointer transition-colors border-b border-white/[0.06] hover:bg-white/[0.03]"
             >
               {/* Artwork */}
-              <div className="relative w-10 h-10 md:w-12 md:h-12 shrink-0 rounded-md overflow-hidden bg-[var(--surface-3)]">
+              <div className="relative w-10 h-10 shrink-0 rounded overflow-hidden bg-[var(--surface-3)]">
                 {track.coverUrl ? (
                   <Image src={track.coverUrl} alt={track.title} fill className="object-cover" sizes="48px" unoptimized />
                 ) : (

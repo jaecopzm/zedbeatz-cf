@@ -20,13 +20,15 @@ function getSystemTheme(): Theme {
 }
 
 export default function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("theme") as Theme | null;
-      return stored ?? getSystemTheme();
-    }
-    return "dark";
-  });
+  // Always start with the server value — sync the real preference after
+  // mount. Reading localStorage during render causes hydration mismatches.
+  const [theme, setTheme] = useState<Theme>("dark");
+
+  useEffect(() => {
+    const stored = localStorage.getItem("theme") as Theme | null;
+    const initial = stored ?? getSystemTheme();
+    setTheme((current) => (current === initial ? current : initial));
+  }, []);
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-color-scheme: dark)");

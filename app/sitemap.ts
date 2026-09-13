@@ -2,6 +2,7 @@ import { MetadataRoute } from 'next';
 import { db } from '@/lib/db/drizzle';
 import { tracks, artists, albums, playlists } from '@/lib/db/schema';
 import { eq, desc, asc, isNotNull, sql } from 'drizzle-orm';
+import { encodeId } from '@/lib/hashids';
 
 export const revalidate = 0;
 
@@ -56,28 +57,28 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
 
   const trackPages = tracksResult.map((t) => ({
-    url: `${BASE_URL}/track/${t.slug || t.id}`,
+    url: `${BASE_URL}/track/${encodeId(t.id)}`,
     lastModified: t.createdAt ? new Date(t.createdAt) : new Date(),
     changeFrequency: 'monthly' as const,
     priority: 0.8,
   }));
 
   const artistPages = artistsResult.map((a) => ({
-    url: `${BASE_URL}/artist/${a.slug || a.id}`,
+    url: `${BASE_URL}/artist/${encodeId(a.id)}`,
     lastModified: a.createdAt ? new Date(a.createdAt) : new Date(),
     changeFrequency: 'weekly' as const,
     priority: 0.7,
   }));
 
   const albumPages = albumsResult.map((a) => ({
-    url: `${BASE_URL}/album/${a.slug || a.id}`,
+    url: `${BASE_URL}/album/${encodeId(a.id)}`,
     lastModified: a.createdAt ? new Date(a.createdAt) : new Date(),
     changeFrequency: 'monthly' as const,
     priority: 0.7,
   }));
 
   const playlistPages = playlistsResult.map((p) => ({
-    url: `${BASE_URL}/playlist/${p.id}`,
+    url: `${BASE_URL}/playlist/${encodeId(p.id)}`,
     lastModified: p.createdAt ? new Date(p.createdAt) : new Date(),
     changeFrequency: 'weekly' as const,
     priority: 0.5,

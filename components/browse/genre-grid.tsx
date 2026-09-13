@@ -25,7 +25,7 @@ export default function GenreGrid({ genres }: { genres: string[] }) {
         <Link
           key={genre}
           href={`/genre/${slugify(genre)}`}
-          className={`aspect-[3/2] rounded-xl bg-gradient-to-br ${colors[i % colors.length]} p-3 md:p-4 flex items-end transition-all duration-300 hover:scale-[1.02] hover:shadow-lg`}
+          className={`aspect-[3/2] rounded bg-gradient-to-br ${colors[i % colors.length]} p-3 md:p-4 flex items-end transition-all duration-300 hover:scale-[1.02] hover:shadow-lg`}
         >
           <span className="text-sm md:text-base font-bold text-foreground drop-shadow-sm leading-tight">{genre}</span>
         </Link>

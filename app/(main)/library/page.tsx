@@ -6,9 +6,7 @@ import { usePlayer, type Track } from "@/lib/player-store";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { useUser, SignInButton } from "@clerk/nextjs";
 import { ListMusic } from "lucide-react";
-import { useRouter } from "next/navigation";
 import "@/app/styles/collection-page.css";
 import { TrackMenu } from "@/components/track-menu";
 import { QuickCard } from "@/components/library/quick-card";
@@ -29,19 +27,12 @@ type Playlist = {
 type ViewState = "list" | "detail";
 
 export default function LibraryPage() {
-  const { isSignedIn, isLoaded } = useUser();
-  const router = useRouter();
+  const isSignedIn = false; const isLoaded = true;
   const [userPlaylists, setUserPlaylists] = useState<Playlist[]>([]);
   const [savedPlaylists, setSavedPlaylists] = useState<Playlist[]>([]);
   const [recentlyPlayed, setRecentlyPlayed] = useState<Track[]>([]);
   const [newName, setNewName] = useState("");
 
-  // Redirect if not authenticated
-  useEffect(() => {
-    if (isLoaded && !isSignedIn) {
-      router.push('/');
-    }
-  }, [isSignedIn, isLoaded, router]);
   const [showCreate, setShowCreate] = useState(false);
   const [selected, setSelected] = useState<number | "recent" | "liked" | null>(null);
   const [tracks, setTracks] = useState<Track[]>([]);
@@ -233,11 +224,7 @@ function ListView({ isSignedIn, isLoaded, searchQuery, setSearchQuery, showCreat
               <Plus size={16} className="text-black" strokeWidth={2.5} />
             </button>
           ) : (
-            <SignInButton mode="modal">
-              <button className="w-8 h-8 rounded-full bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center">
-                <Plus size={16} className="text-[var(--primary)]" />
-              </button>
-            </SignInButton>
+            <span className="w-8 h-8 rounded-full bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center opacity-50"><Plus size={16} className="text-[var(--primary)]" /></span>
           )}
         </div>
 
@@ -510,7 +497,7 @@ function LibraryTrackRow({ track, index, tracks, isCurrent, isPlaying, onPlay, o
             {track.title}
           </button>
           <div className="track-sub">
-            <Link href={track.artistSlug ? `/artist/${track.artistSlug}` : track.artistId ? `/artist/${track.artistId}` : "/browse"} className="track-artist">
+            <Link href={`/artist/${track.artistId}`} className="track-artist">
               {track.artist}
             </Link>
             {track.featuredArtists && <span className="track-feat">, {track.featuredArtists}</span>}
@@ -519,7 +506,7 @@ function LibraryTrackRow({ track, index, tracks, isCurrent, isPlaying, onPlay, o
       </div>
 
       <div className="track-artist-col">
-        <Link href={track.artistSlug ? `/artist/${track.artistSlug}` : track.artistId ? `/artist/${track.artistId}` : "/browse"} className="track-artist-link">
+        <Link href={`/artist/${track.artistId}`} className="track-artist-link">
           {track.featuredArtists ? `${track.artist} feat. ${track.featuredArtists}` : track.artist}
         </Link>
       </div>

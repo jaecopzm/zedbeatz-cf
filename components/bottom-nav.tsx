@@ -2,24 +2,21 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Search, Library } from "lucide-react";
+import { House, MagnifyingGlass, Books } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
 const links = [
-  { href: "/",        label: "Home",    icon: Home    },
-  { href: "/search",  label: "Search",  icon: Search  },
-  { href: "/library", label: "Library", icon: Library },
+  { href: "/",        label: "Home",    icon: House    },
+  { href: "/search",  label: "Search",  icon: MagnifyingGlass  },
+  { href: "/library", label: "Library", icon: Books },
 ];
 
 export default function BottomNav() {
   const path = usePathname();
   return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
-      {/* Glass bar */}
-      <div className="relative bg-background border-t border-[var(--glass-border)] flex">
-        {/* Top gradient line */}
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[var(--primary)]/30 to-transparent" />
-
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 px-4" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 8px)" }}>
+      {/* Floating pill dock */}
+      <div className="relative rounded-full border border-[var(--glass-border)] bg-[var(--glass)] backdrop-blur-[24px] [-webkit-backdrop-filter:blur(24px)] shadow-[0_16px_48px_rgba(0,0,0,0.6)] flex p-1.5 gap-1">
         {links.map(({ href, label, icon: Icon }) => {
           const isActive = path === href;
           return (
@@ -30,23 +27,19 @@ export default function BottomNav() {
                 if ('vibrate' in navigator) navigator.vibrate(10);
               }}
               className={cn(
-                "flex-1 flex flex-col items-center gap-1.5 py-3 transition-all duration-200 relative",
-                isActive ? "text-[var(--primary)]" : "text-[var(--muted)]"
+                "flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-full transition-all duration-200 active:scale-95",
+                isActive ? "bg-[var(--primary)] text-black shadow-lg shadow-primary/25" : "text-[var(--muted)] hover:text-foreground"
               )}
             >
               <span className="relative z-10">
                 <Icon
-                  size={22}
-                  strokeWidth={isActive ? 2.5 : 1.8}
+                  size={18}
+                  weight={isActive ? "fill" : "regular"}
                 />
               </span>
-              <span className="relative z-10 text-[10px] font-semibold tracking-wide">
+              <span className="relative z-10 text-xs font-bold tracking-wide">
                 {label}
               </span>
-              {/* Active indicator */}
-              {isActive && (
-                <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-[var(--primary)] animate-scale-in" />
-              )}
             </Link>
           );
         })}

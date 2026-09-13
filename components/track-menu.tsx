@@ -18,6 +18,7 @@ import DownloadButton from "@/components/download-button";
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 import { VisuallyHidden } from "@/components/ui/visually-hidden";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { encodeId } from "@/lib/hashids";
 
 // ─── Hooks ────────────────────────────────────────────────────────────────────
 
@@ -95,14 +96,14 @@ function useMenuItems(track: Track, onClose: () => void, copied: boolean, setCop
       label: "View Track",
       icon: ListPlus,
       iconColor: "#a78bfa",
-      action: { type: "link" as const, href: `/track/${track.slug || track.id}` },
+      action: { type: "link" as const, href: `/track/${encodeId(track.id)}` },
     },
     {
       id: "radio",
       label: "Go to Radio",
       icon: Radio,
       iconColor: "#34d399",
-      action: { type: "link" as const, href: `/radio/${track.id}` },
+      action: { type: "link" as const, href: `/radio/${encodeId(track.id)}` },
     },
     {
       id: "download",
@@ -144,7 +145,7 @@ function useMenuItems(track: Track, onClose: () => void, copied: boolean, setCop
       action: {
         type: "button" as const,
         onClick: () => {
-          const url = `${window.location.origin}/track/${track.slug || track.id}`;
+          const url = `${window.location.origin}/track/${encodeId(track.id)}`;
           navigator.clipboard.writeText(url);
           showToast("Link copied!", "success");
           onClose();

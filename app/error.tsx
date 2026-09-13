@@ -15,27 +15,27 @@ export default function Error({
   }, [error]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-[var(--background)]">
+    <div className="min-h-screen flex items-center justify-center p-4">
       <div className="text-center space-y-6 max-w-md">
         <div className="flex justify-center">
-          <div className="w-24 h-24 rounded-full bg-red-500/10 flex items-center justify-center">
-            <AlertCircle size={48} className="text-red-500" />
+          <div className="w-20 h-20 rounded-full bg-[var(--surface-2)] ring-1 ring-white/[0.06] flex items-center justify-center">
+            <AlertCircle size={36} className="text-[var(--muted-2)]" />
           </div>
         </div>
         
         <div>
-          <h1 className="text-2xl font-bold mb-2">Something went wrong!</h1>
-          <p className="text-[var(--muted)]">
+          <h1 className="font-display text-xl font-bold tracking-tight mb-2">Something went wrong</h1>
+          <p className="text-sm text-[var(--muted)]">
             An error occurred while loading this page.
           </p>
         </div>
 
         <button
           onClick={reset}
-          className="flex items-center gap-2 px-6 py-3 bg-white hover:scale-105 active:scale-100 text-black font-semibold rounded-md transition-all mx-auto"
+          className="flex items-center gap-2 px-5 py-2.5 bg-[var(--primary)] text-black font-bold text-[13px] rounded-full hover:brightness-110 active:scale-95 transition-all mx-auto"
         >
-          <RefreshCw size={18} />
-          Try Again
+          <RefreshCw size={16} />
+          Try again
         </button>
       </div>
     </div>

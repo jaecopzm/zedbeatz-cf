@@ -25,9 +25,9 @@ export const metadata: Metadata = {
 
 export default function DMCAPage() {
   return (
-    <div className="min-h-screen pb-32 px-4 md:px-8 py-8">
+    <div className="pb-8 px-4 md:px-8 pt-4 md:pt-5">
       <div className="max-w-3xl mx-auto">
-        <h1 className="text-2xl md:text-5xl font-bold mb-6">DMCA Policy</h1>
+        <h1 className="font-display text-2xl md:text-[32px] font-bold tracking-tight leading-tight mb-4">DMCA Policy</h1>
         <p className="text-sm text-[var(--muted)] mb-8">Digital Millennium Copyright Act</p>
         
         <div className="space-y-6 text-[var(--muted)] leading-relaxed text-sm md:text-base">
@@ -58,7 +58,7 @@ export default function DMCAPage() {
             <p>
               Send DMCA notices to:
             </p>
-            <div className="bg-[var(--surface)] p-4 rounded-xl border border-[var(--border)] mt-3">
+            <div className="bg-[var(--surface)] p-4 rounded border border-[var(--border)] mt-3">
               <p className="font-semibold text-foreground">Email:</p>
               <a href="mailto:support@zedbeatz.com" className="text-[var(--primary)] hover:underline">
                 support@zedbeatz.com
@@ -94,7 +94,7 @@ export default function DMCAPage() {
             </p>
           </section>
           
-          <section className="bg-yellow-500/10 border border-yellow-500/20 p-4 rounded-xl">
+          <section className="bg-yellow-500/10 border border-yellow-500/20 p-4 rounded">
             <p className="text-sm">
               <strong className="text-yellow-500">Important:</strong> Submitting a false or fraudulent DMCA notice may result in legal consequences. Please ensure all information provided is accurate.
             </p>

@@ -1,7 +1,6 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { useUser } from "@clerk/nextjs";
 
 type LikesContextType = {
   likedIds: Set<number>;
@@ -15,53 +14,28 @@ const LikesContext = createContext<LikesContextType>({
   isLiked: () => false,
 });
 
+const KEY = "zedbeatz-likes";
+
 export function LikesProvider({ children }: { children: ReactNode }) {
-  const { isSignedIn } = useUser();
   const [likedIds, setLikedIds] = useState<Set<number>>(new Set());
 
   useEffect(() => {
-    if (!isSignedIn) return;
-    fetch("/api/likes")
-      .then(r => r.json())
-      .then(d => setLikedIds(new Set(d.likedIds || [])))
-      .catch(() => {});
-  }, [isSignedIn]);
+    try {
+      const raw = localStorage.getItem(KEY);
+      if (raw) setLikedIds(new Set(JSON.parse(raw)));
+    } catch {}
+  }, []);
 
   async function toggleLike(trackId: number) {
-    const newLiked = !likedIds.has(trackId);
-    
-    // Optimistic update
     setLikedIds(prev => {
       const next = new Set(prev);
-      newLiked ? next.add(trackId) : next.delete(trackId);
+      next.has(trackId) ? next.delete(trackId) : next.add(trackId);
+      try {
+        localStorage.setItem(KEY, JSON.stringify([...next]));
+      } catch {}
       return next;
     });
-
-    try {
-      const res = await fetch("/api/likes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ track_id: trackId }),
-      });
-      const data = await res.json();
-      
-      // Confirm with server
-      setLikedIds(prev => {
-        const next = new Set(prev);
-        data.liked ? next.add(trackId) : next.delete(trackId);
-        return next;
-      });
-
-      // Notify other components
-      window.dispatchEvent(new CustomEvent('likesChanged', { detail: { trackId, liked: data.liked } }));
-    } catch {
-      // Revert on error
-      setLikedIds(prev => {
-        const next = new Set(prev);
-        newLiked ? next.delete(trackId) : next.add(trackId);
-        return next;
-      });
-    }
+    window.dispatchEvent(new CustomEvent("likesChanged", { detail: { trackId } }));
   }
 
   function isLiked(trackId: number) {

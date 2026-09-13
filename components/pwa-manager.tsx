@@ -97,9 +97,9 @@ export default function PwaManager() {
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -50 }}
-          className="fixed top-4 left-4 right-4 z-[999] md:top-6 md:left-1/2 md:right-auto md:-translate-x-1/2 md:w-[400px] bg-[var(--surface)] border border-[var(--glass-border)] shadow-2xl rounded-xl p-4 flex items-center gap-4"
+          className="fixed top-4 left-4 right-4 z-[999] md:top-6 md:left-1/2 md:right-auto md:-translate-x-1/2 md:w-[400px] bg-[var(--surface)] border border-[var(--glass-border)] shadow-2xl rounded p-4 flex items-center gap-4"
         >
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[var(--primary)] to-[#0d732f] flex items-center justify-center shrink-0">
+          <div className="w-12 h-12 rounded bg-gradient-to-br from-[var(--primary)] to-[#0ea5e9] flex items-center justify-center shrink-0">
             <Download className="text-foreground" size={24} />
           </div>
           

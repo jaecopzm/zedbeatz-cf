@@ -8,6 +8,7 @@ import { useLikes } from "@/lib/likes-context";
 import { Pause, Play, Shuffle, Music2, Heart, MoreHorizontal, Headphones, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import "@/app/styles/collection-page.css";
 import { TrackMenu } from "@/components/track-menu";
+import { encodeId } from "@/lib/hashids";
 
 function EqBars({ active }: { active: boolean }) {
   return (
@@ -87,7 +88,7 @@ function TrackRow({
           </div>
           <div className="track-sub">
             <Link
-              href={track.artistSlug ? `/artist/${track.artistSlug}` : track.artistId ? `/artist/${track.artistId}` : "/browse"}
+              href={track.artistId ? `/artist/${encodeId(track.artistId)}` : "/browse"}
               className="track-artist"
               onClick={(e) => e.stopPropagation()}
             >
@@ -100,7 +101,7 @@ function TrackRow({
 
       <div className="track-artist-col">
         <Link
-          href={track.artistSlug ? `/artist/${track.artistSlug}` : track.artistId ? `/artist/${track.artistId}` : "/browse"}
+          href={track.artistId ? `/artist/${encodeId(track.artistId)}` : "/browse"}
           className="track-artist-link"
           onClick={(e) => e.stopPropagation()}
         >
@@ -137,6 +138,7 @@ export default function AlbumClient({
     title: string;
     slug?: string | null;
     artistName: string;
+    artistId?: number | null;
     artistSlug?: string | null;
     coverUrl?: string | null;
     releaseYear?: number | null;
@@ -284,7 +286,7 @@ export default function AlbumClient({
           </button>
           <button 
             onClick={() => {
-              const url = `${window.location.origin}/album/${album.slug || album.id}`;
+              const url = `${window.location.origin}/album/${album.id}`;
               if (navigator.share) {
                 navigator.share({ title: album.title, text: `Check out ${album.title} by ${album.artistName}`, url }).catch(() => {});
               } else {
@@ -317,7 +319,7 @@ export default function AlbumClient({
             <p className="collection-hero-eyebrow">Album{album.releaseYear ? ` · ${album.releaseYear}` : ""}</p>
             <h1 className="collection-hero-title">{album.title}</h1>
             <p className="collection-hero-meta">
-              <Link href={album.artistSlug ? `/artist/${album.artistSlug}` : "/browse"} style={{ color: "inherit", fontWeight: 700 }}>
+              <Link href={album.artistId ? `/artist/${album.artistId}` : "/browse"} style={{ color: "inherit", fontWeight: 700 }}>
                 {album.artistName}
               </Link>
               {" · "}
@@ -359,7 +361,7 @@ export default function AlbumClient({
         </div>
         <button 
           onClick={() => {
-            const url = `${window.location.origin}/album/${album.slug || album.id}`;
+            const url = `${window.location.origin}/album/${album.id}`;
             if (navigator.share) {
               navigator.share({ title: album.title, text: `Check out ${album.title} by ${album.artistName}`, url }).catch(() => {});
             } else {
@@ -427,4 +429,3 @@ export default function AlbumClient({
     </div>
   );
 }
-
